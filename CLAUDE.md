@@ -8,6 +8,7 @@ Agent guide. Cursor rules: `.cursor/rules/`.
 | --- | --- |
 | Scope | `docs/explanation/scope-contract.md` |
 | Measurement | `docs/explanation/measurement-spec.md` |
+| Billing & accounting (binding) | `docs/explanation/billing-and-accounting-compliance.md` |
 | i18n | `docs/development/i18n.md` |
 | Tasks | `docs/todo/current.md` |
 
@@ -16,6 +17,7 @@ Agent guide. Cursor rules: `.cursor/rules/`.
 - Issue-driven; branch `type/issue-number-summary`; never commit to `main` directly
 - English repo docs (ADR 0008); six locale message catalogs for UI (ADR 0011)
 - No NeNe Clear / reconciliation / dunning domain in this repo
+- **Serve is not the books of account; tax-neutral.** No tax computation, no qualified invoices; money SSOT = Invoice (ADR 0014). Billing-relevant counts are audit-grade (ADR 0015)
 - MCP maps to Serve OpenAPI only
 
 ## Ports

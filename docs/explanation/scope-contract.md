@@ -5,7 +5,8 @@
 Read first: [ADR 0009](../adr/0009-separate-from-contact-and-concierge.md),
 [`measurement-spec.md`](./measurement-spec.md),
 [`serve-embed-spec.md`](./serve-embed-spec.md),
-[`privacy-and-ad-compliance.md`](./privacy-and-ad-compliance.md).
+[`privacy-and-ad-compliance.md`](./privacy-and-ad-compliance.md),
+[`billing-and-accounting-compliance.md`](./billing-and-accounting-compliance.md).
 
 ---
 
@@ -75,9 +76,28 @@ Same page may load multiple scripts; **no shared DB**.
 
 ---
 
+## Money, Tax & Books boundary (binding)
+
+When marketplace mode (Phase 3+) introduces advertiser money, the following are
+**non-negotiable** — full rules in
+[`billing-and-accounting-compliance.md`](./billing-and-accounting-compliance.md):
+
+- **Serve is not the books of account.** It holds measurement events and money
+  **counters** (`budget_cents`, `spent_cents`), never journal entries, ledgers,
+  AR, or financial statements. Money SSOT = **NeNe Invoice** (ADR 0014).
+- **Serve is tax-neutral.** It never computes/rounds/displays consumption tax or
+  any tax, and never issues a qualified invoice. It hands a **net, tax-free
+  taxable base** + advertiser identity + period to Invoice, which applies the law.
+- **Billing-relevant counts are audit-grade** (ADR 0015): append-only,
+  closed-period immutable, reproducible pricing, reconciled to the handed-off
+  amount, idempotent on `external_reference`, retained for the statutory period.
+
+---
+
 ## Related
 
 - [`../integrations/sibling-products.md`](../integrations/sibling-products.md)
-- ADR 0011 (locales), ADR 0012 (measurement)
+- [`billing-and-accounting-compliance.md`](./billing-and-accounting-compliance.md) (binding)
+- ADR 0011 (locales), ADR 0012 (measurement), ADR 0014 (money SSOT boundary), ADR 0015 (billing integrity)
 
-Last updated: 2026-06-03
+Last updated: 2026-06-04
