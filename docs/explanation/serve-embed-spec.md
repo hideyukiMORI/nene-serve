@@ -45,14 +45,18 @@ Contract between NeNe Serve and the publisher's site.
 ## Security
 
 - No `eval` of API responses.
-- HTML5 creatives only from **approved bundles** (ADR 0013).
+- HTML5 creatives only from **approved bundles** (ADR 0013), rendered in a
+  sandboxed iframe with strict CSP.
 - CSP-friendly: single script entry point.
+- Origin-gated, rate-limited public endpoints; opaque tokens only; **no open
+  redirect** and short-lived `click_token` — full rules in
+  [`api-security-spec.md`](./api-security-spec.md) (binding), ADR 0018, ADR 0019.
 
 ---
 
 ## Related
 
-- ADR 0010, ADR 0013
+- [`api-security-spec.md`](./api-security-spec.md) (binding), ADR 0010, ADR 0013, ADR 0018, ADR 0019
 - [`measurement-spec.md`](./measurement-spec.md)
 
-Last updated: 2026-06-03
+Last updated: 2026-06-04

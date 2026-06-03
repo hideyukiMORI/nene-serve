@@ -136,8 +136,68 @@ precise geo coordinates, cross-publisher fingerprints.
 
 ---
 
+## API surfaces (ADR 0018)
+
+| Surface | Path | Auth |
+| --- | --- | --- |
+| Public serve | `/public/*` | none (origin-gated, rate-limited) |
+| Admin | `/admin/*` | JWT + `Capability` (ADR 0006) |
+| Service | `/api/*` | scoped service token |
+| System | `GET /health` | none |
+
+---
+
+## Problem Details type slugs (kebab-case)
+
+Base URL: `https://nene-serve.dev/problems/`. Register before use.
+
+| Slug | Use |
+| --- | --- |
+| `validation-failed` | Request body/field validation error (422) |
+| `placement-not-found` | Public placement key not found (404) |
+| `creative-not-found` | Creative id not found (404) |
+| `origin-not-allowed` | Request `Origin` not in placement `allowed_origins` (403) |
+| `click-token-invalid` | Click token expired, used, or unknown (404 / 410) |
+| `too-many-requests` | Rate limit exceeded (429) |
+| `unauthorized` | Missing/invalid bearer token (401) |
+| `insufficient-capability` | Authenticated human lacks required capability (403) |
+| `insufficient-scope` | Service token lacks required scope (403) |
+| `organization-not-resolved` | Tenant could not be resolved (404) |
+| `organization-mismatch` | User org ≠ URL-resolved org (403) |
+
+Validation `errors[].field` uses snake_case paths; `errors[].code` is snake_case.
+
+---
+
+## operationId stems (camelCase)
+
+Shape `{verb}{Resource}` / `{verb}{Resource}ById`. Stable after release; must
+match across OpenAPI, routes, and MCP tool catalog.
+
+| operationId | Surface |
+| --- | --- |
+| `getHealth` | System |
+| `serveCreative`, `recordImpression`, `redirectClick` | Public serve |
+| `login`, `getCurrentUser` | Admin auth |
+| `listPlacements`, `getPlacementById`, `createPlacement`, `updatePlacement` | Admin |
+| `listCreatives`, `createCreative`, `publishCreative` | Admin |
+| `getDeliveryPlan`, `updateDeliveryPlan` | Admin |
+| `getPlacementMetrics`, `exportMetrics` | Admin / Service (read) |
+
+---
+
 ## MCP tools (planned naming)
 
 `listServePlacements`, `getPlacementMetrics`, `proposeDeliveryPlanChange`, …
+(read-first; audited writes; Serve OpenAPI only — ADR 0018).
+
+---
+
+## Environment variables (security)
+
+| Variable | Purpose |
+| --- | --- |
+| `NENE_SERVE_JWT_SECRET` | Admin JWT signing secret (`.env` only) |
+| `NENE_SERVE_CLICK_TOKEN_TTL` | Click token TTL; default `900` (15 min) |
 
 Last updated: 2026-06-04
