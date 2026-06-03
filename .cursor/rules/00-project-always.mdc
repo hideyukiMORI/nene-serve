@@ -1,0 +1,23 @@
+---
+description: NeNe Serve project rules
+alwaysApply: true
+---
+
+# Project Rules
+
+- Canonical docs: `README.md`, `AGENTS.md`, `docs/explanation/scope-contract.md`, `docs/explanation/serve-embed-spec.md`, `docs/explanation/measurement-spec.md`.
+- **NeNe Serve = ad serving & analytics only** (ADR 0009). No contact forms, chat scenarios, billing issuance, bank CSV, or reconciliation.
+- **Six-locale application** (ADR 0011): UI strings in `locales/` only — not bilingual repo docs.
+- **Repository docs: English only** (ADR 0008).
+- **Term registry:** `docs/explanation/terminology.md` — typos block merge.
+- Siblings: HTTP only (ADR 0002). Never reference or implement another product's domain (especially payment matching / dunning).
+
+## Local Port Registry
+
+| Project | HTTP | phpMyAdmin | MySQL |
+|---|---|---|---|
+| NeNe Contact | 8900 | 8901 | 3391 |
+| **NeNe Serve** | **8910** | **8911** | **3392** |
+| nene-concierge | 8090 | 8091 | 3390 |
+
+Update compose, `.env.example`, and Vite proxy together when changing ports.

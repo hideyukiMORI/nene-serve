@@ -1,0 +1,13 @@
+---
+description: Issue-driven workflow
+alwaysApply: true
+---
+
+# Issue Driven Workflow
+
+- All changes require a GitHub Issue first.
+- Read `docs/roadmap.md`, `docs/milestones/`, `docs/todo/current.md` before starting.
+- Never push directly to `main`. Branch: `type/issue-number-summary`.
+- Commits: Conventional Commits, English, `(#issue)` in subject (ADR 0008).
+- PR: `Closes #number` + checklist from `docs/review/`.
+- Canonical: `docs/workflow.md`, `docs/development/commit-conventions.md`.

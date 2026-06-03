@@ -1,0 +1,12 @@
+---
+description: Terminology — zero tolerance
+alwaysApply: true
+---
+
+# Terminology
+
+**`docs/explanation/terminology.md` is the single source of truth.**
+
+Forbidden in this repo: unregistered terms, typos, and **Clear/Profile reconciliation vocabulary** (`reconciliation`, `dunning`, `bank_transaction`, etc.) unless explicitly describing what Serve does **not** do in scope-contract DON'T rows.
+
+Serve domain words: `placement`, `creative`, `campaign`, `impression`, `click`, `serve.js` — never `inquiry` or `submission` for ad events.
