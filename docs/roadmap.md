@@ -10,7 +10,9 @@ Org/auth, placement + image creative, serve API, imp/click, daily metrics CSV, l
 
 ## Phase 2: Rich creatives
 
-Video, HTML5 bundle + review queue, frequency cap, charts polish.
+Video, HTML5 bundle + review queue, frequency cap, charts polish. **Consent UI
+(six-locale) + data-subject-request tooling** land here — gated by privacy
+compliance (ADR 0016/0017); frequency-cap buckets are consent-gated.
 
 ## Phase 3: Marketplace
 

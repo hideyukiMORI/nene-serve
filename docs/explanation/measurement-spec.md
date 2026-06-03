@@ -14,6 +14,13 @@ An **impression** is recorded when:
 
 **Not counted:** API errors, empty fallback with no creative, bots blocked by rate limit (optional `blocked` reason code).
 
+**Consent gating:** non-essential measurement beacons (cross-visit identifiers,
+frequency-cap `visitor_bucket`) **MUST NOT** fire before required consent, and not
+at all when `measurement_enabled=false` — see
+[`privacy-and-ad-compliance.md`](./privacy-and-ad-compliance.md) §3 and
+[ADR 0017](../adr/0017-consent-and-lawful-basis.md). Essential serving is
+unaffected.
+
 Fields (minimum): `impression_id`, `placement_id`, `creative_id`, `organization_id`, `occurred_at`, `country_code` (optional), `placement_page_url` (truncated), `visitor_bucket` (hashed, no raw cookie in MVP).
 
 ---
@@ -74,6 +81,7 @@ figures.
 
 - MCP read tools expose aggregated metrics only by default.
 - Raw IP or visitor identifiers are **excluded** unless admin tool sets `include_sensitive=true` (audit logged).
+- Advertisers (marketplace) receive **aggregated metrics only** — never raw visitor identifiers (privacy doc N8).
 
 ---
 

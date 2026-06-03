@@ -94,10 +94,26 @@ When marketplace mode (Phase 3+) introduces advertiser money, the following are
 
 ---
 
+## Privacy & data-protection boundary (binding)
+
+Full rules in
+[`privacy-and-ad-compliance.md`](./privacy-and-ad-compliance.md):
+
+- **Operator is the data controller**; Serve is self-hosted software, **no
+  third-party data sharing by default** (ADR 0016).
+- **Consent-gated non-essential measurement**; essential serving needs no
+  consent; `measurement_enabled=false` serves without beacons (ADR 0017).
+- **Data minimization**: hashed `visitor_bucket`, truncated URLs, no raw PII in
+  event tables; advertisers get aggregates only. Two retention regimes
+  (privacy-first vs statutory billing) are never conflated.
+
+---
+
 ## Related
 
 - [`../integrations/sibling-products.md`](../integrations/sibling-products.md)
 - [`billing-and-accounting-compliance.md`](./billing-and-accounting-compliance.md) (binding)
-- ADR 0011 (locales), ADR 0012 (measurement), ADR 0014 (money SSOT boundary), ADR 0015 (billing integrity)
+- [`privacy-and-ad-compliance.md`](./privacy-and-ad-compliance.md) (binding)
+- ADR 0011 (locales), ADR 0012 (measurement), ADR 0014 (money SSOT boundary), ADR 0015 (billing integrity), ADR 0016 (controller model), ADR 0017 (consent)
 
 Last updated: 2026-06-04
