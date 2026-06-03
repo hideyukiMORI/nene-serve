@@ -26,6 +26,9 @@
 - [x] Privacy/data-protection (binding): `docs/explanation/privacy-and-ad-compliance.md`
 - [x] ADR 0016 (self-hosted data-controller model), ADR 0017 (consent & lawful basis)
 - [x] Self-review checklist: `docs/review/privacy-compliance.md`; registered privacy/consent terminology
+- [x] API security (binding): `docs/explanation/api-security-spec.md`
+- [x] ADR 0018 (API surface & auth model), ADR 0019 (token & redirect safety)
+- [x] Self-review checklist: `docs/review/api-security.md`; registered Problem Details slugs + operationId stems
 
 ## Notes
 
@@ -33,5 +36,6 @@
 - Ports: **8910 / 8911 / 3392**.
 - **Serve is tax-neutral and not the books of account** (ADR 0014/0015); Phase 3 marketplace is gated by `docs/review/billing-compliance.md`.
 - **Operator is the data controller; privacy by default** (ADR 0016/0017); measurement changes are gated by `docs/review/privacy-compliance.md`.
+- **Three separated API surfaces; fail closed** (ADR 0018/0019); endpoint changes are gated by `docs/review/api-security.md`.
 
 Last updated: 2026-06-04

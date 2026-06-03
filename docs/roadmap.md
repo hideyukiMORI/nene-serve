@@ -6,7 +6,10 @@ Scope, measurement, serve.js spec, six-locale ADR, sibling map, creative sandbox
 
 ## Phase 1: Foundation
 
-Org/auth, placement + image creative, serve API, imp/click, daily metrics CSV, locale CI.
+Org/auth, placement + image creative, serve API, imp/click, daily metrics CSV,
+locale CI. **API security baseline** (three surfaces, origin gating, rate limits,
+short-lived click tokens, no open redirect) is gated by `docs/review/api-security.md`
+(ADR 0018/0019).
 
 ## Phase 2: Rich creatives
 

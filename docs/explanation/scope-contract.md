@@ -94,6 +94,19 @@ When marketplace mode (Phase 3+) introduces advertiser money, the following are
 
 ---
 
+## API security boundary (binding)
+
+Full rules in [`api-security-spec.md`](./api-security-spec.md):
+
+- **Three surfaces, three trust levels** (ADR 0018): `/public/*` unauthenticated +
+  origin-gated + rate-limited; `/admin/*` JWT + `Capability` (ADR 0006);
+  `/api/*` scoped service token. Fail closed; tenant isolation absolute.
+- **No open redirect, opaque short-lived tokens, idempotent beacons** (ADR 0019);
+  no secrets/PII on public responses; CORS never `*` for credentialed routes;
+  blocked requests carry reason codes (no silent metric drop).
+
+---
+
 ## Privacy & data-protection boundary (binding)
 
 Full rules in
@@ -114,6 +127,7 @@ Full rules in
 - [`../integrations/sibling-products.md`](../integrations/sibling-products.md)
 - [`billing-and-accounting-compliance.md`](./billing-and-accounting-compliance.md) (binding)
 - [`privacy-and-ad-compliance.md`](./privacy-and-ad-compliance.md) (binding)
-- ADR 0011 (locales), ADR 0012 (measurement), ADR 0014 (money SSOT boundary), ADR 0015 (billing integrity), ADR 0016 (controller model), ADR 0017 (consent)
+- [`api-security-spec.md`](./api-security-spec.md) (binding)
+- ADR 0011 (locales), ADR 0012 (measurement), ADR 0014 (money SSOT boundary), ADR 0015 (billing integrity), ADR 0016 (controller model), ADR 0017 (consent), ADR 0018 (API surfaces), ADR 0019 (token & redirect safety)
 
 Last updated: 2026-06-04
