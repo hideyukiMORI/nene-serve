@@ -31,6 +31,13 @@ Single source of truth for identifiers. Register new terms in the same PR.
 | Impression event | `impression` | `Impression` |
 | Click event | `click` | `Click` |
 | Click redirect token | `click_token` | string |
+| Creative review status | `review_status` | enum: `draft`, `submitted`, `in_review`, `approved`, `rejected`, `changes_requested` |
+| Creative version | `creative_version` | integer ≥ 1 |
+| Review reason | `review_reason` | string |
+| HTML5 bundle id | `bundle_id` | string |
+| Bundle byte size | `bundle_size_bytes` | integer |
+| Malware scan status | `scan_status` | enum: `pending`, `clean`, `flagged` |
+| Self-approval override | `self_approval_override` | boolean (audited) |
 | Advertiser (Phase 3+) | `advertiser` | `Advertiser` |
 | Budget (Phase 3+) | `budget_cents` | integer |
 
@@ -111,6 +118,11 @@ precise geo coordinates, cross-publisher fingerprints.
 | `paused` | Temporarily off |
 | `archived` | Historical only |
 
+Creative **`review_status`** (separate axis, ADR 0020): `draft`, `submitted`,
+`in_review`, `approved`, `rejected`, `changes_requested`. Only `approved`
+creatives in an `active` campaign serve. Approval needs the **`review_creatives`**
+capability; self-approval is disallowed by default.
+
 ---
 
 ## JSON
@@ -156,6 +168,11 @@ Base URL: `https://nene-serve.dev/problems/`. Register before use.
 | `validation-failed` | Request body/field validation error (422) |
 | `placement-not-found` | Public placement key not found (404) |
 | `creative-not-found` | Creative id not found (404) |
+| `creative-not-approved` | Creative is not in `approved` state for the action (409) |
+| `invalid-review-transition` | Disallowed review-status change (409) |
+| `self-approval-forbidden` | Submitter cannot approve own creative without override (403) |
+| `creative-scan-failed` | HTML5 bundle scan is not `clean` (422) |
+| `destination-url-not-registered` | Redirect target not registered on the creative (422) |
 | `origin-not-allowed` | Request `Origin` not in placement `allowed_origins` (403) |
 | `click-token-invalid` | Click token expired, used, or unknown (404 / 410) |
 | `too-many-requests` | Rate limit exceeded (429) |

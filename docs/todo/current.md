@@ -29,6 +29,9 @@
 - [x] API security (binding): `docs/explanation/api-security-spec.md`
 - [x] ADR 0018 (API surface & auth model), ADR 0019 (token & redirect safety)
 - [x] Self-review checklist: `docs/review/api-security.md`; registered Problem Details slugs + operationId stems
+- [x] Creative review & safety (binding): `docs/explanation/creative-review-and-safety.md`
+- [x] ADR 0020 (review workflow & approval gating), ADR 0021 (acceptance & sandbox safety)
+- [x] Self-review checklist: `docs/review/creative-review.md`; registered review states / scan / creative Problem Details slugs
 
 ## Notes
 
@@ -37,5 +40,6 @@
 - **Serve is tax-neutral and not the books of account** (ADR 0014/0015); Phase 3 marketplace is gated by `docs/review/billing-compliance.md`.
 - **Operator is the data controller; privacy by default** (ADR 0016/0017); measurement changes are gated by `docs/review/privacy-compliance.md`.
 - **Three separated API surfaces; fail closed** (ADR 0018/0019); endpoint changes are gated by `docs/review/api-security.md`.
+- **Only approved creatives serve** (ADR 0020/0021); creative changes are gated by `docs/review/creative-review.md`.
 
 Last updated: 2026-06-04

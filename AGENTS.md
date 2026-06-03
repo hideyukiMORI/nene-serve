@@ -21,6 +21,7 @@ See [ADR 0009](docs/adr/0009-separate-from-contact-and-concierge.md).
 - **Privacy & ad compliance (binding):** `docs/explanation/privacy-and-ad-compliance.md`
 - **Billing & accounting compliance (binding):** `docs/explanation/billing-and-accounting-compliance.md`
 - **API & serve.js security (binding):** `docs/explanation/api-security-spec.md`
+- **Creative review & sandbox safety (binding):** `docs/explanation/creative-review-and-safety.md`
 - **Six locales (binding):** `docs/adr/0011-six-locale-application.md`, `docs/development/i18n.md`
 - **Terminology registry (binding):** `docs/explanation/terminology.md`
 - **Sibling integrations:** `docs/integrations/sibling-products.md`
@@ -34,6 +35,7 @@ See [ADR 0009](docs/adr/0009-separate-from-contact-and-concierge.md).
 - **No tax computation and no qualified invoices in Serve; money SSOT = Invoice** (ADR 0014). Billing-relevant counts are append-only, closed-period immutable, reconciled, idempotent (ADR 0015)
 - **Operator is the data controller; privacy by default** (ADR 0016/0017): consent-gate non-essential beacons, minimize data, hash visitor identifiers, no raw PII in event tables, advertisers get aggregates only
 - **Keep API surfaces separate** (ADR 0018/0019): `/public/*` unauthenticated + origin-gated + rate-limited, `/admin/*` JWT+Capability, `/api/*` scoped token; no open redirect, no `*` CORS for credentialed routes, opaque idempotent tokens, no secrets/PII in public responses
+- **Only approved creatives serve** (ADR 0020/0021): respect the review state machine, four-eyes approval (no self-approval by default), immutable approved versions (edits → new version → re-review), html5 bundles malware-scanned + sandboxed iframe + strict CSP; never raw `third_party_tag`
 - **Repository engineering docs: English only** (ADR 0008). **UI strings: six locales** in `locales/`
 - Namespace: `NeneServe\`
 - Siblings via **HTTP only** (ADR 0002)

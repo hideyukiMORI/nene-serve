@@ -9,13 +9,16 @@ Scope, measurement, serve.js spec, six-locale ADR, sibling map, creative sandbox
 Org/auth, placement + image creative, serve API, imp/click, daily metrics CSV,
 locale CI. **API security baseline** (three surfaces, origin gating, rate limits,
 short-lived click tokens, no open redirect) is gated by `docs/review/api-security.md`
-(ADR 0018/0019).
+(ADR 0018/0019). Image creatives still pass the **approval gate** (only `approved`
+serves) — full review queue is Phase 2 (ADR 0020).
 
 ## Phase 2: Rich creatives
 
 Video, HTML5 bundle + review queue, frequency cap, charts polish. **Consent UI
 (six-locale) + data-subject-request tooling** land here — gated by privacy
-compliance (ADR 0016/0017); frequency-cap buckets are consent-gated.
+compliance (ADR 0016/0017); frequency-cap buckets are consent-gated. **Creative
+review workflow + malware scan + sandbox/CSP** (ADR 0020/0021) gate html5/video,
+per `docs/review/creative-review.md`.
 
 ## Phase 3: Marketplace
 
