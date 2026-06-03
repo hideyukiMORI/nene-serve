@@ -41,7 +41,7 @@ tracks impressions and clicks, and reports time-series metrics with CSV export â
 | **Scope contract (GOAL / DO / DON'T)** | [`docs/explanation/scope-contract.md`](./docs/explanation/scope-contract.md) |
 | **Measurement rules (binding)** | [`docs/explanation/measurement-spec.md`](./docs/explanation/measurement-spec.md) |
 | **Embed / serve.js contract** | [`docs/explanation/serve-embed-spec.md`](./docs/explanation/serve-embed-spec.md) |
-| **Privacy & ad compliance** | [`docs/explanation/privacy-and-ad-compliance.md`](./docs/explanation/privacy-and-ad-compliance.md) |
+| **Privacy, data protection & consent (binding)** | [`docs/explanation/privacy-and-ad-compliance.md`](./docs/explanation/privacy-and-ad-compliance.md) |
 | **Billing & accounting compliance (binding)** | [`docs/explanation/billing-and-accounting-compliance.md`](./docs/explanation/billing-and-accounting-compliance.md) |
 | **i18n (six locales)** | [`docs/development/i18n.md`](./docs/development/i18n.md) |
 | **Terminology registry (binding)** | [`docs/explanation/terminology.md`](./docs/explanation/terminology.md) |

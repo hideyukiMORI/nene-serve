@@ -23,11 +23,15 @@
 - [x] ADR 0015 (billing-relevant measurement integrity)
 - [x] Self-review checklist: `docs/review/billing-compliance.md`
 - [x] Hardened Invoice handoff contract; registered marketplace billing terminology
+- [x] Privacy/data-protection (binding): `docs/explanation/privacy-and-ad-compliance.md`
+- [x] ADR 0016 (self-hosted data-controller model), ADR 0017 (consent & lawful basis)
+- [x] Self-review checklist: `docs/review/privacy-compliance.md`; registered privacy/consent terminology
 
 ## Notes
 
 - Engineering docs: **English**. UI: **en, ja, zh-Hans, ko, de, es**.
 - Ports: **8910 / 8911 / 3392**.
 - **Serve is tax-neutral and not the books of account** (ADR 0014/0015); Phase 3 marketplace is gated by `docs/review/billing-compliance.md`.
+- **Operator is the data controller; privacy by default** (ADR 0016/0017); measurement changes are gated by `docs/review/privacy-compliance.md`.
 
 Last updated: 2026-06-04

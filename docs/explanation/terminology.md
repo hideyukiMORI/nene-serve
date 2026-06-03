@@ -72,6 +72,30 @@ counters only**.
 
 ---
 
+## Privacy & consent
+
+Governed by [`privacy-and-ad-compliance.md`](./privacy-and-ad-compliance.md)
+(binding), ADR 0016, ADR 0017.
+
+| Concept | JSON / table | PHP |
+| --- | --- | --- |
+| Hashed visitor identifier | `visitor_bucket` | string (hashed) |
+| Per-placement tracking switch | `measurement_enabled` | boolean |
+| Consent mode | `consent_mode` | enum: `required`, `not_required` |
+| Recorded consent signal | `consent_state` | enum: `granted`, `denied`, `unknown` |
+| Lawful basis | `lawful_basis` | enum: `consent`, `legitimate_interest`, `not_applicable` |
+| Retention window (days) | `retention_days` | integer |
+| Data subject request | `data_subject_request` | `DataSubjectRequest` |
+| DSR kind | `dsr_kind` | enum: `export`, `erasure` |
+| Erasure tombstone | `erased_at` | timestamp (additive, never a count edit) |
+| Truncated page URL | `placement_page_url` | string (truncated) |
+| Country code | `country_code` | string (ISO 3166-1 alpha-2) |
+
+**Forbidden in event tables (raw PII):** `email`, `ip_address` (long-term raw),
+precise geo coordinates, cross-publisher fingerprints.
+
+---
+
 ## Layer suffixes
 
 `Handler`, `UseCase`, `RepositoryInterface`, `Pdo*Repository` — never `Controller`, `Service`, `Repo`.

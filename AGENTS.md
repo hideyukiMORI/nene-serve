@@ -31,6 +31,7 @@ See [ADR 0009](docs/adr/0009-separate-from-contact-and-concierge.md).
 - **Identifiers** must match `docs/explanation/terminology.md`
 - Do **not** add contact forms, chat scenarios, bank CSV, reconciliation, or invoice issuance
 - **No tax computation and no qualified invoices in Serve; money SSOT = Invoice** (ADR 0014). Billing-relevant counts are append-only, closed-period immutable, reconciled, idempotent (ADR 0015)
+- **Operator is the data controller; privacy by default** (ADR 0016/0017): consent-gate non-essential beacons, minimize data, hash visitor identifiers, no raw PII in event tables, advertisers get aggregates only
 - **Repository engineering docs: English only** (ADR 0008). **UI strings: six locales** in `locales/`
 - Namespace: `NeneServe\`
 - Siblings via **HTTP only** (ADR 0002)
