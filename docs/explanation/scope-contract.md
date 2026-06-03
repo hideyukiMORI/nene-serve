@@ -94,6 +94,21 @@ When marketplace mode (Phase 3+) introduces advertiser money, the following are
 
 ---
 
+## Creative review & safety boundary (binding)
+
+Full rules in
+[`creative-review-and-safety.md`](./creative-review-and-safety.md):
+
+- **Nothing serves without an approved, safe review trail** (ADR 0020): review
+  state machine, approval needs `review_creatives`, self-approval disallowed by
+  default, approved versions immutable (edits → new version → re-review).
+- **Acceptance & sandbox safety** (ADR 0021): per-type acceptance, html5 bundles
+  malware-scanned + sandboxed iframe + strict CSP (no `eval`, no top-navigation,
+  egress allowlisted), `third_party_tag` forbidden, `destination_url` https +
+  registered (no open redirect).
+
+---
+
 ## API security boundary (binding)
 
 Full rules in [`api-security-spec.md`](./api-security-spec.md):
@@ -128,6 +143,7 @@ Full rules in
 - [`billing-and-accounting-compliance.md`](./billing-and-accounting-compliance.md) (binding)
 - [`privacy-and-ad-compliance.md`](./privacy-and-ad-compliance.md) (binding)
 - [`api-security-spec.md`](./api-security-spec.md) (binding)
-- ADR 0011 (locales), ADR 0012 (measurement), ADR 0014 (money SSOT boundary), ADR 0015 (billing integrity), ADR 0016 (controller model), ADR 0017 (consent), ADR 0018 (API surfaces), ADR 0019 (token & redirect safety)
+- [`creative-review-and-safety.md`](./creative-review-and-safety.md) (binding)
+- ADR 0011 (locales), ADR 0012 (measurement), ADR 0014 (money SSOT boundary), ADR 0015 (billing integrity), ADR 0016 (controller model), ADR 0017 (consent), ADR 0018 (API surfaces), ADR 0019 (token & redirect safety), ADR 0020 (creative review), ADR 0021 (creative acceptance & sandbox)
 
 Last updated: 2026-06-04

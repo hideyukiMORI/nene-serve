@@ -8,4 +8,5 @@
 - [ ] Billing-relevant change ran `docs/review/billing-compliance.md`
 - [ ] Privacy-touching change ran `docs/review/privacy-compliance.md`
 - [ ] API/endpoint change ran `docs/review/api-security.md`; new Problem Details slugs / `operationId`s registered in `terminology.md`
+- [ ] Creative/serving change ran `docs/review/creative-review.md` (only `approved` creatives serve; html5 scanned + sandboxed)
 - [ ] English only in docs/ (ADR 0008)

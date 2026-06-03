@@ -52,6 +52,7 @@ following are **non-billable** and **MUST NOT** accrue spend:
   dropped silently)
 - Placements with `measurement_enabled=false`
 - Events outside an **active, funded** campaign window
+- Serves of a creative that is not `approved` (creative review — ADR 0020)
 
 Reporting and billing use the **same** definition and the **same** event records.
 Once a `billing_period` is **closed**, its billable counts are **immutable**;

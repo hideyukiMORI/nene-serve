@@ -7,7 +7,10 @@
 ## Serving core
 
 - **Placement** — `public_placement_key`, `allowed_origins`, locale defaults
-- **Creative** — type, asset URLs or bundle id, `destination_url`, review status
+- **Creative** — type, asset URLs or `bundle_id`, `destination_url`,
+  `review_status` (ADR 0020 workflow), `creative_version`, `scan_status` (html5).
+  Approved versions are immutable; edits create a new version requiring re-review.
+  Only `approved` creatives in an `active` campaign serve (ADR 0021 acceptance)
 - **Campaign** — groups creatives; schedule; status
 - **DeliveryPlan** — weights, caps, `default_creative_id`
 - **Impression**, **Click** — append-only events (partition-friendly)
