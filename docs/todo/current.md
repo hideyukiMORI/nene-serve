@@ -16,9 +16,18 @@
 - [ ] #5 Multi-tenant + auth
 - [ ] #6 OpenAPI baseline
 
+## Governance hardening (2026-06-04)
+
+- [x] Billing & accounting compliance (binding): `docs/explanation/billing-and-accounting-compliance.md`
+- [x] ADR 0014 (Serve is not the books of account; money SSOT = Invoice; tax-neutral)
+- [x] ADR 0015 (billing-relevant measurement integrity)
+- [x] Self-review checklist: `docs/review/billing-compliance.md`
+- [x] Hardened Invoice handoff contract; registered marketplace billing terminology
+
 ## Notes
 
 - Engineering docs: **English**. UI: **en, ja, zh-Hans, ko, de, es**.
 - Ports: **8910 / 8911 / 3392**.
+- **Serve is tax-neutral and not the books of account** (ADR 0014/0015); Phase 3 marketplace is gated by `docs/review/billing-compliance.md`.
 
-Last updated: 2026-06-03
+Last updated: 2026-06-04

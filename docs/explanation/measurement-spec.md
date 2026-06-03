@@ -29,6 +29,30 @@ Direct links to `destination_url` bypassing redirect **do not** count as Serve c
 
 ---
 
+## Billable vs non-billable (marketplace mode)
+
+When a count can incur advertiser spend it is **billing-relevant** and held to the
+integrity standard in
+[`billing-and-accounting-compliance.md`](./billing-and-accounting-compliance.md)
+and [ADR 0015](../adr/0015-billing-relevant-measurement-integrity.md).
+
+A **billable** event is a counted impression/click eligible to incur spend. The
+following are **non-billable** and **MUST NOT** accrue spend:
+
+- Fallback / default-creative serves (no funded advertiser behind them)
+- API errors and empty serves
+- Bot / invalid-traffic filtered events (recorded with a reason code, never
+  dropped silently)
+- Placements with `measurement_enabled=false`
+- Events outside an **active, funded** campaign window
+
+Reporting and billing use the **same** definition and the **same** event records.
+Once a `billing_period` is **closed**, its billable counts are **immutable**;
+corrections are additive adjustments in a later period, never edits to closed
+figures.
+
+---
+
 ## Metrics derived
 
 | Metric | Formula |
@@ -55,7 +79,8 @@ Direct links to `destination_url` bypassing redirect **do not** count as Serve c
 
 ## Related
 
-- ADR 0012
+- ADR 0012, ADR 0015 (billing-relevant integrity)
 - [`privacy-and-ad-compliance.md`](./privacy-and-ad-compliance.md)
+- [`billing-and-accounting-compliance.md`](./billing-and-accounting-compliance.md) (binding)
 
-Last updated: 2026-06-03
+Last updated: 2026-06-04

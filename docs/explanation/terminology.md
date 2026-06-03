@@ -38,6 +38,40 @@ Single source of truth for identifiers. Register new terms in the same PR.
 
 ---
 
+## Marketplace billing (Phase 3+)
+
+Governed by [`billing-and-accounting-compliance.md`](./billing-and-accounting-compliance.md)
+(binding), ADR 0014, ADR 0015. All money: integer `*_cents`, **net of tax**.
+
+| Concept | JSON / table | PHP |
+| --- | --- | --- |
+| Spent to date (net) | `spent_cents` | integer ≥ 0 |
+| Billable impression | `billable_impression` | derived |
+| Billable click | `billable_click` | derived |
+| Non-billable reason code | `non_billable_reason` | enum: `fallback`, `error`, `bot_filtered`, `opt_out`, `unfunded` |
+| Billing period | `billing_period` | `BillingPeriod` |
+| Spend snapshot (versioned) | `spend_snapshot` | `SpendSnapshot` |
+| Pricing rule + version | `pricing_rule`, `pricing_rule_version` | `PricingRule` |
+| Pricing model | `pricing_model` | enum: `cpm`, `cpc`, `flat` |
+| Reconciliation run | `reconciliation_run` | `ReconciliationRun` |
+| Invoice handoff reference | `external_reference` | string (idempotency key) |
+| Invoice linkage | `invoice_client_id`, `invoice_payment_id` | FK (Invoice-side ids) |
+| Auto-pause flag | `pause_on_budget_exhausted` | boolean |
+
+**Forbidden in Serve (tax/accounting — belong to Invoice):** `tax_cents`,
+`tax_rate_bps`, `is_qualified_invoice`, `registration_number`, `invoice_number`,
+`subtotal_cents`/`total_cents` *as document totals*. Serve stores **net spend
+counters only**.
+
+### Billing period / campaign funding status
+
+| Owner | Values |
+| --- | --- |
+| `billing_period.status` | `open`, `closed`, `reconciled`, `handed_off` |
+| campaign funding | `unfunded`, `funded`, `exhausted` |
+
+---
+
 ## Layer suffixes
 
 `Handler`, `UseCase`, `RepositoryInterface`, `Pdo*Repository` — never `Controller`, `Service`, `Repo`.
@@ -82,4 +116,4 @@ Single source of truth for identifiers. Register new terms in the same PR.
 
 `listServePlacements`, `getPlacementMetrics`, `proposeDeliveryPlanChange`, …
 
-Last updated: 2026-06-03
+Last updated: 2026-06-04
