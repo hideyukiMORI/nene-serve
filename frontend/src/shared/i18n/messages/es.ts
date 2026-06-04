@@ -107,4 +107,17 @@ export const es: MessageCatalog = {
   'marketplace.column.version': 'Versión',
   'marketplace.column.funding': 'Financiación',
   'marketplace.column.budget': 'Presupuesto',
+
+  'marketplace.create.advertiser': 'Nuevo anunciante',
+  'marketplace.create.pricingRule': 'Nueva regla de precios',
+  'marketplace.create.campaign': 'Nueva campaña',
+  'marketplace.field.advertiser': 'Anunciante',
+  'marketplace.field.pricingRule': 'Regla de precios',
+  'marketplace.field.rateCents': 'Tarifa (céntimos)',
+  'marketplace.field.budgetCents': 'Presupuesto (céntimos)',
+  'marketplace.action.create': 'Crear',
+  'marketplace.action.creating': 'Creando…',
+  'marketplace.createError': 'No se pudo crear. Revise el formulario e inténtelo de nuevo.',
+  'marketplace.validation.required': 'Este campo es obligatorio.',
+  'marketplace.validation.nonNegative': 'Introduzca 0 o un número entero positivo.',
 }

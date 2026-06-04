@@ -107,4 +107,17 @@ export const ko: MessageCatalog = {
   'marketplace.column.version': '버전',
   'marketplace.column.funding': '자금 상태',
   'marketplace.column.budget': '예산',
+
+  'marketplace.create.advertiser': '광고주 추가',
+  'marketplace.create.pricingRule': '가격 규칙 추가',
+  'marketplace.create.campaign': '캠페인 추가',
+  'marketplace.field.advertiser': '광고주',
+  'marketplace.field.pricingRule': '가격 규칙',
+  'marketplace.field.rateCents': '단가(센트)',
+  'marketplace.field.budgetCents': '예산(센트)',
+  'marketplace.action.create': '생성',
+  'marketplace.action.creating': '생성 중…',
+  'marketplace.createError': '생성할 수 없습니다. 입력을 확인한 후 다시 시도하세요.',
+  'marketplace.validation.required': '필수 항목입니다.',
+  'marketplace.validation.nonNegative': '0 이상의 정수를 입력하세요.',
 }
