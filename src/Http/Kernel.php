@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace NeneServe\Http;
 
+use NeneServe\Assets\AssetRepositoryInterface;
+use NeneServe\Assets\InMemoryAssetRepository;
+use NeneServe\Assets\UseCase\UploadAssetUseCase;
 use NeneServe\Audit\AuditLogInterface;
 use NeneServe\Audit\InMemoryAuditLog;
 use NeneServe\Http\Admin\AcceptInvitationHandler;
@@ -43,10 +46,12 @@ use NeneServe\Http\Admin\ReviseCreativeHandler;
 use NeneServe\Http\Admin\TestSmtpSettingsHandler;
 use NeneServe\Http\Admin\TransitionCreativeHandler;
 use NeneServe\Http\Admin\UpdateSmtpSettingsHandler;
+use NeneServe\Http\Admin\UploadAssetHandler;
 use NeneServe\Http\Auth\BearerTokenMiddleware;
 use NeneServe\Http\Auth\Jwt;
 use NeneServe\Http\Auth\ServiceTokenMiddleware;
 use NeneServe\Http\Auth\UnauthorizedException;
+use NeneServe\Http\PublicApi\AssetHandler;
 use NeneServe\Http\PublicApi\CreativeFrameHandler;
 use NeneServe\Http\PublicApi\RecordConversionHandler;
 use NeneServe\Http\PublicApi\RecordImpressionHandler;
@@ -123,6 +128,8 @@ use NeneServe\Serving\UseCase\TransitionCreativeUseCase;
 use NeneServe\Settings\InMemorySmtpSettingsRepository;
 use NeneServe\Settings\SmtpConfigResolver;
 use NeneServe\Settings\SmtpSettingsRepositoryInterface;
+use NeneServe\Storage\InMemoryStorage;
+use NeneServe\Storage\StorageInterface;
 use NeneServe\Support\Crypto;
 use NeneServe\Support\DevFixtures;
 use NeneServe\Support\NullTransactionManager;
@@ -192,6 +199,8 @@ final class Kernel
     private readonly MailerFactoryInterface $mailerFactory;
     private readonly Crypto $crypto;
     private readonly InvitationRepositoryInterface $invitations;
+    private readonly AssetRepositoryInterface $assets;
+    private readonly StorageInterface $storage;
     private readonly Jwt $jwt;
 
     public function __construct(
@@ -224,6 +233,8 @@ final class Kernel
         ?MailerFactoryInterface $mailerFactory = null,
         ?Crypto $crypto = null,
         ?InvitationRepositoryInterface $invitations = null,
+        ?AssetRepositoryInterface $assets = null,
+        ?StorageInterface $storage = null,
     ) {
         $this->json = new JsonResponseFactory();
         $this->users = $users ?? DevFixtures::users();
@@ -254,6 +265,8 @@ final class Kernel
         $this->mailerFactory = $mailerFactory ?? new SmtpMailerFactory();
         $this->crypto = $crypto ?? new Crypto();
         $this->invitations = $invitations ?? new InMemoryInvitationRepository();
+        $this->assets = $assets ?? new InMemoryAssetRepository();
+        $this->storage = $storage ?? new InMemoryStorage();
         $this->jwt = $jwt ?? new Jwt(self::resolveSecret());
         $this->auth = new BearerTokenMiddleware($this->jwt, $this->users);
         $this->serviceAuth = new ServiceTokenMiddleware($serviceTokens ?? DevFixtures::serviceTokens());
@@ -313,6 +326,10 @@ final class Kernel
 
         $frame = new CreativeFrameHandler($this->tokens, $this->creatives, $this->rateLimiter, $this->json);
         $this->router->add('GET', '/public/frames/{frame_token}', $frame->handle(...));
+
+        // Uploaded creative media, streamed by opaque id (never executed).
+        $asset = new AssetHandler($this->assets, $this->storage, $this->rateLimiter, $this->json);
+        $this->router->add('GET', '/public/assets/{id}', $asset->handle(...));
 
         // Concierge conversion beacon (ADR 0009): append-only, never a Contact submission.
         $conversion = new RecordConversionHandler(
@@ -484,6 +501,12 @@ final class Kernel
 
         $getCreative = new GetCreativeHandler($this->creatives, $this->json);
         $this->router->add('GET', '/admin/creatives/{id}', $this->admin(Capability::ManageCreatives, $getCreative->handle(...)));
+
+        $uploadAsset = new UploadAssetHandler(
+            new UploadAssetUseCase($this->assets, $this->storage, $this->audit, $this->tx),
+            $this->json,
+        );
+        $this->router->add('POST', '/admin/assets', $this->admin(Capability::ManageCreatives, $uploadAsset->handle(...)));
 
         $reviewQueue = new ReviewQueueHandler($this->creatives, $this->json);
         $this->router->add('GET', '/admin/review-queue', $this->admin(Capability::ReviewCreatives, $reviewQueue->handle(...)));

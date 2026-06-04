@@ -128,6 +128,13 @@
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreativeInput" } } } },
         "responses": { "201": { "description": "Created (draft).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Creative" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
     },
+    "/admin/assets": {
+      "post": { "operationId": "uploadAsset", "tags": ["creatives"], "summary": "Upload an image/video asset (base64 JSON; allowlisted content types). Returns the public asset URL.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": {
+          "content_type": { "type": "string", "enum": ["image/png", "image/jpeg", "image/gif", "image/webp", "video/mp4", "video/webm"] }, "data_base64": { "type": "string" }
+        }, "required": ["content_type", "data_base64"] } } } },
+        "responses": { "201": { "description": "Stored.", "content": { "application/json": { "schema": { "type": "object", "properties": { "id": { "type": "string" }, "kind": { "type": "string" }, "content_type": { "type": "string" }, "byte_size": { "type": "integer" }, "asset_url": { "type": "string" } } } } } }, "403": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
+    },
     "/admin/creatives/{id}": {
       "get": { "operationId": "getCreativeById", "tags": ["creatives"], "summary": "Get one creative (admin projection).",
         "parameters": [{ "$ref": "#/components/parameters/Id" }],

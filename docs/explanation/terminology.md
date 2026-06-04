@@ -145,7 +145,8 @@ data has no delivery/measurement/billing/identity meaning.
 `retention.purge_blocked`, `deal.opportunity_sent`, `deal.opportunity_failed`,
 `mcp.change_proposed`, `mcp.change_applied`,
 `settings.smtp_updated`, `settings.smtp_tested`,
-`user.created`, `invitation.sent`, `invitation.accepted`. Register
+`user.created`, `invitation.sent`, `invitation.accepted`,
+`asset.uploaded`. Register
 new actions before use. Mutation audit metadata carries structured
 `before`/`after` (changed fields). Sensitive **reads** (`include_sensitive`
 metrics, DSR export, PII-link reads) are also audited; ordinary reads are not.
@@ -283,6 +284,8 @@ Base URL: `https://nene-serve.dev/problems/`. Register before use.
 | `user-invalid` | Invalid user create input or duplicate email (422) |
 | `invitation-invalid` | Invitation token unknown, used, or expired (404) |
 | `weak-password` | Password below policy on invitation acceptance (422) |
+| `asset-invalid` | Unsupported content type or oversized upload (422) |
+| `asset-not-found` | Uploaded asset id not found (404) |
 
 Validation `errors[].field` uses snake_case paths; `errors[].code` is snake_case.
 
@@ -298,14 +301,14 @@ documented paths == Kernel routes.
 | operationId | Surface |
 | --- | --- |
 | `getHealth` | System |
-| `serveCreative`, `recordImpression`, `redirectClick`, `getCreativeFrame`, `recordConversion` | Public serve |
+| `serveCreative`, `recordImpression`, `redirectClick`, `getCreativeFrame`, `recordConversion`, `getAsset` | Public serve |
 | `login`, `getCurrentUser` | Admin auth |
 | `listUsers`, `createUser` | Admin (tenant-scoped; `manage_users`) |
 | `acceptInvitation`, `getInvitation` | Admin auth (unauthenticated; single-use token) |
 | `listPlacements`, `getPlacementById`, `createPlacement`, `updatePlacement` | Admin |
 | `createPlacement`, `archivePlacement` | Admin (`manage_placements`) |
 | `listCreatives`, `getCreativeById`, `createCreative`, `reviseCreative` | Admin (`manage_creatives`) |
-| `submitCreative`, `getRecordsAsset` | Admin (`manage_creatives`) |
+| `submitCreative`, `getRecordsAsset`, `uploadAsset` | Admin (`manage_creatives`) |
 | `startCreativeReview`, `approveCreative`, `rejectCreative`, `requestCreativeChanges`, `listReviewQueue` | Admin (`review_creatives`) |
 | `publishCreative` | Admin |
 | `getDeliveryPlan`, `updateDeliveryPlan` | Admin |
