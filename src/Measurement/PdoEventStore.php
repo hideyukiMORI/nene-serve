@@ -115,6 +115,22 @@ final class PdoEventStore implements EventStoreInterface
         );
     }
 
+    public function billableCountsForCreatives(string $organizationId, array $creativeIds): array
+    {
+        if ($creativeIds === []) {
+            return ['impressions' => 0, 'clicks' => 0];
+        }
+        $in = implode(',', array_fill(0, count($creativeIds), '?'));
+        $params = array_merge([$organizationId], $creativeIds);
+
+        $impStmt = $this->pdo->prepare("SELECT COUNT(*) FROM impressions WHERE organization_id = ? AND creative_id IN ($in)");
+        $impStmt->execute($params);
+        $clkStmt = $this->pdo->prepare("SELECT COUNT(*) FROM clicks WHERE organization_id = ? AND creative_id IN ($in)");
+        $clkStmt->execute($params);
+
+        return ['impressions' => (int) $impStmt->fetchColumn(), 'clicks' => (int) $clkStmt->fetchColumn()];
+    }
+
     public function visitorBreakdown(string $organizationId, string $fromDate, string $toDate): array
     {
         $stmt = $this->pdo->prepare(

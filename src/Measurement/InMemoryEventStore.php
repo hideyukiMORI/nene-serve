@@ -67,6 +67,25 @@ final class InMemoryEventStore implements EventStoreInterface
         return MetricsAggregator::aggregate($impressions, $this->clicks, $organizationId, $fromDate, $toDate);
     }
 
+    public function billableCountsForCreatives(string $organizationId, array $creativeIds): array
+    {
+        $ids = array_fill_keys($creativeIds, true);
+        $impressions = 0;
+        $clicks = 0;
+        foreach ($this->impressions as $row) {
+            if ($row['org'] === $organizationId && isset($ids[$row['creative']])) {
+                ++$impressions;
+            }
+        }
+        foreach ($this->clicks as $row) {
+            if ($row['org'] === $organizationId && isset($ids[$row['creative']])) {
+                ++$clicks;
+            }
+        }
+
+        return ['impressions' => $impressions, 'clicks' => $clicks];
+    }
+
     public function visitorBreakdown(string $organizationId, string $fromDate, string $toDate): array
     {
         /** @var array<string, array{date: string, placement_id: string, creative_id: string, visitor_bucket: string, impressions: int}> $buckets */

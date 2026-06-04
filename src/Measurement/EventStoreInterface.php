@@ -36,6 +36,16 @@ interface EventStoreInterface
     public function dailyMetrics(string $organizationId, string $fromDate, string $toDate): array;
 
     /**
+     * Billable impression/click counts for a set of creatives (spend derivation,
+     * billing §3.1/§3.4). Counts every recorded event — erased rows keep their
+     * count (privacy erasure forgets the link, never the figure).
+     *
+     * @param list<string> $creativeIds
+     * @return array{impressions: int, clicks: int}
+     */
+    public function billableCountsForCreatives(string $organizationId, array $creativeIds): array;
+
+    /**
      * Sensitive per-visitor breakdown (visitor_bucket level) for an admin tool
      * with `include_sensitive` (measurement-spec MCP/AI). Excludes erased rows
      * and rows without a bucket. The caller MUST gate + audit this access.

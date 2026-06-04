@@ -39,6 +39,7 @@ final class CreateHtml5CreativeUseCase
         string $htmlEntry,
         ?int $width = null,
         ?int $height = null,
+        ?string $campaignId = null,
     ): Creative {
         Html5Acceptance::assertValid($bundleSizeBytes, $assetCount, $destinationUrl, $htmlEntry);
 
@@ -61,6 +62,7 @@ final class CreateHtml5CreativeUseCase
             $bundleId,
             $bundleSizeBytes,
             $scanStatus,
+            $campaignId,
         );
         return $this->tx->transactional(function () use ($creative, $actor, $scanStatus): Creative {
             $this->creatives->save($creative);

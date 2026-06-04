@@ -32,6 +32,8 @@ final class Creative
         public readonly ?string $bundleId = null,
         public readonly ?int $bundleSizeBytes = null,
         public readonly ?ScanStatus $scanStatus = null,
+        /** Marketplace campaign this creative serves under; null = no advertiser money (Phase 1/2). */
+        public readonly ?string $campaignId = null,
     ) {
     }
 
@@ -65,6 +67,7 @@ final class Creative
             $this->bundleId,
             $this->bundleSizeBytes,
             $this->scanStatus,
+            $this->campaignId,
         );
     }
 
@@ -121,6 +124,7 @@ final class Creative
             'bundle_id' => $this->bundleId,
             'bundle_size_bytes' => $this->bundleSizeBytes,
             'scan_status' => $this->scanStatus?->value,
+            'campaign_id' => $this->campaignId,
             'version' => $this->version,
             'review_reason' => $this->reviewReason,
         ];

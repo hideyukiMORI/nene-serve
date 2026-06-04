@@ -8,7 +8,7 @@ use PDO;
 
 final class PdoCreativeRepository implements CreativeRepositoryInterface
 {
-    private const COLUMNS = 'id, organization_id, type, review_status, destination_url, asset_url, width, height, version, submitted_by, review_reason, poster_url, duration_seconds, bundle_id, bundle_size_bytes, scan_status';
+    private const COLUMNS = 'id, organization_id, type, review_status, destination_url, asset_url, width, height, version, submitted_by, review_reason, poster_url, duration_seconds, bundle_id, bundle_size_bytes, scan_status, campaign_id';
 
     public function __construct(
         private readonly PDO $pdo,
@@ -40,8 +40,8 @@ final class PdoCreativeRepository implements CreativeRepositoryInterface
     {
         $stmt = $this->pdo->prepare(
             'REPLACE INTO creatives
-                (id, organization_id, type, review_status, destination_url, asset_url, width, height, version, submitted_by, review_reason, poster_url, duration_seconds, bundle_id, bundle_size_bytes, scan_status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                (id, organization_id, type, review_status, destination_url, asset_url, width, height, version, submitted_by, review_reason, poster_url, duration_seconds, bundle_id, bundle_size_bytes, scan_status, campaign_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         );
         $stmt->execute([
             $creative->id,
@@ -60,6 +60,7 @@ final class PdoCreativeRepository implements CreativeRepositoryInterface
             $creative->bundleId,
             $creative->bundleSizeBytes,
             $creative->scanStatus?->value,
+            $creative->campaignId,
         ]);
     }
 
@@ -83,6 +84,15 @@ final class PdoCreativeRepository implements CreativeRepositoryInterface
             $row['bundle_id'] !== null ? (string) $row['bundle_id'] : null,
             $row['bundle_size_bytes'] !== null ? (int) $row['bundle_size_bytes'] : null,
             $row['scan_status'] !== null ? ScanStatus::from((string) $row['scan_status']) : null,
+            $row['campaign_id'] !== null ? (string) $row['campaign_id'] : null,
         );
+    }
+
+    public function idsByCampaign(string $organizationId, string $campaignId): array
+    {
+        $stmt = $this->pdo->prepare('SELECT id FROM creatives WHERE organization_id = ? AND campaign_id = ?');
+        $stmt->execute([$organizationId, $campaignId]);
+
+        return array_map(static fn ($v): string => (string) $v, $stmt->fetchAll(PDO::FETCH_COLUMN));
     }
 }

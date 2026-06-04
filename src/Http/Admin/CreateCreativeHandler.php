@@ -63,7 +63,7 @@ final class CreateCreativeHandler
         $height = is_int($body['height'] ?? null) ? $body['height'] : null;
 
         try {
-            $creative = $this->createHtml5->execute($context, $destination, $bundleId, $size, $assetCount, $htmlEntry, $width, $height);
+            $creative = $this->createHtml5->execute($context, $destination, $bundleId, $size, $assetCount, $htmlEntry, $width, $height, self::campaignId($body));
         } catch (CreativeValidationException $e) {
             return $this->json->problem(422, 'validation-failed', 'HTML5 bundle rejected', $e->getMessage());
         }
@@ -83,7 +83,7 @@ final class CreateCreativeHandler
         }
 
         try {
-            $creative = $this->createImage->execute($context, $destination, $asset, $width, $height);
+            $creative = $this->createImage->execute($context, $destination, $asset, $width, $height, self::campaignId($body));
         } catch (CreativeValidationException $e) {
             return $this->json->problem(422, 'validation-failed', 'Image rejected', $e->getMessage());
         }
@@ -110,11 +110,17 @@ final class CreateCreativeHandler
         }
 
         try {
-            $creative = $this->createVideo->execute($context, $destination, $asset, $poster, $width, $height, $duration);
+            $creative = $this->createVideo->execute($context, $destination, $asset, $poster, $width, $height, $duration, self::campaignId($body));
         } catch (CreativeValidationException $e) {
             return $this->json->problem(422, 'validation-failed', 'Video rejected', $e->getMessage());
         }
 
         return $this->json->ok($creative->toAdminArray(), 201);
+    }
+
+    /** @param array<string, mixed> $body */
+    private static function campaignId(array $body): ?string
+    {
+        return is_string($body['campaign_id'] ?? null) ? $body['campaign_id'] : null;
     }
 }

@@ -16,4 +16,11 @@ interface CreativeRepositoryInterface
 
     /** Insert or replace a creative version (admin surface). */
     public function save(Creative $creative): void;
+
+    /**
+     * Creative ids belonging to a campaign (for billable-spend derivation).
+     *
+     * @return list<string>
+     */
+    public function idsByCampaign(string $organizationId, string $campaignId): array;
 }
