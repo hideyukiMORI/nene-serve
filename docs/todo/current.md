@@ -56,7 +56,7 @@
 - [x] #79 **serve.js embed client** (#1 critical path) — `public_html/serve.js`, vanilla/CSP-friendly, image/video/sandboxed-html5 render + viewable impression beacon + click-token wrap; served statically; jsdom test on the real artifact. PR #80.
 - [~] #2 Admin create forms — marketplace (advertiser/pricing/campaign, PR #82) + serving (placement/image-creative, PR #84) done; the operate loop is now drivable in the console. Remaining: billing-period close/handoff actions, edit forms, video/html5 creative (needs #4).
 - [x] #3 Provisioning (invite-link via email) — mail infra (#86), admin-managed SMTP encrypted at rest + test (#87), invite backend (#88), **provisioning UI (#90: Users+invite, Settings/SMTP, set-password)**. Operator console onboards teammates end-to-end (configure SMTP → invite → set password → sign in). Remaining sub-items: service-token issuance UI, first-org bootstrap CLI.
-- [ ] Latent prod bug (found during #88): several PDO repos use `REPLACE INTO` which needs `DELETE` (denied to the app role) — create via PDO fails under the locked role. Switch to `INSERT..ON DUPLICATE KEY UPDATE`. Affects advertisers/placements/etc.
+- [x] Prod bug fixed (#92): all 9 `REPLACE INTO` → `INSERT .. AS new ON DUPLICATE KEY UPDATE` (no DELETE needed); verified create+update under the locked `nene` role on MySQL. Create/edit flows now work in production.
 - [ ] #4 Asset upload + storage + real malware scanner (replace StubBundleScanner).
 - [ ] Production deploy hardening (migrations on deploy, HTTPS/secrets, shared token/rate-limit/frequency store for multi-host).
 - [ ] Real sibling integrations (Invoice/Deal/Records) when those services exist.
