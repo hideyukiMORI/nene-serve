@@ -51,6 +51,10 @@
 
 **Phase 4 — Ecosystem ✅ complete (2026-06-04): #57–#60 all merged.**
 
+## Post-roadmap hardening
+
+- [x] #65 OpenAPI 3.1 contracts for the three surfaces (`docs/api/` public · admin · service) — RFC 9457 Problem Details, registry-aligned operationIds, MCP→service-doc-only; `tests/Api/OpenApiContractTest.php` asserts documented paths == Kernel routes (bidirectional, no drift). PR #66.
+
 ## Integrity & audit hardening (ADR 0022) — before Phase 3
 
 - [x] Binding doc + ADR 0022 + self-review (`docs/explanation/audit-and-data-integrity-compliance.md`)
@@ -87,4 +91,4 @@
 - **Three separated API surfaces; fail closed** (ADR 0018/0019); endpoint changes are gated by `docs/review/api-security.md`.
 - **Only approved creatives serve** (ADR 0020/0021); creative changes are gated by `docs/review/creative-review.md`.
 
-Last updated: 2026-06-04 (#60 MCP write-plan landed — Phase 4 Ecosystem complete)
+Last updated: 2026-06-04 (#65 OpenAPI 3.1 contracts landed — docs/api/, route-coverage test)
