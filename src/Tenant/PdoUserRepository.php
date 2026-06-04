@@ -41,6 +41,27 @@ final class PdoUserRepository implements UserRepositoryInterface
         return $this->hydrateOne($stmt->fetch());
     }
 
+    public function save(User $user): void
+    {
+        // Upsert without DELETE privilege (app role has none): INSERT .. ON
+        // DUPLICATE KEY UPDATE. Email/role/password/status may change; org is fixed.
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO users (id, organization_id, email, password_hash, role, status)
+             VALUES (:id, :org, :email, :password_hash, :role, :status)
+             ON DUPLICATE KEY UPDATE
+                email = VALUES(email), password_hash = VALUES(password_hash),
+                role = VALUES(role), status = VALUES(status)',
+        );
+        $stmt->execute([
+            ':id' => $user->id,
+            ':org' => $user->organizationId,
+            ':email' => $user->email,
+            ':password_hash' => $user->passwordHash,
+            ':role' => $user->role->value,
+            ':status' => $user->status,
+        ]);
+    }
+
     public function listByOrganization(string $organizationId): array
     {
         $stmt = $this->pdo->prepare(

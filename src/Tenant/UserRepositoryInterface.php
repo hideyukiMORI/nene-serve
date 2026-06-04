@@ -17,6 +17,9 @@ interface UserRepositoryInterface
     /** Login lookup, scoped to one organization. */
     public function findByEmailInOrganization(string $email, string $organizationId): ?User;
 
+    /** Create or update a user (invitation provisioning, password set). Never deletes. */
+    public function save(User $user): void;
+
     /**
      * All users in one organization.
      *

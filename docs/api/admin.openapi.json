@@ -36,7 +36,24 @@
     },
     "/admin/users": {
       "get": { "operationId": "listUsers", "tags": ["users"], "summary": "List users in the caller's tenant.",
-        "responses": { "200": { "$ref": "#/components/responses/UserList" }, "401": { "$ref": "#/components/responses/Problem" }, "403": { "$ref": "#/components/responses/Problem" } } }
+        "responses": { "200": { "$ref": "#/components/responses/UserList" }, "401": { "$ref": "#/components/responses/Problem" }, "403": { "$ref": "#/components/responses/Problem" } } },
+      "post": { "operationId": "createUser", "tags": ["users"], "summary": "Create an invited user and email a single-use set-password link (manage_users). The raw token is never returned.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": {
+          "email": { "type": "string", "format": "email" }, "role": { "type": "string", "enum": ["superadmin", "org_admin", "editor", "analyst"] }
+        }, "required": ["email", "role"] } } } },
+        "responses": { "201": { "description": "Invited.", "content": { "application/json": { "schema": { "allOf": [ { "$ref": "#/components/schemas/User" }, { "type": "object", "properties": { "invite_email_sent": { "type": "boolean" } } } ] } } } }, "403": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/invitations/accept": {
+      "post": { "operationId": "acceptInvitation", "tags": ["auth"], "security": [], "summary": "Accept an invitation and set the password (unauthenticated; single-use token).",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": {
+          "token": { "type": "string" }, "password": { "type": "string", "minLength": 8 }
+        }, "required": ["token", "password"] } } } },
+        "responses": { "200": { "description": "Accepted.", "content": { "application/json": { "schema": { "type": "object", "properties": { "accepted": { "type": "boolean" } } } } } }, "404": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/invitations/{token}": {
+      "get": { "operationId": "getInvitation", "tags": ["auth"], "security": [], "summary": "Validate an invitation token (unauthenticated); returns the invitee email.",
+        "parameters": [{ "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Valid.", "content": { "application/json": { "schema": { "type": "object", "properties": { "email": { "type": "string" } } } } } }, "404": { "$ref": "#/components/responses/Problem" } } }
     },
     "/admin/metrics": {
       "get": { "operationId": "getPlacementMetrics", "tags": ["metrics"],
