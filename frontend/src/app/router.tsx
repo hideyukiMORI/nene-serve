@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { CreativesPage } from '@/pages/creatives/CreativesPage'
 import { LoginPage } from '@/pages/login/LoginPage'
+import { MarketplacePage } from '@/pages/marketplace/MarketplacePage'
 import { MetricsPage } from '@/pages/metrics/MetricsPage'
 import { NotFoundPage } from '@/pages/not-found/NotFoundPage'
 import { PlacementsPage } from '@/pages/placements/PlacementsPage'
@@ -22,6 +23,7 @@ const router = createBrowserRouter([
       { path: '/creatives', element: <CreativesPage /> },
       { path: '/review', element: <ReviewPage /> },
       { path: '/metrics', element: <MetricsPage /> },
+      { path: '/marketplace', element: <MarketplacePage /> },
     ],
   },
   { path: '*', element: <NotFoundPage /> },
