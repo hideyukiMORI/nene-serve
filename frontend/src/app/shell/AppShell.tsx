@@ -1,8 +1,25 @@
-import { Outlet, useNavigate } from 'react-router-dom'
+import type { ComponentType, SVGProps } from 'react'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '@/entities/auth'
-import { useTranslation } from '@/shared/i18n'
-import { IconBoard, IconLogo } from '@/shared/ui/icons'
+import { useTranslation, type MessageKey } from '@/shared/i18n'
+import { IconBoard, IconLogo, IconShield } from '@/shared/ui/icons'
 import { LangToggle, SignoutButton, ThemeToggle } from './Toggles'
+
+interface NavEntry {
+  to: string
+  label: MessageKey
+  Icon: ComponentType<SVGProps<SVGSVGElement>>
+}
+
+const NAV: NavEntry[] = [
+  { to: '/', label: 'nav.placements', Icon: IconBoard },
+  { to: '/creatives', label: 'nav.creatives', Icon: IconBoard },
+  { to: '/review', label: 'nav.review', Icon: IconShield },
+]
+
+function isActive(to: string, pathname: string): boolean {
+  return to === '/' ? pathname === '/' : pathname.startsWith(to)
+}
 
 /**
  * Admin app shell: brand + primary nav + locale/theme/sign-out controls, with
@@ -11,6 +28,7 @@ import { LangToggle, SignoutButton, ThemeToggle } from './Toggles'
 export function AppShell() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const currentUser = useCurrentUser()
   const email = currentUser.data?.email ?? ''
   const avatarLetter = (email[0] ?? 'N').toUpperCase()
@@ -30,16 +48,19 @@ export function AppShell() {
           </div>
         </div>
         <nav className="topnav-links">
-          <button
-            type="button"
-            className="topnav-link active"
-            onClick={() => {
-              void navigate('/')
-            }}
-          >
-            <IconBoard />
-            {t('nav.placements')}
-          </button>
+          {NAV.map((entry) => (
+            <button
+              key={entry.to}
+              type="button"
+              className={`topnav-link ${isActive(entry.to, location.pathname) ? 'active' : ''}`}
+              onClick={() => {
+                void navigate(entry.to)
+              }}
+            >
+              <entry.Icon />
+              {t(entry.label)}
+            </button>
+          ))}
         </nav>
         <div className="topnav-right">
           <span className="hdr-controls">

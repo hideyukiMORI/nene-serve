@@ -46,6 +46,35 @@ export interface MessageCatalog {
   'notFound.title': string
   'notFound.body': string
   'notFound.back': string
+
+  'nav.creatives': string
+  'nav.review': string
+
+  'creatives.title': string
+  'creatives.subtitle': string
+  'creatives.empty': string
+  'creatives.loading': string
+  'creatives.loadError': string
+  'creatives.column.id': string
+  'creatives.column.type': string
+  'creatives.column.status': string
+  'creatives.column.version': string
+
+  'review.title': string
+  'review.subtitle': string
+  'review.empty': string
+  'review.loading': string
+  'review.loadError': string
+  'review.column.id': string
+  'review.column.type': string
+  'review.column.status': string
+  'review.column.actions': string
+  'review.action.startReview': string
+  'review.action.approve': string
+  'review.action.reject': string
+  'review.action.requestChanges': string
+  'review.fourEyes': string
+  'review.actionFailed': string
 }
 
 export const en: MessageCatalog = {
@@ -91,4 +120,33 @@ export const en: MessageCatalog = {
   'notFound.title': 'Page not found',
   'notFound.body': 'The page you are looking for does not exist.',
   'notFound.back': 'Back to placements',
+
+  'nav.creatives': 'Creatives',
+  'nav.review': 'Review',
+
+  'creatives.title': 'Creatives',
+  'creatives.subtitle': 'Uploaded creatives and their review status',
+  'creatives.empty': 'No creatives yet.',
+  'creatives.loading': 'Loading…',
+  'creatives.loadError': 'Could not load creatives.',
+  'creatives.column.id': 'ID',
+  'creatives.column.type': 'Type',
+  'creatives.column.status': 'Review status',
+  'creatives.column.version': 'Version',
+
+  'review.title': 'Review queue',
+  'review.subtitle': 'Creatives awaiting a review decision',
+  'review.empty': 'Nothing to review.',
+  'review.loading': 'Loading…',
+  'review.loadError': 'Could not load the review queue.',
+  'review.column.id': 'ID',
+  'review.column.type': 'Type',
+  'review.column.status': 'Status',
+  'review.column.actions': 'Actions',
+  'review.action.startReview': 'Start review',
+  'review.action.approve': 'Approve',
+  'review.action.reject': 'Reject',
+  'review.action.requestChanges': 'Request changes',
+  'review.fourEyes': 'Four-eyes: you cannot approve a creative you submitted.',
+  'review.actionFailed': 'The action could not be completed.',
 }
