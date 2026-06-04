@@ -7,6 +7,7 @@ namespace NeneServe\Http;
 use NeneServe\Audit\AuditLogInterface;
 use NeneServe\Audit\InMemoryAuditLog;
 use NeneServe\Http\Admin\ArchivePlacementHandler;
+use NeneServe\Http\Admin\CloseBillingPeriodHandler;
 use NeneServe\Http\Admin\CreateAdvertiserHandler;
 use NeneServe\Http\Admin\CreateCampaignHandler;
 use NeneServe\Http\Admin\CreateCreativeHandler;
@@ -15,12 +16,14 @@ use NeneServe\Http\Admin\CreatePricingRuleHandler;
 use NeneServe\Http\Admin\CurrentUserHandler;
 use NeneServe\Http\Admin\DataSubjectRequestHandler;
 use NeneServe\Http\Admin\ExportMetricsHandler as AdminExportMetricsHandler;
+use NeneServe\Http\Admin\GetBillingPeriodHandler;
 use NeneServe\Http\Admin\GetCampaignHandler;
 use NeneServe\Http\Admin\GetMetricsHandler as AdminGetMetricsHandler;
 use NeneServe\Http\Admin\ListAdvertisersHandler;
 use NeneServe\Http\Admin\ListCreativesHandler;
 use NeneServe\Http\Admin\ListUsersHandler;
 use NeneServe\Http\Admin\LoginHandler;
+use NeneServe\Http\Admin\OpenBillingPeriodHandler;
 use NeneServe\Http\Admin\ReviewQueueHandler;
 use NeneServe\Http\Admin\ReviseCreativeHandler;
 use NeneServe\Http\Admin\TransitionCreativeHandler;
@@ -38,15 +41,21 @@ use NeneServe\Http\Service\ExportMetricsHandler as ServiceExportMetricsHandler;
 use NeneServe\Http\Service\GetMetricsHandler as ServiceGetMetricsHandler;
 use NeneServe\Http\Service\ListPlacementsHandler;
 use NeneServe\Marketplace\AdvertiserRepositoryInterface;
+use NeneServe\Marketplace\BillingPeriodRepositoryInterface;
 use NeneServe\Marketplace\CampaignRepositoryInterface;
 use NeneServe\Marketplace\InMemoryAdvertiserRepository;
+use NeneServe\Marketplace\InMemoryBillingPeriodRepository;
 use NeneServe\Marketplace\InMemoryCampaignRepository;
 use NeneServe\Marketplace\InMemoryPricingRuleRepository;
+use NeneServe\Marketplace\InMemorySpendSnapshotRepository;
 use NeneServe\Marketplace\PricingRuleRepositoryInterface;
+use NeneServe\Marketplace\SpendSnapshotRepositoryInterface;
+use NeneServe\Marketplace\UseCase\CloseBillingPeriodUseCase;
 use NeneServe\Marketplace\UseCase\CreateAdvertiserUseCase;
 use NeneServe\Marketplace\UseCase\CreateCampaignUseCase;
 use NeneServe\Marketplace\UseCase\CreatePricingRuleUseCase;
 use NeneServe\Marketplace\UseCase\GetCampaignSpendUseCase;
+use NeneServe\Marketplace\UseCase\OpenBillingPeriodUseCase;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\InMemoryEventStore;
 use NeneServe\Measurement\UseCase\DataSubjectRequestUseCase;
@@ -121,6 +130,8 @@ final class Kernel
     private readonly PricingRuleRepositoryInterface $pricingRules;
     private readonly CampaignRepositoryInterface $campaigns;
     private readonly GetCampaignSpendUseCase $campaignSpend;
+    private readonly BillingPeriodRepositoryInterface $billingPeriods;
+    private readonly SpendSnapshotRepositoryInterface $spendSnapshots;
     private readonly Jwt $jwt;
 
     public function __construct(
@@ -140,6 +151,8 @@ final class Kernel
         ?AdvertiserRepositoryInterface $advertisers = null,
         ?PricingRuleRepositoryInterface $pricingRules = null,
         ?CampaignRepositoryInterface $campaigns = null,
+        ?BillingPeriodRepositoryInterface $billingPeriods = null,
+        ?SpendSnapshotRepositoryInterface $spendSnapshots = null,
     ) {
         $this->json = new JsonResponseFactory();
         $this->users = $users ?? DevFixtures::users();
@@ -157,6 +170,8 @@ final class Kernel
         $this->pricingRules = $pricingRules ?? new InMemoryPricingRuleRepository();
         $this->campaigns = $campaigns ?? new InMemoryCampaignRepository();
         $this->campaignSpend = new GetCampaignSpendUseCase($this->creatives, $this->events, $this->pricingRules);
+        $this->billingPeriods = $billingPeriods ?? new InMemoryBillingPeriodRepository();
+        $this->spendSnapshots = $spendSnapshots ?? new InMemorySpendSnapshotRepository();
         $this->jwt = $jwt ?? new Jwt(self::resolveSecret());
         $this->auth = new BearerTokenMiddleware($this->jwt, $this->users);
         $this->serviceAuth = new ServiceTokenMiddleware($serviceTokens ?? DevFixtures::serviceTokens());
@@ -269,6 +284,21 @@ final class Kernel
 
         $getCampaign = new GetCampaignHandler($this->campaigns, $this->campaignSpend, $this->json);
         $this->router->add('GET', '/admin/campaigns/{id}', $this->admin(Capability::ManageMarketplace, $getCampaign->handle(...)));
+
+        $openPeriod = new OpenBillingPeriodHandler(
+            new OpenBillingPeriodUseCase($this->billingPeriods, $this->campaigns, $this->audit, $this->tx),
+            $this->json,
+        );
+        $this->router->add('POST', '/admin/campaigns/{id}/billing-periods', $this->admin(Capability::ManageMarketplace, $openPeriod->handle(...)));
+
+        $closePeriod = new CloseBillingPeriodHandler(
+            new CloseBillingPeriodUseCase($this->billingPeriods, $this->campaigns, $this->spendSnapshots, $this->campaignSpend, $this->audit, $this->tx),
+            $this->json,
+        );
+        $this->router->add('POST', '/admin/billing-periods/{id}/close', $this->admin(Capability::ManageMarketplace, $closePeriod->handle(...)));
+
+        $getPeriod = new GetBillingPeriodHandler($this->billingPeriods, $this->spendSnapshots, $this->json);
+        $this->router->add('GET', '/admin/billing-periods/{id}', $this->admin(Capability::ManageMarketplace, $getPeriod->handle(...)));
     }
 
     /** Placement + creative management and the review state machine (ADR 0020/0021). */

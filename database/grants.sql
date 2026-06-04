@@ -25,8 +25,10 @@ GRANT SELECT, INSERT, UPDATE ON nene_serve.impressions    TO 'nene'@'%';
 GRANT SELECT, INSERT, UPDATE ON nene_serve.clicks         TO 'nene'@'%';
 GRANT SELECT, INSERT, UPDATE ON nene_serve.serve_requests TO 'nene'@'%';
 GRANT SELECT, INSERT, UPDATE ON nene_serve.advertisers    TO 'nene'@'%';
-GRANT SELECT, INSERT, UPDATE ON nene_serve.campaigns      TO 'nene'@'%';
-GRANT SELECT, INSERT         ON nene_serve.pricing_rules  TO 'nene'@'%'; -- versioned, immutable
+GRANT SELECT, INSERT, UPDATE ON nene_serve.campaigns        TO 'nene'@'%';
+GRANT SELECT, INSERT, UPDATE ON nene_serve.billing_periods  TO 'nene'@'%'; -- status advances
+GRANT SELECT, INSERT         ON nene_serve.pricing_rules    TO 'nene'@'%'; -- versioned, immutable
+GRANT SELECT, INSERT         ON nene_serve.spend_snapshots  TO 'nene'@'%'; -- append-only, immutable
 GRANT SELECT, INSERT         ON nene_serve.audit_events   TO 'nene'@'%'; -- append-only
 
 -- Presentation data: cosmetic UI state may be deleted.

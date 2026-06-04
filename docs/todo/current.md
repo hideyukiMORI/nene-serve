@@ -35,7 +35,7 @@
 
 - [x] #47 (A) Money primitives + Advertiser + PricingRule (versioned, JPY net, no tax/float) (ADR 0014/0015)
 - [x] #48 (B) Campaign + budget + funding + billable spend accrual — derived reproducible spend, cap/pause_on_budget_exhausted (no overspend), only active+funded serves billable
-- [ ] #49 (C) BillingPeriod + tamper-evident SpendSnapshot + audited close (immutability)
+- [x] #49 (C) BillingPeriod + tamper-evident SpendSnapshot + audited close — versioned/reproducible snapshot, immutable on close (re-close 409)
 - [ ] #50 (D) Invoice handoff (idempotent) + reconciliation + HTTP client (net-only)
 - [ ] #51 (E) Billing-relevant statutory retention + legal hold (closes Integrity #41)
 
@@ -75,4 +75,4 @@
 - **Three separated API surfaces; fail closed** (ADR 0018/0019); endpoint changes are gated by `docs/review/api-security.md`.
 - **Only approved creatives serve** (ADR 0020/0021); creative changes are gated by `docs/review/creative-review.md`.
 
-Last updated: 2026-06-04 (#48 campaign + spend accrual landed; next: #49 billing period + spend snapshot)
+Last updated: 2026-06-04 (#49 billing period + spend snapshot landed; next: #50 Invoice handoff + reconciliation)
