@@ -2,24 +2,10 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { AppProviders } from '@/app/providers'
 import { AppRouter } from '@/app/router'
-import { applyLocaleFontFamily, resolveLocale } from '@/shared/i18n'
 import { applyStoredTheme } from '@/shared/theme'
-import '@/shared/ui/theme/index.css'
-import '@/fonts'
-// Calm design system (shared sibling convention) — imported last so its tokens
-// and component classes are authoritative over the base Tailwind theme.
-import '@/app/design/styles.css'
-import '@/app/design/designs.css'
+// Single, centralized stylesheet — the "Control Room" design system (one file).
+import '@/app/design/serve.css'
 
-// FOUC guard: detect the locale and apply its font family before React renders.
-const storedLocale = (() => {
-  try {
-    return localStorage.getItem('nene-serve-locale') ?? navigator.language
-  } catch {
-    return navigator.language
-  }
-})()
-applyLocaleFontFamily(resolveLocale(storedLocale))
 applyStoredTheme()
 
 async function enableMocking(): Promise<void> {

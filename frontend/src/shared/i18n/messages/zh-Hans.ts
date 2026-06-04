@@ -4,7 +4,6 @@ import type { MessageCatalog } from './en'
 export const zhHans: MessageCatalog = {
   'app.title': 'NeNe Serve',
   'app.subtitle': '广告投放与分析',
-
   'nav.placements': '广告位',
 
   'shell.theme': '主题',
@@ -180,4 +179,9 @@ export const zhHans: MessageCatalog = {
   'creatives.uploading': '上传中…',
   'creatives.uploaded': '已上传。',
   'creatives.uploadError': '请在创建前上传图片文件。',
+  'nav.group.build': '构建',
+  'nav.group.govern': '治理',
+  'nav.group.measure': '度量',
+  'nav.group.business': '业务',
+  'nav.group.admin': '管理',
 }

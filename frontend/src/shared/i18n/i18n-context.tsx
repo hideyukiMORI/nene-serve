@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { LOCALES, resolveLocale, type SupportedLocale } from './locales'
-import { applyLocaleFontFamily } from './locale-fonts'
 import { getMessages } from './messages'
 import { translate, type MessageKey, type MessageParams } from './translate'
 import { I18nContext } from './i18n-context-ref'
@@ -20,7 +19,6 @@ function detectLocale(): SupportedLocale {
 function applyLocaleToDocument(locale: SupportedLocale): void {
   document.documentElement.lang = locale
   document.documentElement.dir = LOCALES[locale].dir
-  applyLocaleFontFamily(locale)
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {

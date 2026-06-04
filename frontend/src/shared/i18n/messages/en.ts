@@ -8,6 +8,11 @@ export interface MessageCatalog {
   'app.subtitle': string
 
   'nav.placements': string
+  'nav.group.build': string
+  'nav.group.govern': string
+  'nav.group.measure': string
+  'nav.group.business': string
+  'nav.group.admin': string
 
   'shell.theme': string
   'shell.themeLight': string
@@ -192,6 +197,11 @@ export const en: MessageCatalog = {
   'app.subtitle': 'Ad serving & analytics',
 
   'nav.placements': 'Placements',
+  'nav.group.build': 'Build',
+  'nav.group.govern': 'Govern',
+  'nav.group.measure': 'Measure',
+  'nav.group.business': 'Business',
+  'nav.group.admin': 'Admin',
 
   'shell.theme': 'Theme',
   'shell.themeLight': 'Light',

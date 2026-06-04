@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useTranslation } from '@/shared/i18n'
-import { Button, Input, Text } from '@/shared/ui'
+import { AuthShell, Text } from '@/shared/ui'
 
 export interface SetPasswordViewProps {
   validating: boolean
@@ -38,42 +38,50 @@ export function SetPasswordView({
   })
 
   return (
-    <div className="fs-wrap">
-      <div className="auth-form" style={{ minHeight: '100vh' }}>
-        <div className="auth-card stack g6">
-          <div className="stack g2">
-            <h1 className="t-h1">{t('setPassword.title')}</h1>
-            {email !== null ? <span className="muted t-cap">{email}</span> : null}
-          </div>
+    <AuthShell>
+      <div className="stack g5">
+        <div className="stack g1">
+          <h1 className="t-h1">{t('setPassword.title')}</h1>
+          {email !== null ? <span className="t-cap muted mono">{email}</span> : null}
+        </div>
 
-          {validating ? <Text muted>{t('setPassword.validating')}</Text> : null}
-          {invalid && !validating ? (
-            <Text className="danger">{t('setPassword.invalid')}</Text>
-          ) : null}
+        {validating ? <Text muted>{t('setPassword.validating')}</Text> : null}
+        {invalid && !validating ? (
+          <span className="field-msg err">{t('setPassword.invalid')}</span>
+        ) : null}
 
-          {!invalid && !validating ? (
-            <form
-              noValidate
-              onSubmit={(event) => {
-                void submit(event)
-              }}
-              className="stack g4"
-            >
-              <Input
+        {!invalid && !validating ? (
+          <form
+            noValidate
+            onSubmit={(event) => {
+              void submit(event)
+            }}
+            className="stack g4"
+          >
+            <div className="field">
+              <label htmlFor="set-password">{t('setPassword.password')}</label>
+              <input
                 id="set-password"
+                className="input"
                 type="password"
-                label={t('setPassword.password')}
-                error={errors.password?.message}
+                placeholder="••••••••"
                 {...register('password')}
               />
-              {errorMessage !== null ? <Text className="danger">{errorMessage}</Text> : null}
-              <Button type="submit" disabled={submitting}>
-                {submitting ? t('form.creating') : t('setPassword.submit')}
-              </Button>
-            </form>
-          ) : null}
-        </div>
+              {errors.password?.message !== undefined ? (
+                <span className="field-msg err">{errors.password.message}</span>
+              ) : null}
+            </div>
+            {errorMessage !== null ? <span className="field-msg err">{errorMessage}</span> : null}
+            <button
+              className="btn btn-primary btn-lg btn-block"
+              type="submit"
+              disabled={submitting}
+            >
+              {submitting ? t('form.creating') : t('setPassword.submit')}
+            </button>
+          </form>
+        ) : null}
       </div>
-    </div>
+    </AuthShell>
   )
 }
