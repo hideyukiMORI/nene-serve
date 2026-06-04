@@ -21,6 +21,14 @@
 
 **Phase 1 — Foundation ✅ complete (2026-06-04): #10–#15 all merged.**
 
+## Next (Phase 2 — milestone "Phase 2: Rich creatives")
+
+- [x] #24 (A) Video creative acceptance — MP4/WebM, poster, max duration, no autoplay-with-sound (ADR 0021)
+- [ ] #25 (B) HTML5 bundle + malware scan + sandbox/CSP + review queue (ADR 0020/0021)
+- [ ] #26 (C) Frequency cap (consent-gated visitor buckets) (ADR 0017)
+- [ ] #27 (D) Consent UI (six-locale) + data-subject-request tooling (ADR 0016/0017)
+- [ ] #28 (E) Reporting polish — JSON time-series metrics (CTR, fill rate) (measurement-spec)
+
 ## Governance hardening (2026-06-04)
 
 - [x] Billing & accounting compliance (binding): `docs/explanation/billing-and-accounting-compliance.md`
@@ -47,4 +55,4 @@
 - **Three separated API surfaces; fail closed** (ADR 0018/0019); endpoint changes are gated by `docs/review/api-security.md`.
 - **Only approved creatives serve** (ADR 0020/0021); creative changes are gated by `docs/review/creative-review.md`.
 
-Last updated: 2026-06-04 (#15 locale CI landed — Phase 1 Foundation complete; next: Phase 2)
+Last updated: 2026-06-04 (Phase 2 opened; #24 video creative landed; next: #25 HTML5)
