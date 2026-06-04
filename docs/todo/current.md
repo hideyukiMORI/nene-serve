@@ -35,7 +35,7 @@
 
 - [x] Binding doc + ADR 0022 + self-review (`docs/explanation/audit-and-data-integrity-compliance.md`)
 - [x] FK `ON DELETE CASCADE` → `RESTRICT` on governed tables (users/placements/creatives/audit_events) — #36; org delete now refused (error 1451), audit trail survives
-- [ ] Hash-chained tamper-evident `audit_events`
+- [x] Hash-chained tamper-evident `audit_events` — #37; per-tenant SHA-256 chain + verifier (edit/gap/reorder detectable)
 - [ ] Audited-write coverage gaps + structured before→after (user/auth/settings paths); mutation+audit atomic
 - [ ] DB grants: app role without `DELETE`/`TRUNCATE` on governed tables; `archived_at`/`disabled_at` tombstones
 - [ ] Sensitive-read audit (`include_sensitive`, DSR export, PII-link reads)

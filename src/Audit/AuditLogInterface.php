@@ -28,4 +28,11 @@ interface AuditLogInterface
      * @return list<AuditEvent>
      */
     public function forSubject(string $organizationId, string $subjectType, string $subjectId): array;
+
+    /**
+     * Full tenant chain, oldest → newest, for {@see AuditChainVerifier}.
+     *
+     * @return list<AuditEvent>
+     */
+    public function allForOrganization(string $organizationId): array;
 }
