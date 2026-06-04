@@ -17,3 +17,7 @@
 /frontend/node_modules/
 /frontend/dist/
 /frontend/.vitest.cache/
+
+# Generated static preview artifacts (not source)
+static-preview/
+static-preview.zip
