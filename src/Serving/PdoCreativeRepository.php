@@ -8,7 +8,7 @@ use PDO;
 
 final class PdoCreativeRepository implements CreativeRepositoryInterface
 {
-    private const COLUMNS = 'id, organization_id, type, review_status, destination_url, asset_url, width, height, version';
+    private const COLUMNS = 'id, organization_id, type, review_status, destination_url, asset_url, width, height, version, submitted_by, review_reason';
 
     public function __construct(
         private readonly PDO $pdo,
@@ -22,10 +22,45 @@ final class PdoCreativeRepository implements CreativeRepositoryInterface
         );
         $stmt->execute([$id, $organizationId]);
         $row = $stmt->fetch();
-        if ($row === false) {
-            return null;
-        }
 
+        return $row === false ? null : $this->hydrate($row);
+    }
+
+    public function listByOrganization(string $organizationId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT ' . self::COLUMNS . ' FROM creatives WHERE organization_id = ? ORDER BY id',
+        );
+        $stmt->execute([$organizationId]);
+
+        return array_map($this->hydrate(...), array_values($stmt->fetchAll()));
+    }
+
+    public function save(Creative $creative): void
+    {
+        $stmt = $this->pdo->prepare(
+            'REPLACE INTO creatives
+                (id, organization_id, type, review_status, destination_url, asset_url, width, height, version, submitted_by, review_reason)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        );
+        $stmt->execute([
+            $creative->id,
+            $creative->organizationId,
+            $creative->type->value,
+            $creative->reviewStatus->value,
+            $creative->destinationUrl,
+            $creative->assetUrl,
+            $creative->width,
+            $creative->height,
+            $creative->version,
+            $creative->submittedBy,
+            $creative->reviewReason,
+        ]);
+    }
+
+    /** @param array<string, mixed> $row */
+    private function hydrate(array $row): Creative
+    {
         return new Creative(
             (string) $row['id'],
             (string) $row['organization_id'],
@@ -36,6 +71,8 @@ final class PdoCreativeRepository implements CreativeRepositoryInterface
             $row['width'] !== null ? (int) $row['width'] : null,
             $row['height'] !== null ? (int) $row['height'] : null,
             (int) $row['version'],
+            $row['submitted_by'] !== null ? (string) $row['submitted_by'] : null,
+            $row['review_reason'] !== null ? (string) $row['review_reason'] : null,
         );
     }
 }

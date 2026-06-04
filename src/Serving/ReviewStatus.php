@@ -28,4 +28,25 @@ enum ReviewStatus: string
     {
         return $this === self::Draft || $this === self::ChangesRequested;
     }
+
+    /**
+     * Legal transitions of the review state machine (creative-review §1).
+     *
+     * @return list<self>
+     */
+    public function allowedNext(): array
+    {
+        return match ($this) {
+            self::Draft => [self::Submitted],
+            self::ChangesRequested => [self::Submitted],
+            self::Submitted => [self::InReview],
+            self::InReview => [self::Approved, self::Rejected, self::ChangesRequested],
+            self::Approved, self::Rejected => [],
+        };
+    }
+
+    public function canTransitionTo(self $next): bool
+    {
+        return in_array($next, $this->allowedNext(), true);
+    }
 }

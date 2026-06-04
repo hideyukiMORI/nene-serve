@@ -159,6 +159,8 @@ Roles map to capabilities; admin routes require a **capability**, not a role.
 | `manage_users` | ✓ | ✓ | | |
 | `view_metrics` | ✓ | ✓ | ✓ | ✓ |
 | `manage_settings` | ✓ | ✓ | | |
+| `manage_placements` | ✓ | ✓ | ✓ | |
+| `manage_creatives` | ✓ | ✓ | ✓ | |
 | `review_creatives` | ✓ | ✓ | | |
 
 Role values (`users.role`): `superadmin`, `org_admin`, `editor`, `analyst`.
@@ -230,7 +232,11 @@ match across OpenAPI, routes, and MCP tool catalog.
 | `login`, `getCurrentUser` | Admin auth |
 | `listUsers` | Admin (tenant-scoped) |
 | `listPlacements`, `getPlacementById`, `createPlacement`, `updatePlacement` | Admin |
-| `listCreatives`, `createCreative`, `publishCreative` | Admin |
+| `createPlacement` | Admin (`manage_placements`) |
+| `listCreatives`, `createCreative`, `reviseCreative` | Admin (`manage_creatives`) |
+| `submitCreative` | Admin (`manage_creatives`) |
+| `startCreativeReview`, `approveCreative`, `rejectCreative`, `requestCreativeChanges` | Admin (`review_creatives`) |
+| `publishCreative` | Admin |
 | `getDeliveryPlan`, `updateDeliveryPlan` | Admin |
 | `getPlacementMetrics`, `exportMetrics` | Admin / Service (read) |
 

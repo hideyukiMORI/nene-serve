@@ -45,6 +45,23 @@ final class PdoPlacementRepository implements PlacementRepositoryInterface
         return array_map($this->hydrateRow(...), array_values($stmt->fetchAll()));
     }
 
+    public function save(Placement $placement): void
+    {
+        $stmt = $this->pdo->prepare(
+            'REPLACE INTO placements
+                (id, organization_id, public_placement_key, allowed_origins, status, default_creative_id)
+             VALUES (?, ?, ?, ?, ?, ?)',
+        );
+        $stmt->execute([
+            $placement->id,
+            $placement->organizationId,
+            $placement->publicPlacementKey,
+            (string) json_encode($placement->allowedOrigins),
+            $placement->status,
+            $placement->defaultCreativeId,
+        ]);
+    }
+
     /** @param array<string, mixed>|false $row */
     private function hydrate(array|false $row): ?Placement
     {

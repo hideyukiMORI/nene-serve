@@ -6,13 +6,15 @@ namespace NeneServe\Serving;
 
 final class InMemoryPlacementRepository implements PlacementRepositoryInterface
 {
-    /** @var list<Placement> */
-    private array $placements;
+    /** @var array<string, Placement> keyed by placement id */
+    private array $placements = [];
 
     /** @param list<Placement> $placements */
     public function __construct(array $placements = [])
     {
-        $this->placements = $placements;
+        foreach ($placements as $placement) {
+            $this->placements[$placement->id] = $placement;
+        }
     }
 
     public function findByPublicKey(string $publicPlacementKey): ?Placement
@@ -28,13 +30,9 @@ final class InMemoryPlacementRepository implements PlacementRepositoryInterface
 
     public function findByIdInOrganization(string $id, string $organizationId): ?Placement
     {
-        foreach ($this->placements as $p) {
-            if ($p->id === $id && $p->organizationId === $organizationId) {
-                return $p;
-            }
-        }
+        $p = $this->placements[$id] ?? null;
 
-        return null;
+        return ($p !== null && $p->organizationId === $organizationId) ? $p : null;
     }
 
     public function listByOrganization(string $organizationId): array
@@ -43,5 +41,10 @@ final class InMemoryPlacementRepository implements PlacementRepositoryInterface
             $this->placements,
             static fn (Placement $p): bool => $p->organizationId === $organizationId,
         ));
+    }
+
+    public function save(Placement $placement): void
+    {
+        $this->placements[$placement->id] = $placement;
     }
 }

@@ -4,9 +4,16 @@ declare(strict_types=1);
 
 namespace NeneServe\Http;
 
+use NeneServe\Audit\AuditLogInterface;
+use NeneServe\Audit\InMemoryAuditLog;
+use NeneServe\Http\Admin\CreateCreativeHandler;
+use NeneServe\Http\Admin\CreatePlacementHandler;
 use NeneServe\Http\Admin\CurrentUserHandler;
+use NeneServe\Http\Admin\ListCreativesHandler;
 use NeneServe\Http\Admin\ListUsersHandler;
 use NeneServe\Http\Admin\LoginHandler;
+use NeneServe\Http\Admin\ReviseCreativeHandler;
+use NeneServe\Http\Admin\TransitionCreativeHandler;
 use NeneServe\Http\Auth\BearerTokenMiddleware;
 use NeneServe\Http\Auth\Jwt;
 use NeneServe\Http\Auth\ServiceTokenMiddleware;
@@ -22,9 +29,14 @@ use NeneServe\Service\ServiceContext;
 use NeneServe\Service\ServiceTokenRepositoryInterface;
 use NeneServe\Serving\CreativeRepositoryInterface;
 use NeneServe\Serving\PlacementRepositoryInterface;
+use NeneServe\Serving\Review\ReviewAction;
 use NeneServe\Serving\Token\InMemoryTokenStore;
 use NeneServe\Serving\Token\TokenStoreInterface;
+use NeneServe\Serving\UseCase\CreateImageCreativeUseCase;
+use NeneServe\Serving\UseCase\CreatePlacementUseCase;
+use NeneServe\Serving\UseCase\ReviseCreativeUseCase;
 use NeneServe\Serving\UseCase\ServeCreativeUseCase;
+use NeneServe\Serving\UseCase\TransitionCreativeUseCase;
 use NeneServe\Support\DevFixtures;
 use NeneServe\Tenant\AuthContext;
 use NeneServe\Tenant\Capability;
@@ -61,6 +73,7 @@ final class Kernel
     private readonly CreativeRepositoryInterface $creatives;
     private readonly TokenStoreInterface $tokens;
     private readonly RateLimiterInterface $rateLimiter;
+    private readonly AuditLogInterface $audit;
     private readonly Jwt $jwt;
 
     public function __construct(
@@ -72,6 +85,7 @@ final class Kernel
         ?TokenStoreInterface $tokens = null,
         ?RateLimiterInterface $rateLimiter = null,
         ?ServiceTokenRepositoryInterface $serviceTokens = null,
+        ?AuditLogInterface $audit = null,
     ) {
         $this->json = new JsonResponseFactory();
         $this->users = $users ?? DevFixtures::users();
@@ -80,6 +94,7 @@ final class Kernel
         $this->creatives = $creatives ?? DevFixtures::creatives();
         $this->tokens = $tokens ?? new InMemoryTokenStore();
         $this->rateLimiter = $rateLimiter ?? new InMemoryRateLimiter();
+        $this->audit = $audit ?? new InMemoryAuditLog();
         $this->jwt = $jwt ?? new Jwt(self::resolveSecret());
         $this->auth = new BearerTokenMiddleware($this->jwt, $this->users);
         $this->serviceAuth = new ServiceTokenMiddleware($serviceTokens ?? DevFixtures::serviceTokens());
@@ -141,6 +156,44 @@ final class Kernel
 
         $listUsers = new ListUsersHandler(new ListUsersUseCase($this->users), $this->json);
         $this->router->add('GET', '/admin/users', $this->admin(Capability::ViewUsers, $listUsers->handle(...)));
+
+        $this->registerCreativeRoutes();
+    }
+
+    /** Placement + creative management and the review state machine (ADR 0020/0021). */
+    private function registerCreativeRoutes(): void
+    {
+        $createPlacement = new CreatePlacementHandler(
+            new CreatePlacementUseCase($this->placements, $this->audit),
+            $this->json,
+        );
+        $this->router->add('POST', '/admin/placements', $this->admin(Capability::ManagePlacements, $createPlacement->handle(...)));
+
+        $createCreative = new CreateCreativeHandler(
+            new CreateImageCreativeUseCase($this->creatives, $this->audit),
+            $this->json,
+        );
+        $this->router->add('POST', '/admin/creatives', $this->admin(Capability::ManageCreatives, $createCreative->handle(...)));
+
+        $listCreatives = new ListCreativesHandler($this->creatives, $this->json);
+        $this->router->add('GET', '/admin/creatives', $this->admin(Capability::ManageCreatives, $listCreatives->handle(...)));
+
+        $transition = new TransitionCreativeUseCase($this->creatives, $this->audit);
+        // Author actions require `manage_creatives`; reviewer actions require `review_creatives` (four-eyes).
+        $this->addTransition('submit', ReviewAction::Submit, Capability::ManageCreatives, $transition);
+        $this->addTransition('start-review', ReviewAction::StartReview, Capability::ReviewCreatives, $transition);
+        $this->addTransition('approve', ReviewAction::Approve, Capability::ReviewCreatives, $transition);
+        $this->addTransition('reject', ReviewAction::Reject, Capability::ReviewCreatives, $transition);
+        $this->addTransition('request-changes', ReviewAction::RequestChanges, Capability::ReviewCreatives, $transition);
+
+        $revise = new ReviseCreativeHandler(new ReviseCreativeUseCase($this->creatives, $this->audit), $this->json);
+        $this->router->add('POST', '/admin/creatives/{id}/revise', $this->admin(Capability::ManageCreatives, $revise->handle(...)));
+    }
+
+    private function addTransition(string $path, ReviewAction $action, Capability $capability, TransitionCreativeUseCase $transition): void
+    {
+        $handler = new TransitionCreativeHandler($action, $transition, $this->json);
+        $this->router->add('POST', '/admin/creatives/{id}/' . $path, $this->admin($capability, $handler->handle(...)));
     }
 
     /** Service surface `/api/*` — scoped service token (api-security §5). */
