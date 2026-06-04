@@ -57,7 +57,11 @@
 - [x] #67 Wire PDO repositories into production kernel boot — `Support\KernelFactory` (DB_HOST → database mode, else file/dev); migration 0029 `service_tokens` + `PdoServiceTokenRepository` + grants (append-only, no DELETE) closes the service-token gap; verified end-to-end on docker MySQL. PR #68.
 - [x] #69 Admin SPA scaffold (`frontend/`) following sibling NeNe convention — React+Vite+TS, FSD, Tailwind v4, TanStack Query, MSW mock-first, Storybook, six-locale i18n, openapi-typescript codegen; login + placements vertical slice; CI `frontend` job. PR #70.
 - [x] #71 Admin read/list endpoints (step ①) — `GET /admin/placements`(+`/{id}`), `GET /admin/creatives/{id}`, `GET /admin/campaigns`, `GET /admin/pricing-rules`; `Placement::toAdminArray()`; spec+terminology updated; verified end-to-end on MySQL. PR #72.
-- [ ] Step ② screens (FE): creatives & review → metrics → marketplace/billing, wired to the real admin endpoints.
+- Step ② screens (FE), wired to the real admin endpoints:
+  - [x] Creatives & review (list + review-queue with actions; nav Placements·Creatives·Review). PR #74.
+  - [ ] Metrics dashboard (`GET /admin/metrics` time-series; CTR/fill).
+  - [ ] Marketplace/billing (advertisers, pricing rules, campaigns, billing periods).
+  - [ ] Detail views (placement/creative); CJK/Hangul webfonts; serve re-theme.
 
 ## Integrity & audit hardening (ADR 0022) — before Phase 3
 
