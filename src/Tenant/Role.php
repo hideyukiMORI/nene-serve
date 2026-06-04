@@ -31,10 +31,14 @@ enum Role: string
                 Capability::ManageUsers,
                 Capability::ViewMetrics,
                 Capability::ManageSettings,
+                Capability::ManagePlacements,
+                Capability::ManageCreatives,
                 Capability::ReviewCreatives,
             ],
             self::Editor => [
                 Capability::ViewMetrics,
+                Capability::ManagePlacements,
+                Capability::ManageCreatives,
             ],
             self::Analyst => [
                 Capability::ViewMetrics,

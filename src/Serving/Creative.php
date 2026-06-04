@@ -8,6 +8,9 @@ namespace NeneServe\Serving;
  * A reviewable creative. Only an `approved` creative is ever served (ADR 0020);
  * `destinationUrl` is registered here and is the only redirect target the click
  * endpoint will use (no open redirect — ADR 0019/0021).
+ *
+ * Instances are immutable; review transitions and revisions return new
+ * instances (an approved version is frozen — creative-review §0.3).
  */
 final class Creative
 {
@@ -21,12 +24,37 @@ final class Creative
         public readonly ?int $width = null,
         public readonly ?int $height = null,
         public readonly int $version = 1,
+        public readonly ?string $submittedBy = null,
+        public readonly ?string $reviewReason = null,
     ) {
     }
 
     public function isServable(): bool
     {
         return $this->reviewStatus->isServable();
+    }
+
+    /** Editable only in `draft` / `changes_requested` (creative-review §1). */
+    public function isEditable(): bool
+    {
+        return $this->reviewStatus->isEditable();
+    }
+
+    public function withReview(ReviewStatus $status, ?string $submittedBy = null, ?string $reason = null): self
+    {
+        return new self(
+            $this->id,
+            $this->organizationId,
+            $this->type,
+            $status,
+            $this->destinationUrl,
+            $this->assetUrl,
+            $this->width,
+            $this->height,
+            $this->version,
+            $submittedBy ?? $this->submittedBy,
+            $reason,
+        );
     }
 
     /**
@@ -43,5 +71,25 @@ final class Creative
             'width' => $this->width,
             'height' => $this->height,
         ], static fn ($v) => $v !== null);
+    }
+
+    /**
+     * Admin projection — includes review metadata, never visible on the public surface.
+     *
+     * @return array<string, mixed>
+     */
+    public function toAdminArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'type' => $this->type->value,
+            'review_status' => $this->reviewStatus->value,
+            'destination_url' => $this->destinationUrl,
+            'asset_url' => $this->assetUrl,
+            'width' => $this->width,
+            'height' => $this->height,
+            'version' => $this->version,
+            'review_reason' => $this->reviewReason,
+        ];
     }
 }

@@ -45,6 +45,7 @@ final class DevFixtures
 
         return new InMemoryUserRepository([
             new User('user-acme-admin', 'org-acme', 'admin@acme.test', Role::OrgAdmin, $hash),
+            new User('user-acme-editor', 'org-acme', 'editor@acme.test', Role::Editor, $hash),
             new User('user-acme-analyst', 'org-acme', 'analyst@acme.test', Role::Analyst, $hash),
             new User('user-globex-admin', 'org-globex', 'admin@globex.test', Role::OrgAdmin, $hash),
             new User('user-root', 'org-acme', 'root@serve.test', Role::SuperAdmin, $hash),
