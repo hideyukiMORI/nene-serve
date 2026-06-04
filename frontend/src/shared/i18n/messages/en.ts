@@ -42,6 +42,10 @@ export interface MessageCatalog {
   'placements.column.key': string
   'placements.column.status': string
   'placements.column.creative': string
+  'placements.create': string
+  'placements.field.key': string
+  'placements.field.origins': string
+  'placements.field.defaultCreative': string
 
   'notFound.title': string
   'notFound.body': string
@@ -59,6 +63,17 @@ export interface MessageCatalog {
   'creatives.column.type': string
   'creatives.column.status': string
   'creatives.column.version': string
+  'creatives.create': string
+  'creatives.field.destination': string
+  'creatives.field.asset': string
+  'creatives.field.width': string
+  'creatives.field.height': string
+
+  'form.create': string
+  'form.creating': string
+  'form.error': string
+  'form.required': string
+  'form.positiveInt': string
 
   'review.title': string
   'review.subtitle': string
@@ -162,6 +177,10 @@ export const en: MessageCatalog = {
   'placements.column.key': 'Key',
   'placements.column.status': 'Status',
   'placements.column.creative': 'Default creative',
+  'placements.create': 'New placement',
+  'placements.field.key': 'Public placement key',
+  'placements.field.origins': 'Allowed origins (comma-separated)',
+  'placements.field.defaultCreative': 'Default creative id (optional)',
 
   'notFound.title': 'Page not found',
   'notFound.body': 'The page you are looking for does not exist.',
@@ -179,6 +198,17 @@ export const en: MessageCatalog = {
   'creatives.column.type': 'Type',
   'creatives.column.status': 'Review status',
   'creatives.column.version': 'Version',
+  'creatives.create': 'New image creative',
+  'creatives.field.destination': 'Destination URL',
+  'creatives.field.asset': 'Asset URL',
+  'creatives.field.width': 'Width',
+  'creatives.field.height': 'Height',
+
+  'form.create': 'Create',
+  'form.creating': 'Creating…',
+  'form.error': 'Could not create. Check the form and try again.',
+  'form.required': 'This field is required.',
+  'form.positiveInt': 'Enter a positive whole number.',
 
   'review.title': 'Review queue',
   'review.subtitle': 'Creatives awaiting a review decision',

@@ -14,4 +14,11 @@ export const placementHandlers = [
       ],
     }),
   ),
+  http.post('/admin/placements', async ({ request }) => {
+    const body = (await request.json()) as { public_placement_key: string }
+    return HttpResponse.json(
+      makePlacementDto({ id: 'plc-new', public_placement_key: body.public_placement_key }),
+      { status: 201 },
+    )
+  }),
 ]

@@ -1,6 +1,7 @@
 import type { Placement } from '@/entities/placement'
 import { useTranslation } from '@/shared/i18n'
 import { EmptyState, Stack, Text } from '@/shared/ui'
+import { CreatePlacementForm } from './CreatePlacementForm'
 
 export interface PlacementsViewProps {
   placements: Placement[]
@@ -19,6 +20,8 @@ export function PlacementsView({ placements, loading, errorMessage }: Placements
         </Text>
         <Text muted>{t('placements.subtitle')}</Text>
       </Stack>
+
+      <CreatePlacementForm />
 
       {loading ? <Text muted>{t('placements.loading')}</Text> : null}
       {errorMessage !== null ? <Text className="danger">{errorMessage}</Text> : null}
