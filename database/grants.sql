@@ -28,6 +28,7 @@ GRANT SELECT, INSERT, UPDATE ON nene_serve.advertisers    TO 'nene'@'%';
 GRANT SELECT, INSERT, UPDATE ON nene_serve.campaigns        TO 'nene'@'%';
 GRANT SELECT, INSERT, UPDATE ON nene_serve.billing_periods  TO 'nene'@'%'; -- status advances
 GRANT SELECT, INSERT, UPDATE ON nene_serve.invoice_handoffs TO 'nene'@'%'; -- status/payment id fill-in only
+GRANT SELECT, INSERT, UPDATE ON nene_serve.deal_opportunities TO 'nene'@'%'; -- status/opportunity id fill-in only
 GRANT SELECT, INSERT         ON nene_serve.pricing_rules    TO 'nene'@'%'; -- versioned, immutable
 GRANT SELECT, INSERT         ON nene_serve.spend_snapshots  TO 'nene'@'%'; -- append-only, immutable
 GRANT SELECT, INSERT         ON nene_serve.audit_events   TO 'nene'@'%'; -- append-only

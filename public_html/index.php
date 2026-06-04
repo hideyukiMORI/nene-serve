@@ -6,6 +6,7 @@ use NeneServe\Http\Kernel;
 use NeneServe\Http\Request;
 use NeneServe\Marketplace\Invoice\HttpInvoiceClient;
 use NeneServe\Measurement\FileEventStore;
+use NeneServe\Upstream\Deal\HttpDealClient;
 use NeneServe\Upstream\Records\HttpRecordsClient;
 use NeneServe\Serving\Frequency\FileFrequencyCapStore;
 use NeneServe\Serving\Token\FileTokenStore;
@@ -54,12 +55,19 @@ $recordsClient = (is_string($recordsBase) && $recordsBase !== '' && is_string($r
     ? new HttpRecordsClient($recordsBase, $recordsToken)
     : null;
 
+$dealBase = getenv('NENE_DEAL_API_BASE_URL');
+$dealToken = getenv('NENE_DEAL_SERVICE_TOKEN');
+$dealClient = (is_string($dealBase) && $dealBase !== '' && is_string($dealToken) && $dealToken !== '')
+    ? new HttpDealClient($dealBase, $dealToken)
+    : null;
+
 $kernel = new Kernel(
     tokens: new FileTokenStore(dirname(__DIR__) . '/var/tokens.json'),
     events: new FileEventStore(dirname(__DIR__) . '/var/events.json'),
     frequencyCaps: new FileFrequencyCapStore(dirname(__DIR__) . '/var/frequency.json'),
     invoiceClient: $invoiceClient,
     records: $recordsClient,
+    dealClient: $dealClient,
 );
 
 $kernel->handle(Request::fromGlobals())->send();

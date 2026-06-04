@@ -45,7 +45,7 @@
 ## Next (Phase 4 — milestone "Phase 4: Ecosystem")
 
 - [x] #57 (A) Upstream HTTP client framework + Records read client (asset metadata) (ADR 0002)
-- [ ] #58 (B) Deal opportunity handoff (idempotent, audited, failure-isolated)
+- [x] #58 (B) Deal opportunity handoff — net-only, idempotent on external_reference, audited, failure-isolated
 - [ ] #59 (C) Concierge conversion beacon (append-only, no Contact submission) (ADR 0009)
 - [ ] #60 (D) MCP write-plan mechanism (propose → confirm → apply, read-first, audited)
 
@@ -85,4 +85,4 @@
 - **Three separated API surfaces; fail closed** (ADR 0018/0019); endpoint changes are gated by `docs/review/api-security.md`.
 - **Only approved creatives serve** (ADR 0020/0021); creative changes are gated by `docs/review/creative-review.md`.
 
-Last updated: 2026-06-04 (Phase 4 opened; #57 Records read client landed; next: #58 Deal handoff)
+Last updated: 2026-06-04 (#58 Deal handoff landed; next: #59 Concierge conversion beacon)

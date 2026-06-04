@@ -141,7 +141,8 @@ data has no delivery/measurement/billing/identity meaning.
 `billing_period.opened`, `billing_period.closed`, `invoice.reconciled`,
 `invoice.handed_off`, `invoice.handoff_failed`, `invoice.reconciliation_discrepancy`,
 `legal_hold.placed`, `legal_hold.released`, `retention.purged`,
-`retention.purge_blocked`. Register
+`retention.purge_blocked`, `deal.opportunity_sent`, `deal.opportunity_failed`.
+Register
 new actions before use. Mutation audit metadata carries structured
 `before`/`after` (changed fields). Sensitive **reads** (`include_sensitive`
 metrics, DSR export, PII-link reads) are also audited; ordinary reads are not.
@@ -189,6 +190,8 @@ capability; self-approval is disallowed by default.
 | `NENE_INVOICE_SERVICE_TOKEN` | Scoped Invoice `/api/*` |
 | `NENE_RECORDS_API_BASE_URL` | Records read (creative assets) |
 | `NENE_RECORDS_SERVICE_TOKEN` | Scoped Records `/api/*` (read-only) |
+| `NENE_DEAL_API_BASE_URL` | Deal opportunity handoff |
+| `NENE_DEAL_SERVICE_TOKEN` | Scoped Deal `/api/*` |
 
 ---
 
@@ -268,6 +271,7 @@ Base URL: `https://nene-serve.dev/problems/`. Register before use.
 | `invoice-handoff-failed` | Invoice transport failed; not paused, retryable (502) |
 | `records-asset-not-found` | Records asset ref not found (404) |
 | `records-unavailable` | Records read transport error (502) |
+| `deal-handoff-failed` | Deal transport failed; serving unaffected, retryable (502) |
 
 Validation `errors[].field` uses snake_case paths; `errors[].code` is snake_case.
 
@@ -296,6 +300,7 @@ match across OpenAPI, routes, and MCP tool catalog.
 | `createAdvertiser`, `listAdvertisers`, `createPricingRule` | Admin (`manage_marketplace`) |
 | `createCampaign`, `getCampaign` | Admin (`manage_marketplace`) |
 | `openBillingPeriod`, `closeBillingPeriod`, `getBillingPeriod`, `handoffBillingPeriod` | Admin (`manage_marketplace`) |
+| `handoffCampaignToDeal` | Admin (`manage_marketplace`) |
 
 ---
 
