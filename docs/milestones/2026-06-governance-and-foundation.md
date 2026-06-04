@@ -6,6 +6,6 @@
 - [x] ADR 0011 six locales documented + `locales/*.json` placeholders
 - [x] Measurement and serve embed specs accepted
 - [x] Terminology registry for placement/creative/impression/click
-- [ ] Phase 1 runtime Issue opened
+- [x] Phase 1 runtime Issue opened (milestone "Phase 1: Foundation"; issues #10–#15)
 
-Last updated: 2026-06-03
+Last updated: 2026-06-04
