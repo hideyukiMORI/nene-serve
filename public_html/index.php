@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use NeneServe\Http\Kernel;
 use NeneServe\Http\Request;
+use NeneServe\Serving\Token\FileTokenStore;
 
 $autoload = dirname(__DIR__) . '/vendor/autoload.php';
 if (is_file($autoload)) {
@@ -31,4 +32,11 @@ if (PHP_SAPI === 'cli-server') {
     }
 }
 
-(new Kernel())->handle(Request::fromGlobals())->send();
+// Tokens must persist across the separate serve/click HTTP requests, so the live
+// entry point uses a file-backed store (the kernel default in-memory store is
+// per-request and suits tests). Production swaps a shared store; see #14.
+$kernel = new Kernel(
+    tokens: new FileTokenStore(dirname(__DIR__) . '/var/tokens.json'),
+);
+
+$kernel->handle(Request::fromGlobals())->send();

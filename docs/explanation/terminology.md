@@ -166,6 +166,19 @@ Capability strings are snake_case and registered here before use.
 
 ---
 
+## Service-token scopes (ADR 0018 §5)
+
+Service tokens (`/api/*`) grant explicit scopes, not human capabilities; MCP is
+read-first. `insufficient-scope` → 403. Register before use.
+
+| Scope | Grants |
+| --- | --- |
+| `read:placements` | List/read placements (tenant-scoped) |
+| `read:metrics` | Read aggregated metrics / CSV export |
+| `write:delivery_plan` | Propose/apply delivery-plan changes (audited) |
+
+---
+
 ## API surfaces (ADR 0018)
 
 | Surface | Path | Auth |
