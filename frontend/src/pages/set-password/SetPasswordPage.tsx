@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { SetPasswordView, useSetPasswordPage } from '@/features/set-password'
 import { useTranslation } from '@/shared/i18n'
-import { Text } from '@/shared/ui'
+import { AuthShell, Text } from '@/shared/ui'
 
 export function SetPasswordPage() {
   const [params] = useSearchParams()
@@ -14,23 +14,21 @@ export function SetPasswordPage() {
 
   if (done) {
     return (
-      <div className="fs-wrap">
-        <div className="auth-form" style={{ minHeight: '100vh' }}>
-          <div className="auth-card stack g4">
-            <h1 className="t-h1">{t('setPassword.doneTitle')}</h1>
-            <Text muted>{t('setPassword.doneBody')}</Text>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => {
-                void navigate('/login')
-              }}
-            >
-              {t('setPassword.toLogin')}
-            </button>
-          </div>
+      <AuthShell>
+        <div className="stack g4">
+          <h1 className="t-h1">{t('setPassword.doneTitle')}</h1>
+          <Text muted>{t('setPassword.doneBody')}</Text>
+          <button
+            type="button"
+            className="btn btn-primary btn-block"
+            onClick={() => {
+              void navigate('/login')
+            }}
+          >
+            {t('setPassword.toLogin')}
+          </button>
         </div>
-      </div>
+      </AuthShell>
     )
   }
 

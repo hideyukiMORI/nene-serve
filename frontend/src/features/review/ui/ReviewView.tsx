@@ -1,6 +1,6 @@
 import type { Creative, ReviewAction } from '@/entities/creative'
 import { useTranslation } from '@/shared/i18n'
-import { Button, EmptyState, Stack, Text } from '@/shared/ui'
+import { Button, EmptyState, Page, Pill, reviewStatusTone, Stack, Text } from '@/shared/ui'
 
 export interface ReviewViewProps {
   creatives: Creative[]
@@ -37,63 +37,65 @@ export function ReviewView({
   const { t } = useTranslation()
 
   return (
-    <Stack gap="md">
-      <Stack gap="xs">
-        <Text as="h1" variant="heading-md">
-          {t('review.title')}
-        </Text>
-        <Text muted>{t('review.subtitle')}</Text>
-        <Text muted variant="caption">
-          {t('review.fourEyes')}
-        </Text>
+    <Page title={t('review.title')} subtitle={t('review.subtitle')}>
+      <Stack gap="md">
+        <div className="callout callout-info">
+          <div>{t('review.fourEyes')}</div>
+        </div>
+
+        {loading ? <Text muted>{t('review.loading')}</Text> : null}
+        {errorMessage !== null ? <Text className="danger">{errorMessage}</Text> : null}
+        {actionErrorMessage !== null ? <Text className="danger">{actionErrorMessage}</Text> : null}
+
+        {!loading && errorMessage === null && creatives.length === 0 ? (
+          <EmptyState title={t('review.empty')} />
+        ) : null}
+
+        {creatives.length > 0 ? (
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>{t('review.column.id')}</th>
+                  <th>{t('review.column.type')}</th>
+                  <th>{t('review.column.status')}</th>
+                  <th>{t('review.column.actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {creatives.map((creative) => (
+                  <tr key={creative.id}>
+                    <td className="cell-key">{creative.id}</td>
+                    <td>{creative.type}</td>
+                    <td>
+                      <Pill tone={reviewStatusTone(creative.reviewStatus)}>
+                        {creative.reviewStatus}
+                      </Pill>
+                    </td>
+                    <td>
+                      <div className="row g1 wrap">
+                        {ACTIONS.map(({ action, labelKey, variant }) => (
+                          <Button
+                            key={action}
+                            variant={variant}
+                            size="sm"
+                            disabled={acting}
+                            onClick={() => {
+                              onAct(creative.id, action)
+                            }}
+                          >
+                            {t(labelKey)}
+                          </Button>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
       </Stack>
-
-      {loading ? <Text muted>{t('review.loading')}</Text> : null}
-      {errorMessage !== null ? <Text className="danger">{errorMessage}</Text> : null}
-      {actionErrorMessage !== null ? <Text className="danger">{actionErrorMessage}</Text> : null}
-
-      {!loading && errorMessage === null && creatives.length === 0 ? (
-        <EmptyState title={t('review.empty')} />
-      ) : null}
-
-      {creatives.length > 0 ? (
-        <table className="table">
-          <thead>
-            <tr>
-              <th>{t('review.column.id')}</th>
-              <th>{t('review.column.type')}</th>
-              <th>{t('review.column.status')}</th>
-              <th>{t('review.column.actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {creatives.map((creative) => (
-              <tr key={creative.id}>
-                <td>{creative.id}</td>
-                <td>{creative.type}</td>
-                <td>{creative.reviewStatus}</td>
-                <td>
-                  <Stack direction="horizontal" gap="xs">
-                    {ACTIONS.map(({ action, labelKey, variant }) => (
-                      <Button
-                        key={action}
-                        variant={variant}
-                        size="sm"
-                        disabled={acting}
-                        onClick={() => {
-                          onAct(creative.id, action)
-                        }}
-                      >
-                        {t(labelKey)}
-                      </Button>
-                    ))}
-                  </Stack>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : null}
-    </Stack>
+    </Page>
   )
 }

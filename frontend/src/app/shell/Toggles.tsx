@@ -2,18 +2,17 @@ import { useNavigate } from 'react-router-dom'
 import { authStore } from '@/shared/auth'
 import { LOCALES, SUPPORTED_LOCALE_IDS, useTranslation } from '@/shared/i18n'
 import { useTheme } from '@/shared/theme'
-import { IconArrowOut, IconGlobe, IconMoon, IconSun } from '@/shared/ui/icons'
+import { IconArrowOut, IconMoon, IconSun } from '@/shared/ui/icons'
 
-/** Sun / moon color-mode toggle (light default + dark). */
+/** Theme + language segmented toggles ("Control Room" .seg style). */
 export function ThemeToggle() {
   const { t } = useTranslation()
   const { theme, setTheme } = useTheme()
   return (
-    <span className="mode-toggle" title={t('shell.theme')}>
+    <div className="seg" title={t('shell.theme')}>
       <button
         type="button"
         className={theme === 'light' ? 'active' : ''}
-        title={t('shell.themeLight')}
         aria-label={t('shell.themeLight')}
         aria-pressed={theme === 'light'}
         onClick={() => {
@@ -25,7 +24,6 @@ export function ThemeToggle() {
       <button
         type="button"
         className={theme === 'dark' ? 'active' : ''}
-        title={t('shell.themeDark')}
         aria-label={t('shell.themeDark')}
         aria-pressed={theme === 'dark'}
         onClick={() => {
@@ -34,16 +32,14 @@ export function ThemeToggle() {
       >
         <IconMoon />
       </button>
-    </span>
+    </div>
   )
 }
 
-/** Globe + 日本語 / EN language toggle. */
 export function LangToggle() {
   const { t, locale, setLocale } = useTranslation()
   return (
-    <span className="lang-toggle" title={t('shell.lang')}>
-      <IconGlobe />
+    <div className="seg" title={t('shell.lang')}>
       {SUPPORTED_LOCALE_IDS.map((id) => (
         <button
           key={id}
@@ -57,25 +53,25 @@ export function LangToggle() {
           {id === 'en' ? 'EN' : LOCALES[id].label}
         </button>
       ))}
-    </span>
+    </div>
   )
 }
 
-/** Sign out — clears the bearer token and returns to the login screen. */
 export function SignoutButton() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   return (
     <button
       type="button"
-      className="signout-btn"
+      className="icon-btn"
+      aria-label={t('shell.signout')}
+      title={t('shell.signout')}
       onClick={() => {
         authStore.clear()
         void navigate('/login')
       }}
     >
       <IconArrowOut />
-      <span>{t('shell.signout')}</span>
     </button>
   )
 }

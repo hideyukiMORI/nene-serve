@@ -4,7 +4,6 @@ import type { MessageCatalog } from './en'
 export const es: MessageCatalog = {
   'app.title': 'NeNe Serve',
   'app.subtitle': 'Publicación de anuncios y analítica',
-
   'nav.placements': 'Ubicaciones',
 
   'shell.theme': 'Tema',
@@ -181,4 +180,9 @@ export const es: MessageCatalog = {
   'creatives.uploading': 'Subiendo…',
   'creatives.uploaded': 'Subido.',
   'creatives.uploadError': 'Suba un archivo de imagen antes de crear.',
+  'nav.group.build': 'Construir',
+  'nav.group.govern': 'Gobernanza',
+  'nav.group.measure': 'Medición',
+  'nav.group.business': 'Negocio',
+  'nav.group.admin': 'Admin',
 }

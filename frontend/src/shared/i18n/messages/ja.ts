@@ -4,7 +4,6 @@ import type { MessageCatalog } from './en'
 export const ja: MessageCatalog = {
   'app.title': 'NeNe Serve',
   'app.subtitle': '広告配信と分析',
-
   'nav.placements': 'プレースメント',
 
   'shell.theme': 'テーマ',
@@ -181,4 +180,9 @@ export const ja: MessageCatalog = {
   'creatives.uploading': 'アップロード中…',
   'creatives.uploaded': 'アップロードしました。',
   'creatives.uploadError': '作成前に画像ファイルをアップロードしてください。',
+  'nav.group.build': '作成',
+  'nav.group.govern': 'ガバナンス',
+  'nav.group.measure': '計測',
+  'nav.group.business': 'ビジネス',
+  'nav.group.admin': '管理',
 }

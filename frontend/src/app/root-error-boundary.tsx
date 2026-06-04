@@ -35,7 +35,10 @@ export class RootErrorBoundary extends Component<RootErrorBoundaryProps, RootErr
   override render(): ReactNode {
     if (this.state.hasError) {
       return (
-        <main className="mx-auto flex min-h-screen max-w-3xl items-center px-inline-lg py-stack-xl">
+        <main
+          className="row"
+          style={{ minHeight: '100vh', maxWidth: '48rem', margin: '0 auto', padding: '0 24px' }}
+        >
           <Stack gap="md">
             <Text as="h1" variant="heading-md">
               Something went wrong / 問題が発生しました

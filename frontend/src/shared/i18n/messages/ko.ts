@@ -4,7 +4,6 @@ import type { MessageCatalog } from './en'
 export const ko: MessageCatalog = {
   'app.title': 'NeNe Serve',
   'app.subtitle': '광고 게재 및 분석',
-
   'nav.placements': '게재위치',
 
   'shell.theme': '테마',
@@ -181,4 +180,9 @@ export const ko: MessageCatalog = {
   'creatives.uploading': '업로드 중…',
   'creatives.uploaded': '업로드했습니다.',
   'creatives.uploadError': '생성하기 전에 이미지 파일을 업로드하세요.',
+  'nav.group.build': '구성',
+  'nav.group.govern': '거버넌스',
+  'nav.group.measure': '측정',
+  'nav.group.business': '비즈니스',
+  'nav.group.admin': '관리',
 }
