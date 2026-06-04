@@ -1,7 +1,26 @@
 {
   "_meta": {
     "locale": "de",
-    "version": 0,
-    "note": "Phase 0 placeholder"
+    "version": 1,
+    "note": "Keys must match en.json (ADR 0011)."
+  },
+  "embed": {
+    "loading": "Anzeige wird geladen…",
+    "error": "Anzeige konnte nicht geladen werden."
+  },
+  "consent": {
+    "banner_title": "Ihre Privatsphäre",
+    "accept": "Akzeptieren",
+    "reject": "Ablehnen",
+    "measurement_label": "Anzeigenmessung erlauben"
+  },
+  "admin": {
+    "placements": { "title": "Platzierungen" },
+    "creatives": { "title": "Creatives" },
+    "metrics": {
+      "title": "Kennzahlen",
+      "impressions_one": "{count} Impression",
+      "impressions_other": "{count} Impressionen"
+    }
   }
 }

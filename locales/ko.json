@@ -1,7 +1,26 @@
 {
   "_meta": {
     "locale": "ko",
-    "version": 0,
-    "note": "Phase 0 placeholder"
+    "version": 1,
+    "note": "Keys must match en.json (ADR 0011)."
+  },
+  "embed": {
+    "loading": "광고 불러오는 중…",
+    "error": "광고를 불러올 수 없습니다."
+  },
+  "consent": {
+    "banner_title": "개인정보 보호",
+    "accept": "동의",
+    "reject": "거부",
+    "measurement_label": "광고 측정 허용"
+  },
+  "admin": {
+    "placements": { "title": "게재위치" },
+    "creatives": { "title": "광고 소재" },
+    "metrics": {
+      "title": "지표",
+      "impressions_one": "노출 {count}회",
+      "impressions_other": "노출 {count}회"
+    }
   }
 }

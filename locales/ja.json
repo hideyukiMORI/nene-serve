@@ -1,7 +1,26 @@
 {
   "_meta": {
     "locale": "ja",
-    "version": 0,
-    "note": "Phase 0 placeholder"
+    "version": 1,
+    "note": "Keys must match en.json (ADR 0011)."
+  },
+  "embed": {
+    "loading": "広告を読み込み中…",
+    "error": "広告を読み込めませんでした。"
+  },
+  "consent": {
+    "banner_title": "プライバシーについて",
+    "accept": "同意する",
+    "reject": "拒否する",
+    "measurement_label": "広告効果測定を許可する"
+  },
+  "admin": {
+    "placements": { "title": "プレースメント" },
+    "creatives": { "title": "クリエイティブ" },
+    "metrics": {
+      "title": "指標",
+      "impressions_one": "{count} インプレッション",
+      "impressions_other": "{count} インプレッション"
+    }
   }
 }

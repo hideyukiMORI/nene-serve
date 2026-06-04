@@ -52,9 +52,10 @@ tracks impressions and clicks, and reports time-series metrics with CSV export �
 
 ## Status
 
-**Phase 1 — Foundation** (started). Phase 0 governance is complete; the runtime
-scaffold (`GET /health`, `composer locales:check`, Docker stack) landed in #10.
-Tracking: milestone **Phase 1: Foundation**, issues #10–#15.
+**Phase 1 — Foundation ✅ complete** (#10–#15). Runtime scaffold + three API
+surfaces (public serve / admin JWT+Capability / scoped service), multi-tenant
+auth, creative review & approval gate, impression/click measurement + daily CSV,
+and six-locale CI. Next: **Phase 2** (rich creatives, consent UI, review queue).
 
 ## Running locally
 

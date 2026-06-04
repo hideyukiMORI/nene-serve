@@ -17,9 +17,9 @@
 - [x] #12 (C) Three API surfaces + serve API baseline — origin gating, rate limits, short-lived single-use click tokens, no open redirect, idempotent impression, scoped service tokens (ADR 0018/0019)
 - [x] #13 (D) Placement + image creative behind approval gate — review state machine, four-eyes, immutable versions, image acceptance, audit (ADR 0020/0021)
 - [x] #14 (E) Impression/click measurement + daily metrics CSV — append-only events, consent-gated visitor bucket, opt-out, no raw PII, CSV export (ADR 0012/0015/0017)
-- [ ] #15 (F) Locale CI — six-locale catalog check (ADR 0011)
+- [x] #15 (F) Locale CI — six-locale catalog check: nested-key parity + pluralization, GitHub Actions (ADR 0011)
 
-Order: #10 first (foundation); then #11 → #12 → #13/#14; #15 after #10.
+**Phase 1 — Foundation ✅ complete (2026-06-04): #10–#15 all merged.**
 
 ## Governance hardening (2026-06-04)
 
@@ -47,4 +47,4 @@ Order: #10 first (foundation); then #11 → #12 → #13/#14; #15 after #10.
 - **Three separated API surfaces; fail closed** (ADR 0018/0019); endpoint changes are gated by `docs/review/api-security.md`.
 - **Only approved creatives serve** (ADR 0020/0021); creative changes are gated by `docs/review/creative-review.md`.
 
-Last updated: 2026-06-04 (#14 measurement + CSV landed; next: #15 locale CI)
+Last updated: 2026-06-04 (#15 locale CI landed — Phase 1 Foundation complete; next: Phase 2)
