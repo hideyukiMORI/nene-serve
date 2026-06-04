@@ -53,11 +53,13 @@ tracks impressions and clicks, and reports time-series metrics with CSV export �
 
 ## Status
 
-**Phase 2 — Rich creatives ✅ complete** (#24–#28). Builds on Phase 1 (#10–#15):
-image/video/HTML5 creatives (scan + sandbox/CSP + review queue), consent-gated
-frequency cap, six-locale consent chrome + data-subject-request tooling, and JSON
-time-series reporting (CTR + fill rate). Next: **Phase 3** (marketplace —
-advertiser budgets; money SSOT stays in Invoice).
+**Phase 3 — Marketplace ✅ complete** (#47–#51), on top of Phase 1 (#10–#15) and
+Phase 2 (#24–#28): advertisers, versioned pricing, campaigns with budgets +
+billable spend accrual (no overspend), tamper-evident spend snapshots + immutable
+billing-period close, idempotent net Invoice handoff + reconciliation, and
+statutory retention + legal hold. **Money SSOT stays in NeNe Invoice; Serve is
+tax-neutral** (ADR 0014/0015). Also shipped: **integrity & audit hardening**
+(#36–#41) — append-only governed data, hash-chained audit, DB-enforced no-delete.
 
 ## Running locally
 

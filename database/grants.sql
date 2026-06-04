@@ -32,7 +32,13 @@ GRANT SELECT, INSERT         ON nene_serve.pricing_rules    TO 'nene'@'%'; -- ve
 GRANT SELECT, INSERT         ON nene_serve.spend_snapshots  TO 'nene'@'%'; -- append-only, immutable
 GRANT SELECT, INSERT         ON nene_serve.audit_events   TO 'nene'@'%'; -- append-only
 
+GRANT SELECT, INSERT, UPDATE ON nene_serve.legal_holds     TO 'nene'@'%';
+
 -- Presentation data: cosmetic UI state may be deleted.
 GRANT SELECT, INSERT, UPDATE, DELETE ON nene_serve.user_preferences TO 'nene'@'%';
+
+-- NOTE: the app role above has NO DELETE on governed tables (ADR 0022 §6). The
+-- governed retention purge (scripts/purge-retention.php, billing §7) runs under a
+-- SEPARATE privileged role that holds DELETE on impressions/clicks — never this one.
 
 FLUSH PRIVILEGES;

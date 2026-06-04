@@ -23,4 +23,12 @@ interface CreativeRepositoryInterface
      * @return list<string>
      */
     public function idsByCampaign(string $organizationId, string $campaignId): array;
+
+    /**
+     * All billing-relevant creative ids (bound to any campaign) — used to keep
+     * their events under statutory retention (billing §7).
+     *
+     * @return list<string>
+     */
+    public function idsWithCampaign(string $organizationId): array;
 }

@@ -95,4 +95,12 @@ final class PdoCreativeRepository implements CreativeRepositoryInterface
 
         return array_map(static fn ($v): string => (string) $v, $stmt->fetchAll(PDO::FETCH_COLUMN));
     }
+
+    public function idsWithCampaign(string $organizationId): array
+    {
+        $stmt = $this->pdo->prepare('SELECT id FROM creatives WHERE organization_id = ? AND campaign_id IS NOT NULL');
+        $stmt->execute([$organizationId]);
+
+        return array_map(static fn ($v): string => (string) $v, $stmt->fetchAll(PDO::FETCH_COLUMN));
+    }
 }
