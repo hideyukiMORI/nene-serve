@@ -19,6 +19,7 @@ use NeneServe\Http\Admin\ExportMetricsHandler as AdminExportMetricsHandler;
 use NeneServe\Http\Admin\GetBillingPeriodHandler;
 use NeneServe\Http\Admin\GetCampaignHandler;
 use NeneServe\Http\Admin\GetMetricsHandler as AdminGetMetricsHandler;
+use NeneServe\Http\Admin\GetRecordsAssetHandler;
 use NeneServe\Http\Admin\HandoffBillingPeriodHandler;
 use NeneServe\Http\Admin\ListAdvertisersHandler;
 use NeneServe\Http\Admin\ListCreativesHandler;
@@ -103,6 +104,8 @@ use NeneServe\Tenant\OrganizationRepositoryInterface;
 use NeneServe\Tenant\UseCase\ListUsersUseCase;
 use NeneServe\Tenant\UseCase\LoginUseCase;
 use NeneServe\Tenant\UserRepositoryInterface;
+use NeneServe\Upstream\Records\FakeRecordsClient;
+use NeneServe\Upstream\Records\RecordsClientInterface;
 
 /**
  * Application kernel: wires dependencies, registers the three API surfaces, and
@@ -146,6 +149,7 @@ final class Kernel
     private readonly InvoiceHandoffRepositoryInterface $invoiceHandoffs;
     private readonly InvoiceClientInterface $invoiceClient;
     private readonly LegalHoldRepositoryInterface $legalHolds;
+    private readonly RecordsClientInterface $records;
     private readonly Jwt $jwt;
 
     public function __construct(
@@ -170,6 +174,7 @@ final class Kernel
         ?InvoiceHandoffRepositoryInterface $invoiceHandoffs = null,
         ?InvoiceClientInterface $invoiceClient = null,
         ?LegalHoldRepositoryInterface $legalHolds = null,
+        ?RecordsClientInterface $records = null,
     ) {
         $this->json = new JsonResponseFactory();
         $this->users = $users ?? DevFixtures::users();
@@ -192,6 +197,7 @@ final class Kernel
         $this->invoiceHandoffs = $invoiceHandoffs ?? new InMemoryInvoiceHandoffRepository();
         $this->invoiceClient = $invoiceClient ?? new FakeInvoiceClient();
         $this->legalHolds = $legalHolds ?? new InMemoryLegalHoldRepository();
+        $this->records = $records ?? new FakeRecordsClient();
         $this->jwt = $jwt ?? new Jwt(self::resolveSecret());
         $this->auth = new BearerTokenMiddleware($this->jwt, $this->users);
         $this->serviceAuth = new ServiceTokenMiddleware($serviceTokens ?? DevFixtures::serviceTokens());
@@ -371,6 +377,9 @@ final class Kernel
 
         $reviewQueue = new ReviewQueueHandler($this->creatives, $this->json);
         $this->router->add('GET', '/admin/review-queue', $this->admin(Capability::ReviewCreatives, $reviewQueue->handle(...)));
+
+        $recordsAsset = new GetRecordsAssetHandler($this->records, $this->json);
+        $this->router->add('GET', '/admin/records-assets/{ref}', $this->admin(Capability::ManageCreatives, $recordsAsset->handle(...)));
 
         $transition = new TransitionCreativeUseCase($this->creatives, $this->audit, $this->tx);
         // Author actions require `manage_creatives`; reviewer actions require `review_creatives` (four-eyes).

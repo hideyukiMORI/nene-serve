@@ -42,6 +42,13 @@
 **Phase 3 — Marketplace ✅ complete (2026-06-04): #47–#51 all merged.**
 **Integrity & audit hardening ✅ complete: #36–#41 (#41 closed by #51).**
 
+## Next (Phase 4 — milestone "Phase 4: Ecosystem")
+
+- [x] #57 (A) Upstream HTTP client framework + Records read client (asset metadata) (ADR 0002)
+- [ ] #58 (B) Deal opportunity handoff (idempotent, audited, failure-isolated)
+- [ ] #59 (C) Concierge conversion beacon (append-only, no Contact submission) (ADR 0009)
+- [ ] #60 (D) MCP write-plan mechanism (propose → confirm → apply, read-first, audited)
+
 ## Integrity & audit hardening (ADR 0022) — before Phase 3
 
 - [x] Binding doc + ADR 0022 + self-review (`docs/explanation/audit-and-data-integrity-compliance.md`)
@@ -78,4 +85,4 @@
 - **Three separated API surfaces; fail closed** (ADR 0018/0019); endpoint changes are gated by `docs/review/api-security.md`.
 - **Only approved creatives serve** (ADR 0020/0021); creative changes are gated by `docs/review/creative-review.md`.
 
-Last updated: 2026-06-04 (#51 retention + legal hold landed — Phase 3 Marketplace complete; #41 closed)
+Last updated: 2026-06-04 (Phase 4 opened; #57 Records read client landed; next: #58 Deal handoff)
