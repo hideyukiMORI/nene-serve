@@ -60,8 +60,8 @@
 - Step ② screens (FE), wired to the real admin endpoints:
   - [x] Creatives & review (list + review-queue with actions; nav Placements·Creatives·Review). PR #74.
   - [x] Metrics dashboard (`GET /admin/metrics`; KPI cards + daily CTR/fill table). PR #76.
-  - [ ] Marketplace/billing (advertisers, pricing rules, campaigns, billing periods).
-  - [ ] Detail views (placement/creative); CJK/Hangul webfonts; serve re-theme.
+  - [x] Marketplace (advertisers, pricing rules, campaigns — read; money via formatMoneyJpy). PR #78.
+  - [ ] Billing-period actions (close/handoff), create forms, detail views (placement/creative); CJK/Hangul webfonts; serve re-theme.
 
 ## Integrity & audit hardening (ADR 0022) — before Phase 3
 
