@@ -8,7 +8,7 @@ use PDO;
 
 final class PdoPlacementRepository implements PlacementRepositoryInterface
 {
-    private const COLUMNS = 'id, organization_id, public_placement_key, allowed_origins, status, default_creative_id';
+    private const COLUMNS = 'id, organization_id, public_placement_key, allowed_origins, status, default_creative_id, measurement_enabled';
 
     public function __construct(
         private readonly PDO $pdo,
@@ -49,8 +49,8 @@ final class PdoPlacementRepository implements PlacementRepositoryInterface
     {
         $stmt = $this->pdo->prepare(
             'REPLACE INTO placements
-                (id, organization_id, public_placement_key, allowed_origins, status, default_creative_id)
-             VALUES (?, ?, ?, ?, ?, ?)',
+                (id, organization_id, public_placement_key, allowed_origins, status, default_creative_id, measurement_enabled)
+             VALUES (?, ?, ?, ?, ?, ?, ?)',
         );
         $stmt->execute([
             $placement->id,
@@ -59,6 +59,7 @@ final class PdoPlacementRepository implements PlacementRepositoryInterface
             (string) json_encode($placement->allowedOrigins),
             $placement->status,
             $placement->defaultCreativeId,
+            $placement->measurementEnabled ? 1 : 0,
         ]);
     }
 
@@ -81,6 +82,7 @@ final class PdoPlacementRepository implements PlacementRepositoryInterface
             $origins,
             (string) $row['status'],
             $row['default_creative_id'] !== null ? (string) $row['default_creative_id'] : null,
+            (bool) $row['measurement_enabled'],
         );
     }
 }

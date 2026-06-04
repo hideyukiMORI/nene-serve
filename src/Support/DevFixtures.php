@@ -59,6 +59,8 @@ final class DevFixtures
             new Placement('plc-acme-home', 'org-acme', 'pk_acme_home', ['https://acme.test'], 'active', 'cr-acme-banner'),
             // Active placement whose default creative is only draft → empty serve (204).
             new Placement('plc-acme-side', 'org-acme', 'pk_acme_side', [], 'active', 'cr-acme-draft'),
+            // Active + approved but measurement opted out (privacy P2): serves, no beacons counted.
+            new Placement('plc-acme-quiet', 'org-acme', 'pk_acme_quiet', [], 'active', 'cr-acme-banner', false),
         ]);
     }
 

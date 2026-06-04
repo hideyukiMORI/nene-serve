@@ -54,11 +54,6 @@ final class ServeCreativeUseCase
             throw new NoEligibleCreativeException();
         }
 
-        $impressionToken = $this->tokens->issueImpressionToken(
-            $placement->organizationId,
-            $placement->id,
-            $creative->id,
-        );
         $clickToken = $this->tokens->issueClickToken(
             $placement->organizationId,
             $placement->id,
@@ -67,11 +62,19 @@ final class ServeCreativeUseCase
             $this->clickTokenTtlSeconds,
         );
 
-        $payload = [
-            'creative' => $creative->toServePayload(),
-            'impression_token' => $impressionToken,
-            'click_url' => '/public/clicks/' . $clickToken,
-        ];
+        $payload = ['creative' => $creative->toServePayload()];
+
+        // Privacy P2/§3: only issue the impression beacon token when the placement
+        // opts into measurement. The click redirect is essential and always works.
+        if ($placement->measurementEnabled) {
+            $payload['impression_token'] = $this->tokens->issueImpressionToken(
+                $placement->organizationId,
+                $placement->id,
+                $creative->id,
+            );
+        }
+
+        $payload['click_url'] = '/public/clicks/' . $clickToken;
 
         $corsOrigin = ($origin !== null && $placement->allowedOrigins !== [] && in_array($origin, $placement->allowedOrigins, true))
             ? $origin

@@ -8,18 +8,18 @@ use NeneServe\Http\JsonResponseFactory;
 use NeneServe\Http\RateLimit\RateLimiterInterface;
 use NeneServe\Http\Request;
 use NeneServe\Http\Response;
-use NeneServe\Serving\Token\TokenStoreInterface;
+use NeneServe\Measurement\UseCase\RecordImpressionUseCase;
 
 /**
  * POST /public/events/impression (operationId `recordImpression`). Idempotent
- * beacon: replaying a token does not inflate counts (ADR 0019 §4). Unknown
- * tokens are accepted silently (204) to avoid token enumeration; event
- * persistence proper lands in #14.
+ * beacon (ADR 0019 §4). The hashed visitor bucket is recorded only when the body
+ * carries a positive `consent_state` (privacy §3); unknown tokens ack silently
+ * (204) to avoid enumeration.
  */
 final class RecordImpressionHandler
 {
     public function __construct(
-        private readonly TokenStoreInterface $tokens,
+        private readonly RecordImpressionUseCase $recordImpression,
         private readonly RateLimiterInterface $rateLimiter,
         private readonly JsonResponseFactory $json,
     ) {
@@ -37,8 +37,18 @@ final class RecordImpressionHandler
             return $this->json->problem(422, 'validation-failed', 'impression_token is required');
         }
 
-        // Records on first call, no-ops on replay; either way the beacon acks 204.
-        $this->tokens->recordImpression($token);
+        $consentGranted = ($body['consent_state'] ?? null) === 'granted';
+        $countryCode = is_string($body['country_code'] ?? null) ? $body['country_code'] : null;
+        $pageUrl = is_string($body['page_url'] ?? null) ? $body['page_url'] : null;
+
+        $this->recordImpression->execute(
+            $token,
+            $request->clientIp,
+            $request->header('user-agent') ?? '',
+            $consentGranted,
+            $countryCode,
+            $pageUrl,
+        );
 
         return new Response(204, '');
     }
