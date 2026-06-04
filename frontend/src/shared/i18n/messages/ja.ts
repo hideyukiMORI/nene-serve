@@ -107,4 +107,17 @@ export const ja: MessageCatalog = {
   'marketplace.column.version': 'バージョン',
   'marketplace.column.funding': '入金状況',
   'marketplace.column.budget': '予算',
+
+  'marketplace.create.advertiser': '広告主を追加',
+  'marketplace.create.pricingRule': '料金ルールを追加',
+  'marketplace.create.campaign': 'キャンペーンを追加',
+  'marketplace.field.advertiser': '広告主',
+  'marketplace.field.pricingRule': '料金ルール',
+  'marketplace.field.rateCents': '単価（cents）',
+  'marketplace.field.budgetCents': '予算（cents）',
+  'marketplace.action.create': '作成',
+  'marketplace.action.creating': '作成中…',
+  'marketplace.createError': '作成できませんでした。入力を確認して再試行してください。',
+  'marketplace.validation.required': 'この項目は必須です。',
+  'marketplace.validation.nonNegative': '0 以上の整数を入力してください。',
 }

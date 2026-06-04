@@ -109,6 +109,18 @@ export interface MessageCatalog {
   'marketplace.column.version': string
   'marketplace.column.funding': string
   'marketplace.column.budget': string
+  'marketplace.create.advertiser': string
+  'marketplace.create.pricingRule': string
+  'marketplace.create.campaign': string
+  'marketplace.field.advertiser': string
+  'marketplace.field.pricingRule': string
+  'marketplace.field.rateCents': string
+  'marketplace.field.budgetCents': string
+  'marketplace.action.create': string
+  'marketplace.action.creating': string
+  'marketplace.createError': string
+  'marketplace.validation.required': string
+  'marketplace.validation.nonNegative': string
 }
 
 export const en: MessageCatalog = {
@@ -217,4 +229,16 @@ export const en: MessageCatalog = {
   'marketplace.column.version': 'Version',
   'marketplace.column.funding': 'Funding',
   'marketplace.column.budget': 'Budget',
+  'marketplace.create.advertiser': 'New advertiser',
+  'marketplace.create.pricingRule': 'New pricing rule',
+  'marketplace.create.campaign': 'New campaign',
+  'marketplace.field.advertiser': 'Advertiser',
+  'marketplace.field.pricingRule': 'Pricing rule',
+  'marketplace.field.rateCents': 'Rate (cents)',
+  'marketplace.field.budgetCents': 'Budget (cents)',
+  'marketplace.action.create': 'Create',
+  'marketplace.action.creating': 'Creating…',
+  'marketplace.createError': 'Could not create. Check the form and try again.',
+  'marketplace.validation.required': 'This field is required.',
+  'marketplace.validation.nonNegative': 'Enter 0 or a positive whole number.',
 }

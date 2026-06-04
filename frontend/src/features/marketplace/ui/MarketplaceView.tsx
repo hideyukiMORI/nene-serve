@@ -4,6 +4,9 @@ import type { PricingRule } from '@/entities/pricing-rule'
 import { useTranslation } from '@/shared/i18n'
 import { formatMoneyJpy } from '@/shared/lib/format-money'
 import { EmptyState, Stack, Text } from '@/shared/ui'
+import { CreateAdvertiserForm } from './CreateAdvertiserForm'
+import { CreateCampaignForm } from './CreateCampaignForm'
+import { CreatePricingRuleForm } from './CreatePricingRuleForm'
 
 export interface MarketplaceViewProps {
   advertisers: Advertiser[]
@@ -38,6 +41,7 @@ export function MarketplaceView({
         <Text as="h2" variant="heading-sm">
           {t('marketplace.advertisers.title')}
         </Text>
+        <CreateAdvertiserForm />
         {advertisers.length === 0 ? (
           <EmptyState title={t('marketplace.advertisers.empty')} />
         ) : (
@@ -64,6 +68,7 @@ export function MarketplaceView({
         <Text as="h2" variant="heading-sm">
           {t('marketplace.pricingRules.title')}
         </Text>
+        <CreatePricingRuleForm />
         {pricingRules.length === 0 ? (
           <EmptyState title={t('marketplace.pricingRules.empty')} />
         ) : (
@@ -94,6 +99,7 @@ export function MarketplaceView({
         <Text as="h2" variant="heading-sm">
           {t('marketplace.campaigns.title')}
         </Text>
+        <CreateCampaignForm advertisers={advertisers} pricingRules={pricingRules} />
         {campaigns.length === 0 ? (
           <EmptyState title={t('marketplace.campaigns.empty')} />
         ) : (

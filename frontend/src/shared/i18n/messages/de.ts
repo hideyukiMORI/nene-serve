@@ -108,4 +108,17 @@ export const de: MessageCatalog = {
   'marketplace.column.version': 'Version',
   'marketplace.column.funding': 'Finanzierung',
   'marketplace.column.budget': 'Budget',
+
+  'marketplace.create.advertiser': 'Werbetreibenden anlegen',
+  'marketplace.create.pricingRule': 'Preisregel anlegen',
+  'marketplace.create.campaign': 'Kampagne anlegen',
+  'marketplace.field.advertiser': 'Werbetreibender',
+  'marketplace.field.pricingRule': 'Preisregel',
+  'marketplace.field.rateCents': 'Tarif (Cent)',
+  'marketplace.field.budgetCents': 'Budget (Cent)',
+  'marketplace.action.create': 'Anlegen',
+  'marketplace.action.creating': 'Wird angelegt…',
+  'marketplace.createError': 'Anlegen fehlgeschlagen. Bitte Formular prüfen und erneut versuchen.',
+  'marketplace.validation.required': 'Dieses Feld ist erforderlich.',
+  'marketplace.validation.nonNegative': 'Geben Sie 0 oder eine positive Ganzzahl ein.',
 }

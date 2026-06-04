@@ -107,4 +107,17 @@ export const zhHans: MessageCatalog = {
   'marketplace.column.version': '版本',
   'marketplace.column.funding': '资金状态',
   'marketplace.column.budget': '预算',
+
+  'marketplace.create.advertiser': '新增广告主',
+  'marketplace.create.pricingRule': '新增定价规则',
+  'marketplace.create.campaign': '新增广告活动',
+  'marketplace.field.advertiser': '广告主',
+  'marketplace.field.pricingRule': '定价规则',
+  'marketplace.field.rateCents': '单价（分）',
+  'marketplace.field.budgetCents': '预算（分）',
+  'marketplace.action.create': '创建',
+  'marketplace.action.creating': '创建中…',
+  'marketplace.createError': '无法创建。请检查表单后重试。',
+  'marketplace.validation.required': '此字段为必填项。',
+  'marketplace.validation.nonNegative': '请输入 0 或正整数。',
 }

@@ -142,7 +142,7 @@
       "get": { "operationId": "listAdvertisers", "tags": ["marketplace"], "summary": "List advertisers.",
         "responses": { "200": { "description": "Advertisers.", "content": { "application/json": { "schema": { "type": "array", "items": { "type": "object" } } } } }, "403": { "$ref": "#/components/responses/Problem" } } },
       "post": { "operationId": "createAdvertiser", "tags": ["marketplace"], "summary": "Create an advertiser.",
-        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "name": { "type": "string" } }, "required": ["name"] } } } },
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "name": { "type": "string" }, "invoice_client_id": { "type": ["string", "null"] } }, "required": ["name"] } } } },
         "responses": { "201": { "description": "Created.", "content": { "application/json": { "schema": { "type": "object" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
     },
     "/admin/pricing-rules": {
@@ -150,17 +150,17 @@
         "responses": { "200": { "description": "Pricing rules.", "content": { "application/json": { "schema": { "type": "object", "properties": { "pricing_rules": { "type": "array", "items": { "type": "object" } } } } } } }, "403": { "$ref": "#/components/responses/Problem" } } },
       "post": { "operationId": "createPricingRule", "tags": ["marketplace"], "summary": "Create an immutable, versioned pricing rule (JPY net, no tax/float).",
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": {
-          "advertiser_id": { "type": "string" }, "model": { "type": "string", "enum": ["cpm", "cpc", "flat"] }, "rate_cents": { "type": "integer", "minimum": 0 }
-        }, "required": ["advertiser_id", "model", "rate_cents"] } } } },
+          "name": { "type": "string" }, "pricing_model": { "type": "string", "enum": ["cpm", "cpc", "flat"] }, "rate_cents": { "type": "integer", "minimum": 0, "description": "Net minor units (JPY cents)." }
+        }, "required": ["name", "pricing_model", "rate_cents"] } } } },
         "responses": { "201": { "description": "Created.", "content": { "application/json": { "schema": { "type": "object" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
     },
     "/admin/campaigns": {
       "get": { "operationId": "listCampaigns", "tags": ["marketplace"], "summary": "List campaigns in the caller's tenant.",
         "responses": { "200": { "description": "Campaigns.", "content": { "application/json": { "schema": { "type": "object", "properties": { "campaigns": { "type": "array", "items": { "type": "object" } } } } } } }, "403": { "$ref": "#/components/responses/Problem" } } },
-      "post": { "operationId": "createCampaign", "tags": ["marketplace"], "summary": "Create a campaign with a budget (cents).",
+      "post": { "operationId": "createCampaign", "tags": ["marketplace"], "summary": "Create a campaign with a budget (net minor units).",
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": {
-          "advertiser_id": { "type": "string" }, "pricing_rule_id": { "type": "string" }, "budget_cents": { "type": "integer", "minimum": 0 }, "pause_on_budget_exhausted": { "type": "boolean" }
-        }, "required": ["advertiser_id", "pricing_rule_id", "budget_cents"] } } } },
+          "advertiser_id": { "type": "string" }, "name": { "type": "string" }, "pricing_rule_id": { "type": "string" }, "budget_cents": { "type": "integer", "minimum": 0, "description": "Net minor units (JPY cents)." }, "pause_on_budget_exhausted": { "type": "boolean" }
+        }, "required": ["advertiser_id", "name", "pricing_rule_id", "budget_cents"] } } } },
         "responses": { "201": { "description": "Created.", "content": { "application/json": { "schema": { "type": "object" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
     },
     "/admin/campaigns/{id}": {

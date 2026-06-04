@@ -409,7 +409,7 @@ export interface paths {
         /** List campaigns in the caller's tenant. */
         get: operations["listCampaigns"];
         put?: never;
-        /** Create a campaign with a budget (cents). */
+        /** Create a campaign with a budget (net minor units). */
         post: operations["createCampaign"];
         delete?: never;
         options?: never;
@@ -1176,6 +1176,7 @@ export interface operations {
             content: {
                 "application/json": {
                     name: string;
+                    invoice_client_id?: string | null;
                 };
             };
         };
@@ -1226,9 +1227,10 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    advertiser_id: string;
+                    name: string;
                     /** @enum {string} */
-                    model: "cpm" | "cpc" | "flat";
+                    pricing_model: "cpm" | "cpc" | "flat";
+                    /** @description Net minor units (JPY cents). */
                     rate_cents: number;
                 };
             };
@@ -1281,7 +1283,9 @@ export interface operations {
             content: {
                 "application/json": {
                     advertiser_id: string;
+                    name: string;
                     pricing_rule_id: string;
+                    /** @description Net minor units (JPY cents). */
                     budget_cents: number;
                     pause_on_budget_exhausted?: boolean;
                 };
