@@ -17,6 +17,9 @@ final class InMemoryEventStore implements EventStoreInterface
     /** @var list<array{org: string, date: string, placement: string, creative: string}> */
     private array $clicks = [];
 
+    /** @var list<array{org: string, date: string, placement: string, filled: bool}> */
+    private array $serves = [];
+
     public function recordImpression(ImpressionEvent $event): void
     {
         $this->impressions[] = [
@@ -37,6 +40,21 @@ final class InMemoryEventStore implements EventStoreInterface
             'placement' => $event->placementId,
             'creative' => $event->creativeId,
         ];
+    }
+
+    public function recordServeRequest(string $organizationId, string $placementId, bool $filled): void
+    {
+        $this->serves[] = [
+            'org' => $organizationId,
+            'date' => gmdate('Y-m-d'),
+            'placement' => $placementId,
+            'filled' => $filled,
+        ];
+    }
+
+    public function dailyFillRates(string $organizationId, string $fromDate, string $toDate): array
+    {
+        return FillRateAggregator::aggregate($this->serves, $organizationId, $fromDate, $toDate);
     }
 
     public function dailyMetrics(string $organizationId, string $fromDate, string $toDate): array

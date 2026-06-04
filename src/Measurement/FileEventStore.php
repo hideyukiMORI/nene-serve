@@ -43,6 +43,18 @@ final class FileEventStore implements EventStoreInterface
         });
     }
 
+    public function recordServeRequest(string $organizationId, string $placementId, bool $filled): void
+    {
+        $this->mutate(function (array &$state) use ($organizationId, $placementId, $filled): void {
+            $state['serves'][] = [
+                'org' => $organizationId,
+                'date' => gmdate('Y-m-d'),
+                'placement' => $placementId,
+                'filled' => $filled,
+            ];
+        });
+    }
+
     public function dailyMetrics(string $organizationId, string $fromDate, string $toDate): array
     {
         $state = $this->read();
@@ -52,6 +64,14 @@ final class FileEventStore implements EventStoreInterface
         );
 
         return MetricsAggregator::aggregate($impressions, $state['clicks'], $organizationId, $fromDate, $toDate);
+    }
+
+    public function dailyFillRates(string $organizationId, string $fromDate, string $toDate): array
+    {
+        /** @var list<array{org: string, date: string, placement: string, filled: bool}> $serves */
+        $serves = $this->read()['serves'];
+
+        return FillRateAggregator::aggregate($serves, $organizationId, $fromDate, $toDate);
     }
 
     public function exportVisitorData(string $organizationId, string $visitorBucket): array
@@ -88,7 +108,7 @@ final class FileEventStore implements EventStoreInterface
     }
 
     /**
-     * @param callable(array{impressions: list<array<string, mixed>>, clicks: list<array<string, mixed>>}): void $apply
+     * @param callable(array{impressions: list<array<string, mixed>>, clicks: list<array<string, mixed>>, serves: list<array<string, mixed>>}): void $apply
      */
     private function mutate(callable $apply): void
     {
@@ -105,9 +125,9 @@ final class FileEventStore implements EventStoreInterface
         try {
             flock($handle, LOCK_EX);
             $raw = stream_get_contents($handle);
-            /** @var array{impressions?: list<array<string, mixed>>, clicks?: list<array<string, mixed>>} $state */
+            /** @var array{impressions?: list<array<string, mixed>>, clicks?: list<array<string, mixed>>, serves?: list<array<string, mixed>>} $state */
             $state = $raw === false || $raw === '' ? [] : (json_decode($raw, true) ?: []);
-            $state += ['impressions' => [], 'clicks' => []];
+            $state += ['impressions' => [], 'clicks' => [], 'serves' => []];
 
             $apply($state);
 
@@ -121,16 +141,16 @@ final class FileEventStore implements EventStoreInterface
         }
     }
 
-    /** @return array{impressions: list<array<string, mixed>>, clicks: list<array{org: string, date: string, placement: string, creative: string}>} */
+    /** @return array{impressions: list<array<string, mixed>>, clicks: list<array{org: string, date: string, placement: string, creative: string}>, serves: list<array<string, mixed>>} */
     private function read(): array
     {
         if (!is_file($this->path)) {
-            return ['impressions' => [], 'clicks' => []];
+            return ['impressions' => [], 'clicks' => [], 'serves' => []];
         }
         $raw = (string) file_get_contents($this->path);
-        /** @var array{impressions?: list<array<string, mixed>>, clicks?: list<array{org: string, date: string, placement: string, creative: string}>} $state */
+        /** @var array{impressions?: list<array<string, mixed>>, clicks?: list<array{org: string, date: string, placement: string, creative: string}>, serves?: list<array<string, mixed>>} $state */
         $state = $raw === '' ? [] : (json_decode($raw, true) ?: []);
 
-        return ['impressions' => $state['impressions'] ?? [], 'clicks' => $state['clicks'] ?? []];
+        return ['impressions' => $state['impressions'] ?? [], 'clicks' => $state['clicks'] ?? [], 'serves' => $state['serves'] ?? []];
     }
 }

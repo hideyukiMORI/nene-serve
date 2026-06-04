@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\UseCase;
 
+use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\VisitorBucket;
 use NeneServe\Serving\CreativeRepositoryInterface;
 use NeneServe\Serving\CreativeType;
@@ -29,6 +30,7 @@ final class ServeCreativeUseCase
         private readonly CreativeRepositoryInterface $creatives,
         private readonly TokenStoreInterface $tokens,
         private readonly FrequencyCapStoreInterface $frequencyCaps,
+        private readonly EventStoreInterface $events,
         private readonly int $clickTokenTtlSeconds = 900,
     ) {
     }
@@ -50,6 +52,7 @@ final class ServeCreativeUseCase
         }
 
         if (!$placement->isActive() || $placement->defaultCreativeId === null) {
+            $this->events->recordServeRequest($placement->organizationId, $placement->id, false);
             throw new NoEligibleCreativeException();
         }
 
@@ -61,6 +64,7 @@ final class ServeCreativeUseCase
             && $consentGranted) {
             $bucket = VisitorBucket::derive($placement->organizationId, $clientIp, $userAgent);
             if ($this->frequencyCaps->count($placement->id, $bucket) >= $placement->frequencyCap) {
+                $this->events->recordServeRequest($placement->organizationId, $placement->id, false);
                 throw new FrequencyCappedException();
             }
         }
@@ -72,8 +76,11 @@ final class ServeCreativeUseCase
         if ($creative === null
             || !$creative->isServable()
             || !DestinationUrl::isSafe($creative->destinationUrl)) {
+            $this->events->recordServeRequest($placement->organizationId, $placement->id, false);
             throw new NoEligibleCreativeException();
         }
+
+        $this->events->recordServeRequest($placement->organizationId, $placement->id, true);
 
         $clickToken = $this->tokens->issueClickToken(
             $placement->organizationId,
