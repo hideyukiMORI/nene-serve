@@ -37,6 +37,7 @@ GRANT SELECT, INSERT         ON nene_serve.audit_events   TO 'nene'@'%'; -- appe
 GRANT SELECT, INSERT, UPDATE ON nene_serve.legal_holds     TO 'nene'@'%';
 GRANT SELECT, INSERT, UPDATE ON nene_serve.change_plans    TO 'nene'@'%'; -- status advances
 GRANT SELECT, INSERT, UPDATE ON nene_serve.service_tokens  TO 'nene'@'%'; -- revoke = status tombstone, no delete
+GRANT SELECT, INSERT, UPDATE ON nene_serve.smtp_settings   TO 'nene'@'%'; -- upsert via INSERT..ON DUPLICATE KEY UPDATE (no delete)
 
 -- Presentation data: cosmetic UI state may be deleted.
 GRANT SELECT, INSERT, UPDATE, DELETE ON nene_serve.user_preferences TO 'nene'@'%';

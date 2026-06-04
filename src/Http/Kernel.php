@@ -22,6 +22,7 @@ use NeneServe\Http\Admin\GetCreativeHandler;
 use NeneServe\Http\Admin\GetMetricsHandler as AdminGetMetricsHandler;
 use NeneServe\Http\Admin\GetPlacementHandler;
 use NeneServe\Http\Admin\GetRecordsAssetHandler;
+use NeneServe\Http\Admin\GetSmtpSettingsHandler;
 use NeneServe\Http\Admin\HandoffBillingPeriodHandler;
 use NeneServe\Http\Admin\HandoffCampaignToDealHandler;
 use NeneServe\Http\Admin\ListAdvertisersHandler;
@@ -36,7 +37,9 @@ use NeneServe\Http\Admin\PlaceLegalHoldHandler;
 use NeneServe\Http\Admin\ReleaseLegalHoldHandler;
 use NeneServe\Http\Admin\ReviewQueueHandler;
 use NeneServe\Http\Admin\ReviseCreativeHandler;
+use NeneServe\Http\Admin\TestSmtpSettingsHandler;
 use NeneServe\Http\Admin\TransitionCreativeHandler;
+use NeneServe\Http\Admin\UpdateSmtpSettingsHandler;
 use NeneServe\Http\Auth\BearerTokenMiddleware;
 use NeneServe\Http\Auth\Jwt;
 use NeneServe\Http\Auth\ServiceTokenMiddleware;
@@ -53,6 +56,8 @@ use NeneServe\Http\Service\ExportMetricsHandler as ServiceExportMetricsHandler;
 use NeneServe\Http\Service\GetMetricsHandler as ServiceGetMetricsHandler;
 use NeneServe\Http\Service\ListPlacementsHandler;
 use NeneServe\Http\Service\ProposeChangeHandler;
+use NeneServe\Mail\MailerFactoryInterface;
+use NeneServe\Mail\SmtpMailerFactory;
 use NeneServe\Marketplace\AdvertiserRepositoryInterface;
 use NeneServe\Marketplace\BillingPeriodRepositoryInterface;
 use NeneServe\Marketplace\CampaignRepositoryInterface;
@@ -112,6 +117,9 @@ use NeneServe\Serving\UseCase\CreateVideoCreativeUseCase;
 use NeneServe\Serving\UseCase\ReviseCreativeUseCase;
 use NeneServe\Serving\UseCase\ServeCreativeUseCase;
 use NeneServe\Serving\UseCase\TransitionCreativeUseCase;
+use NeneServe\Settings\InMemorySmtpSettingsRepository;
+use NeneServe\Settings\SmtpSettingsRepositoryInterface;
+use NeneServe\Support\Crypto;
 use NeneServe\Support\DevFixtures;
 use NeneServe\Support\NullTransactionManager;
 use NeneServe\Support\TransactionManagerInterface;
@@ -172,6 +180,9 @@ final class Kernel
     private readonly DealOpportunityRepositoryInterface $dealOpportunities;
     private readonly DealClientInterface $dealClient;
     private readonly ChangePlanRepositoryInterface $changePlans;
+    private readonly SmtpSettingsRepositoryInterface $smtpSettings;
+    private readonly MailerFactoryInterface $mailerFactory;
+    private readonly Crypto $crypto;
     private readonly Jwt $jwt;
 
     public function __construct(
@@ -200,6 +211,9 @@ final class Kernel
         ?DealOpportunityRepositoryInterface $dealOpportunities = null,
         ?DealClientInterface $dealClient = null,
         ?ChangePlanRepositoryInterface $changePlans = null,
+        ?SmtpSettingsRepositoryInterface $smtpSettings = null,
+        ?MailerFactoryInterface $mailerFactory = null,
+        ?Crypto $crypto = null,
     ) {
         $this->json = new JsonResponseFactory();
         $this->users = $users ?? DevFixtures::users();
@@ -226,6 +240,9 @@ final class Kernel
         $this->dealOpportunities = $dealOpportunities ?? new InMemoryDealOpportunityRepository();
         $this->dealClient = $dealClient ?? new FakeDealClient();
         $this->changePlans = $changePlans ?? new InMemoryChangePlanRepository();
+        $this->smtpSettings = $smtpSettings ?? new InMemorySmtpSettingsRepository();
+        $this->mailerFactory = $mailerFactory ?? new SmtpMailerFactory();
+        $this->crypto = $crypto ?? new Crypto();
         $this->jwt = $jwt ?? new Jwt(self::resolveSecret());
         $this->auth = new BearerTokenMiddleware($this->jwt, $this->users);
         $this->serviceAuth = new ServiceTokenMiddleware($serviceTokens ?? DevFixtures::serviceTokens());
@@ -315,6 +332,15 @@ final class Kernel
 
         $dsr = new DataSubjectRequestHandler(new DataSubjectRequestUseCase($this->events, $this->audit), $this->json);
         $this->router->add('POST', '/admin/data-subject-requests', $this->admin(Capability::ManageSettings, $dsr->handle(...)));
+
+        $getSmtp = new GetSmtpSettingsHandler($this->smtpSettings, $this->json);
+        $this->router->add('GET', '/admin/settings/smtp', $this->admin(Capability::ManageSettings, $getSmtp->handle(...)));
+
+        $updateSmtp = new UpdateSmtpSettingsHandler($this->smtpSettings, $this->crypto, $this->audit, $this->json);
+        $this->router->add('PUT', '/admin/settings/smtp', $this->admin(Capability::ManageSettings, $updateSmtp->handle(...)));
+
+        $testSmtp = new TestSmtpSettingsHandler($this->smtpSettings, $this->crypto, $this->mailerFactory, $this->users, $this->audit, $this->json);
+        $this->router->add('POST', '/admin/settings/smtp/test', $this->admin(Capability::ManageSettings, $testSmtp->handle(...)));
 
         $placeHold = new PlaceLegalHoldHandler(new PlaceLegalHoldUseCase($this->legalHolds, $this->audit, $this->tx), $this->json);
         $this->router->add('POST', '/admin/legal-holds', $this->admin(Capability::ManageSettings, $placeHold->handle(...)));

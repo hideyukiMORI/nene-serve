@@ -140,6 +140,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/settings/smtp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the tenant's SMTP settings (never returns the password). */
+        get: operations["getSmtpSettings"];
+        /** Update SMTP settings (password encrypted at rest; omit to keep existing). Audited. */
+        put: operations["updateSmtpSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/settings/smtp/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a test email through the saved SMTP config to the acting operator. Audited. */
+        post: operations["testSmtpSettings"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/records-assets/{ref}": {
         parameters: {
             query?: never;
@@ -575,6 +610,18 @@ export interface components {
                 fill_rate?: number;
             }[];
         };
+        SmtpSettings: {
+            host: string;
+            port: number;
+            username?: string;
+            from_address?: string;
+            from_name?: string;
+            /** @enum {string} */
+            encryption: "none" | "starttls" | "tls";
+            /** @description Whether a password is stored (the password itself is never returned). */
+            has_password: boolean;
+            configured?: boolean;
+        };
         /** @description RFC 9457 Problem Details. */
         ProblemDetails: {
             /** Format: uri */
@@ -829,6 +876,89 @@ export interface operations {
             };
             403: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
+        };
+    };
+    getSmtpSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description SMTP settings (password masked via has_password). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SmtpSettings"];
+                };
+            };
+            403: components["responses"]["Problem"];
+        };
+    };
+    updateSmtpSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    host: string;
+                    port: number;
+                    username?: string;
+                    /** @description Plaintext; encrypted at rest. Omit/empty to keep the stored one. */
+                    password?: string;
+                    from_address: string;
+                    from_name?: string;
+                    /** @enum {string} */
+                    encryption?: "none" | "starttls" | "tls";
+                };
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SmtpSettings"];
+                };
+            };
+            403: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+        };
+    };
+    testSmtpSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Test email sent. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        sent?: boolean;
+                        recipient?: string;
+                    };
+                };
+            };
+            403: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+            502: components["responses"]["Problem"];
         };
     };
     getRecordsAsset: {
