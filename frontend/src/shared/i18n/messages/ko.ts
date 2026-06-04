@@ -1,0 +1,47 @@
+import type { MessageCatalog } from './en'
+
+/** Korean catalog (ADR 0011). */
+export const ko: MessageCatalog = {
+  'app.title': 'NeNe Serve',
+  'app.subtitle': '광고 게재 및 분석',
+
+  'nav.placements': '게재위치',
+
+  'shell.theme': '테마',
+  'shell.themeLight': '라이트',
+  'shell.themeDark': '다크',
+  'shell.lang': '언어',
+  'shell.signout': '로그아웃',
+
+  'common.error.unauthorized': '계속하려면 로그인하세요.',
+  'common.error.forbidden': '이 리소스에 접근할 권한이 없습니다.',
+  'common.error.notFound': '찾을 수 없습니다.',
+  'common.error.conflict': '현재 상태와 충돌합니다.',
+  'common.error.validation': '입력 내용을 확인한 후 다시 시도하세요.',
+  'common.error.rateLimit': '요청이 너무 많습니다. 잠시 후 다시 시도하세요.',
+  'common.error.serverError': '서버에서 문제가 발생했습니다.',
+  'common.error.unknown': '예기치 않은 오류가 발생했습니다.',
+
+  'login.title': '로그인',
+  'login.subtitle': '운영 콘솔',
+  'login.email': '이메일',
+  'login.password': '비밀번호',
+  'login.submit': '로그인',
+  'login.failed': '이메일 또는 비밀번호가 올바르지 않습니다.',
+  'login.secure': '암호화되고 감사되는 접근.',
+  'login.validation.emailRequired': '이메일을 입력하세요.',
+  'login.validation.passwordRequired': '비밀번호를 입력하세요.',
+
+  'placements.title': '게재위치',
+  'placements.subtitle': '광고 슬롯 및 게재 상태',
+  'placements.empty': '게재위치가 아직 없습니다.',
+  'placements.loading': '불러오는 중…',
+  'placements.loadError': '게재위치를 불러오지 못했습니다.',
+  'placements.column.key': '키',
+  'placements.column.status': '상태',
+  'placements.column.creative': '기본 크리에이티브',
+
+  'notFound.title': '페이지를 찾을 수 없습니다',
+  'notFound.body': '찾으시는 페이지가 존재하지 않습니다.',
+  'notFound.back': '게재위치로 돌아가기',
+}

@@ -29,10 +29,11 @@ Agent guide. Cursor rules: `.cursor/rules/`.
 - **Governed data is append-only & fully audited.** Every governed write is audited (who/when/before→after/why); no ad-hoc/manual physical delete — "delete" = archive/disable/tombstone; FKs `RESTRICT` not `CASCADE`; app DB role lacks `DELETE`/`TRUNCATE`; only cosmetic "presentation" data (allowlist) is freely deletable/unaudited (ADR 0022)
 - MCP maps to Serve OpenAPI only (`docs/api/service.openapi.json`)
 - **OpenAPI 3.1 is the contract** for the three surfaces (`docs/api/`, ADR 0018); `tests/Api/OpenApiContractTest.php` asserts documented paths == Kernel routes — add an endpoint, update its spec
+- **Admin SPA in `frontend/`** follows the sibling NeNe convention (React+Vite+TS, FSD, Tailwind v4, TanStack Query, MSW mock-first, Storybook, six-locale i18n); typed from `docs/api/admin.openapi.json` via `npm run codegen`; gate is `npm run check` (see `frontend/README.md`)
 
 ## Ports
 
-API **8910** · phpMyAdmin **8911** · MySQL **3392**
+API **8910** · phpMyAdmin **8911** · MySQL **3392** · frontend dev **5189** · Storybook **6107**
 
 ## Status
 

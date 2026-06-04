@@ -1,0 +1,47 @@
+import type { MessageCatalog } from './en'
+
+/** Simplified Chinese catalog (ADR 0011). */
+export const zhHans: MessageCatalog = {
+  'app.title': 'NeNe Serve',
+  'app.subtitle': '广告投放与分析',
+
+  'nav.placements': '广告位',
+
+  'shell.theme': '主题',
+  'shell.themeLight': '浅色',
+  'shell.themeDark': '深色',
+  'shell.lang': '语言',
+  'shell.signout': '退出登录',
+
+  'common.error.unauthorized': '请先登录以继续。',
+  'common.error.forbidden': '您没有访问该资源的权限。',
+  'common.error.notFound': '未找到。',
+  'common.error.conflict': '此操作与当前状态冲突。',
+  'common.error.validation': '请检查表单后重试。',
+  'common.error.rateLimit': '请求过多，请稍后重试。',
+  'common.error.serverError': '服务器发生错误。',
+  'common.error.unknown': '发生了意外错误。',
+
+  'login.title': '登录',
+  'login.subtitle': '运营控制台',
+  'login.email': '邮箱',
+  'login.password': '密码',
+  'login.submit': '登录',
+  'login.failed': '邮箱或密码不正确。',
+  'login.secure': '加密且经过审计的访问。',
+  'login.validation.emailRequired': '请输入邮箱。',
+  'login.validation.passwordRequired': '请输入密码。',
+
+  'placements.title': '广告位',
+  'placements.subtitle': '广告位及其投放状态',
+  'placements.empty': '暂无广告位。',
+  'placements.loading': '加载中…',
+  'placements.loadError': '无法加载广告位。',
+  'placements.column.key': '键',
+  'placements.column.status': '状态',
+  'placements.column.creative': '默认素材',
+
+  'notFound.title': '未找到页面',
+  'notFound.body': '您查找的页面不存在。',
+  'notFound.back': '返回广告位',
+}
