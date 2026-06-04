@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\UseCase;
 
+use NeneServe\Measurement\VisitorBucket;
 use NeneServe\Serving\CreativeRepositoryInterface;
 use NeneServe\Serving\CreativeType;
 use NeneServe\Serving\DestinationUrl;
+use NeneServe\Serving\Frequency\FrequencyCapStoreInterface;
 use NeneServe\Serving\PlacementRepositoryInterface;
 use NeneServe\Serving\Token\TokenStoreInterface;
 
@@ -26,12 +28,18 @@ final class ServeCreativeUseCase
         private readonly PlacementRepositoryInterface $placements,
         private readonly CreativeRepositoryInterface $creatives,
         private readonly TokenStoreInterface $tokens,
+        private readonly FrequencyCapStoreInterface $frequencyCaps,
         private readonly int $clickTokenTtlSeconds = 900,
     ) {
     }
 
-    public function execute(string $publicPlacementKey, ?string $origin): ServeResult
-    {
+    public function execute(
+        string $publicPlacementKey,
+        ?string $origin,
+        bool $consentGranted = false,
+        string $clientIp = '',
+        string $userAgent = '',
+    ): ServeResult {
         $placement = $this->placements->findByPublicKey($publicPlacementKey);
         if ($placement === null) {
             throw new PlacementNotFoundException();
@@ -43,6 +51,18 @@ final class ServeCreativeUseCase
 
         if (!$placement->isActive() || $placement->defaultCreativeId === null) {
             throw new NoEligibleCreativeException();
+        }
+
+        // Frequency cap is consent-gated: only when the placement measures, a cap
+        // is set, and consent permits a visitor bucket. No consent → no cap, no
+        // tracking (fail open to serve — privacy ADR 0017 §3).
+        if ($placement->measurementEnabled
+            && $placement->frequencyCap !== null
+            && $consentGranted) {
+            $bucket = VisitorBucket::derive($placement->organizationId, $clientIp, $userAgent);
+            if ($this->frequencyCaps->count($placement->id, $bucket) >= $placement->frequencyCap) {
+                throw new FrequencyCappedException();
+            }
         }
 
         $creative = $this->creatives->findByIdInOrganization(

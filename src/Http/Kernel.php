@@ -37,6 +37,8 @@ use NeneServe\Service\Scope;
 use NeneServe\Service\ServiceContext;
 use NeneServe\Service\ServiceTokenRepositoryInterface;
 use NeneServe\Serving\CreativeRepositoryInterface;
+use NeneServe\Serving\Frequency\FrequencyCapStoreInterface;
+use NeneServe\Serving\Frequency\InMemoryFrequencyCapStore;
 use NeneServe\Serving\PlacementRepositoryInterface;
 use NeneServe\Serving\Review\ReviewAction;
 use NeneServe\Serving\Scan\BundleScannerInterface;
@@ -89,6 +91,7 @@ final class Kernel
     private readonly AuditLogInterface $audit;
     private readonly EventStoreInterface $events;
     private readonly BundleScannerInterface $scanner;
+    private readonly FrequencyCapStoreInterface $frequencyCaps;
     private readonly Jwt $jwt;
 
     public function __construct(
@@ -103,6 +106,7 @@ final class Kernel
         ?AuditLogInterface $audit = null,
         ?EventStoreInterface $events = null,
         ?BundleScannerInterface $scanner = null,
+        ?FrequencyCapStoreInterface $frequencyCaps = null,
     ) {
         $this->json = new JsonResponseFactory();
         $this->users = $users ?? DevFixtures::users();
@@ -114,6 +118,7 @@ final class Kernel
         $this->audit = $audit ?? new InMemoryAuditLog();
         $this->events = $events ?? new InMemoryEventStore();
         $this->scanner = $scanner ?? new StubBundleScanner();
+        $this->frequencyCaps = $frequencyCaps ?? new InMemoryFrequencyCapStore();
         $this->jwt = $jwt ?? new Jwt(self::resolveSecret());
         $this->auth = new BearerTokenMiddleware($this->jwt, $this->users);
         $this->serviceAuth = new ServiceTokenMiddleware($serviceTokens ?? DevFixtures::serviceTokens());
@@ -151,14 +156,14 @@ final class Kernel
     private function registerPublicRoutes(): void
     {
         $serve = new ServeHandler(
-            new ServeCreativeUseCase($this->placements, $this->creatives, $this->tokens, self::clickTokenTtl()),
+            new ServeCreativeUseCase($this->placements, $this->creatives, $this->tokens, $this->frequencyCaps, self::clickTokenTtl()),
             $this->rateLimiter,
             $this->json,
         );
         $this->router->add('GET', '/public/placements/{public_placement_key}/serve', $serve->handle(...));
 
         $impression = new RecordImpressionHandler(
-            new RecordImpressionUseCase($this->tokens, $this->events, $this->placements),
+            new RecordImpressionUseCase($this->tokens, $this->events, $this->placements, $this->frequencyCaps),
             $this->rateLimiter,
             $this->json,
         );

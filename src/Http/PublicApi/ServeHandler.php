@@ -8,6 +8,7 @@ use NeneServe\Http\JsonResponseFactory;
 use NeneServe\Http\RateLimit\RateLimiterInterface;
 use NeneServe\Http\Request;
 use NeneServe\Http\Response;
+use NeneServe\Serving\UseCase\FrequencyCappedException;
 use NeneServe\Serving\UseCase\NoEligibleCreativeException;
 use NeneServe\Serving\UseCase\OriginNotAllowedException;
 use NeneServe\Serving\UseCase\PlacementNotFoundException;
@@ -36,14 +37,15 @@ final class ServeHandler
         }
 
         $origin = $request->header('origin');
+        $consentGranted = ($request->query['consent'] ?? null) === 'granted';
 
         try {
-            $result = $this->serve->execute($key, $origin);
+            $result = $this->serve->execute($key, $origin, $consentGranted, $request->clientIp, $request->header('user-agent') ?? '');
         } catch (PlacementNotFoundException) {
             return $this->json->problem(404, 'placement-not-found', 'Placement not found');
         } catch (OriginNotAllowedException) {
             return $this->json->problem(403, 'origin-not-allowed', 'Origin not allowed');
-        } catch (NoEligibleCreativeException) {
+        } catch (NoEligibleCreativeException | FrequencyCappedException) {
             // Empty serve — not an error, nothing counted (measurement-spec).
             return new Response(204, '', $this->corsHeaders(null));
         }
