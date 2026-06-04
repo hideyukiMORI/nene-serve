@@ -2,16 +2,17 @@
 
 declare(strict_types=1);
 
-namespace NeNe\Serve\Tests\Http;
+namespace NeneServe\Tests\Http;
 
-use NeNe\Serve\Http\Kernel;
+use NeneServe\Http\Kernel;
+use NeneServe\Http\Request;
 use PHPUnit\Framework\TestCase;
 
 final class HealthTest extends TestCase
 {
     public function testHealthReturns200AndOkStatus(): void
     {
-        $response = (new Kernel())->handle('GET', '/health');
+        $response = (new Kernel())->handle(new Request('GET', '/health'));
 
         self::assertSame(200, $response->status);
         self::assertSame(
@@ -28,7 +29,7 @@ final class HealthTest extends TestCase
 
     public function testUnknownRouteReturnsProblemJson404(): void
     {
-        $response = (new Kernel())->handle('GET', '/does-not-exist');
+        $response = (new Kernel())->handle(new Request('GET', '/does-not-exist'));
 
         self::assertSame(404, $response->status);
         self::assertSame(
@@ -39,6 +40,6 @@ final class HealthTest extends TestCase
         /** @var array<string, mixed> $body */
         $body = json_decode($response->body, true);
         self::assertSame(404, $body['status']);
-        self::assertStringEndsWith('/problems/not-found', $body['type']);
+        self::assertStringEndsWith('/problems/route-not-found', $body['type']);
     }
 }

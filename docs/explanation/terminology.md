@@ -148,6 +148,24 @@ capability; self-approval is disallowed by default.
 
 ---
 
+## Roles & capabilities (ADR 0006)
+
+Roles map to capabilities; admin routes require a **capability**, not a role.
+`superadmin` is the only cross-tenant role and implicitly holds every capability.
+
+| Capability | `superadmin` | `org_admin` | `editor` | `analyst` |
+| --- | :---: | :---: | :---: | :---: |
+| `view_users` | ✓ | ✓ | | |
+| `manage_users` | ✓ | ✓ | | |
+| `view_metrics` | ✓ | ✓ | ✓ | ✓ |
+| `manage_settings` | ✓ | ✓ | | |
+| `review_creatives` | ✓ | ✓ | | |
+
+Role values (`users.role`): `superadmin`, `org_admin`, `editor`, `analyst`.
+Capability strings are snake_case and registered here before use.
+
+---
+
 ## API surfaces (ADR 0018)
 
 | Surface | Path | Auth |
@@ -181,6 +199,7 @@ Base URL: `https://nene-serve.dev/problems/`. Register before use.
 | `insufficient-scope` | Service token lacks required scope (403) |
 | `organization-not-resolved` | Tenant could not be resolved (404) |
 | `organization-mismatch` | User org ≠ URL-resolved org (403) |
+| `route-not-found` | No route matched the request path (404) |
 
 Validation `errors[].field` uses snake_case paths; `errors[].code` is snake_case.
 
@@ -196,6 +215,7 @@ match across OpenAPI, routes, and MCP tool catalog.
 | `getHealth` | System |
 | `serveCreative`, `recordImpression`, `redirectClick` | Public serve |
 | `login`, `getCurrentUser` | Admin auth |
+| `listUsers` | Admin (tenant-scoped) |
 | `listPlacements`, `getPlacementById`, `createPlacement`, `updatePlacement` | Admin |
 | `listCreatives`, `createCreative`, `publishCreative` | Admin |
 | `getDeliveryPlan`, `updateDeliveryPlan` | Admin |

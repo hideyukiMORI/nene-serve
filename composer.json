@@ -16,12 +16,12 @@
     },
     "autoload": {
         "psr-4": {
-            "NeNe\\Serve\\": "src/"
+            "NeneServe\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "NeNe\\Serve\\Tests\\": "tests/"
+            "NeneServe\\Tests\\": "tests/"
         }
     },
     "scripts": {

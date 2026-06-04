@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NeNe\Serve\Http;
+namespace NeneServe\Http;
 
 /**
  * Produces JSON responses and RFC 9457 Problem Details errors.
