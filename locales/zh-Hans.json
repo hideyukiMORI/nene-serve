@@ -1,7 +1,26 @@
 {
   "_meta": {
     "locale": "zh-Hans",
-    "version": 0,
-    "note": "Phase 0 placeholder"
+    "version": 1,
+    "note": "Keys must match en.json (ADR 0011)."
+  },
+  "embed": {
+    "loading": "正在加载广告…",
+    "error": "广告无法加载。"
+  },
+  "consent": {
+    "banner_title": "您的隐私",
+    "accept": "接受",
+    "reject": "拒绝",
+    "measurement_label": "允许广告测量"
+  },
+  "admin": {
+    "placements": { "title": "广告位" },
+    "creatives": { "title": "素材" },
+    "metrics": {
+      "title": "指标",
+      "impressions_one": "{count} 次展示",
+      "impressions_other": "{count} 次展示"
+    }
   }
 }

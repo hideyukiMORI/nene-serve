@@ -1,7 +1,26 @@
 {
   "_meta": {
     "locale": "en",
-    "version": 0,
-    "note": "Phase 0 placeholder — populate keys when admin UI lands"
+    "version": 1,
+    "note": "Canonical key set (ADR 0011). Other locales must match these keys."
+  },
+  "embed": {
+    "loading": "Loading ad…",
+    "error": "Ad could not load."
+  },
+  "consent": {
+    "banner_title": "Your privacy",
+    "accept": "Accept",
+    "reject": "Reject",
+    "measurement_label": "Allow ad measurement"
+  },
+  "admin": {
+    "placements": { "title": "Placements" },
+    "creatives": { "title": "Creatives" },
+    "metrics": {
+      "title": "Metrics",
+      "impressions_one": "{count} impression",
+      "impressions_other": "{count} impressions"
+    }
   }
 }

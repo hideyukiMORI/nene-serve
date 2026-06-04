@@ -1,7 +1,26 @@
 {
   "_meta": {
     "locale": "es",
-    "version": 0,
-    "note": "Phase 0 placeholder"
+    "version": 1,
+    "note": "Keys must match en.json (ADR 0011)."
+  },
+  "embed": {
+    "loading": "Cargando anuncio…",
+    "error": "No se pudo cargar el anuncio."
+  },
+  "consent": {
+    "banner_title": "Tu privacidad",
+    "accept": "Aceptar",
+    "reject": "Rechazar",
+    "measurement_label": "Permitir la medición de anuncios"
+  },
+  "admin": {
+    "placements": { "title": "Ubicaciones" },
+    "creatives": { "title": "Creatividades" },
+    "metrics": {
+      "title": "Métricas",
+      "impressions_one": "{count} impresión",
+      "impressions_other": "{count} impresiones"
+    }
   }
 }

@@ -3,66 +3,30 @@
 declare(strict_types=1);
 
 /**
- * composer locales:check — six-locale key-parity check (ADR 0011).
+ * composer locales:check — six-locale key-parity check (ADR 0011, i18n.md).
  *
- * STUB (Phase 1-A, #10): validates top-level key parity of every catalog
- * against the canonical `en.json`, ignoring the `_meta` block. #15 promotes
- * this to a full check (nested keys, pluralization suffixes, CI gating).
+ * Full check: flattens nested keys to dotted paths, asserts every locale matches
+ * the canonical en.json key set, and verifies _one/_other pluralization pairs.
+ * Run in CI (.github/workflows/ci.yml).
  */
 
-const LOCALE_DIR = __DIR__ . '/../locales';
-const REQUIRED = ['en', 'ja', 'zh-Hans', 'ko', 'de', 'es']; // ADR 0011
-const CANONICAL = 'en';
+require_once __DIR__ . '/../vendor/autoload.php';
 
-/** @return array<string, mixed> */
-function loadCatalog(string $code): array
-{
-    $path = LOCALE_DIR . '/' . $code . '.json';
-    if (!is_file($path)) {
-        fwrite(STDERR, "✗ missing catalog: locales/{$code}.json\n");
-        exit(1);
-    }
-    /** @var array<string, mixed>|null $data */
-    $data = json_decode((string) file_get_contents($path), true);
-    if (!is_array($data)) {
-        fwrite(STDERR, "✗ invalid JSON: locales/{$code}.json\n");
-        exit(1);
-    }
-    unset($data['_meta']);
+use NeneServe\I18n\LocaleCatalogs;
 
-    return $data;
+$result = LocaleCatalogs::check(__DIR__ . '/../locales');
+
+foreach ($result->keyCounts as $code => $count) {
+    printf("  %-8s %d keys\n", $code, $count);
 }
 
-$canonicalKeys = array_keys(loadCatalog(CANONICAL));
-sort($canonicalKeys);
-
-$failed = false;
-foreach (REQUIRED as $code) {
-    $keys = array_keys(loadCatalog($code));
-    sort($keys);
-
-    $missing = array_diff($canonicalKeys, $keys);
-    $extra = array_diff($keys, $canonicalKeys);
-
-    if ($missing === [] && $extra === []) {
-        printf("✓ %-8s %d keys\n", $code, count($keys));
-        continue;
+if (!$result->ok) {
+    fwrite(STDERR, "\n✗ locales:check FAILED\n");
+    foreach ($result->errors as $error) {
+        fwrite(STDERR, "    {$error}\n");
     }
-
-    $failed = true;
-    printf("✗ %-8s parity mismatch vs %s\n", $code, CANONICAL);
-    if ($missing !== []) {
-        printf("    missing: %s\n", implode(', ', $missing));
-    }
-    if ($extra !== []) {
-        printf("    extra:   %s\n", implode(', ', $extra));
-    }
-}
-
-if ($failed) {
-    fwrite(STDERR, "\nlocales:check FAILED\n");
     exit(1);
 }
 
-printf("\nlocales:check OK — %d locales, %d keys each\n", count(REQUIRED), count($canonicalKeys));
+printf("\n✓ locales:check OK — %d locales in parity\n", count(LocaleCatalogs::LOCALES));
 exit(0);
