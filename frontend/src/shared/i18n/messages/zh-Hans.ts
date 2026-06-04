@@ -174,4 +174,8 @@ export const zhHans: MessageCatalog = {
   'setPassword.doneTitle': '密码已设置',
   'setPassword.doneBody': '您现在可以使用新密码登录。',
   'setPassword.toLogin': '前往登录',
+  'creatives.field.file': '图片文件',
+  'creatives.uploading': '上传中…',
+  'creatives.uploaded': '已上传。',
+  'creatives.uploadError': '请在创建前上传图片文件。',
 }

@@ -175,4 +175,8 @@ export const ko: MessageCatalog = {
   'setPassword.doneTitle': '비밀번호가 설정되었습니다',
   'setPassword.doneBody': '이제 새 비밀번호로 로그인할 수 있습니다.',
   'setPassword.toLogin': '로그인으로 이동',
+  'creatives.field.file': '이미지 파일',
+  'creatives.uploading': '업로드 중…',
+  'creatives.uploaded': '업로드했습니다.',
+  'creatives.uploadError': '생성하기 전에 이미지 파일을 업로드하세요.',
 }

@@ -175,4 +175,8 @@ export const ja: MessageCatalog = {
   'setPassword.doneTitle': 'パスワードを設定しました',
   'setPassword.doneBody': '新しいパスワードでサインインできます。',
   'setPassword.toLogin': 'サインインへ',
+  'creatives.field.file': '画像ファイル',
+  'creatives.uploading': 'アップロード中…',
+  'creatives.uploaded': 'アップロードしました。',
+  'creatives.uploadError': '作成前に画像ファイルをアップロードしてください。',
 }

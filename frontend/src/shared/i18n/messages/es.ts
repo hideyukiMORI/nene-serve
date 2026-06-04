@@ -175,4 +175,8 @@ export const es: MessageCatalog = {
   'setPassword.doneTitle': 'Contraseña establecida',
   'setPassword.doneBody': 'Ahora puede iniciar sesión con su nueva contraseña.',
   'setPassword.toLogin': 'Ir al inicio de sesión',
+  'creatives.field.file': 'Archivo de imagen',
+  'creatives.uploading': 'Subiendo…',
+  'creatives.uploaded': 'Subido.',
+  'creatives.uploadError': 'Suba un archivo de imagen antes de crear.',
 }
