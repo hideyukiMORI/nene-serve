@@ -99,10 +99,41 @@ final class FileTokenStore implements TokenStoreInterface
         return $result;
     }
 
+    public function issueFrameToken(string $organizationId, string $creativeId, int $ttlSeconds): string
+    {
+        $token = self::random();
+        $this->mutate(function (array &$state) use ($token, $organizationId, $creativeId, $ttlSeconds): void {
+            $state['frames'][$token] = [
+                'org' => $organizationId,
+                'creative' => $creativeId,
+                'expires' => time() + $ttlSeconds,
+            ];
+        });
+
+        return $token;
+    }
+
+    public function resolveFrameToken(string $token): ?FrameTarget
+    {
+        $result = null;
+        $this->mutate(function (array &$state) use ($token, &$result): void {
+            if (!isset($state['frames'][$token])) {
+                return;
+            }
+            $entry = $state['frames'][$token];
+            if ((int) $entry['expires'] < time()) {
+                return;
+            }
+            $result = new FrameTarget((string) $entry['org'], (string) $entry['creative']);
+        });
+
+        return $result;
+    }
+
     /**
      * Loads state, applies $apply, and writes it back under an exclusive lock.
      *
-     * @param callable(array{impressions: array<string, mixed>, clicks: array<string, mixed>}): void $apply
+     * @param callable(array{impressions: array<string, mixed>, clicks: array<string, mixed>, frames: array<string, mixed>}): void $apply
      */
     private function mutate(callable $apply): void
     {
@@ -119,9 +150,9 @@ final class FileTokenStore implements TokenStoreInterface
         try {
             flock($handle, LOCK_EX);
             $raw = stream_get_contents($handle);
-            /** @var array{impressions?: array<string, mixed>, clicks?: array<string, mixed>} $state */
+            /** @var array{impressions?: array<string, mixed>, clicks?: array<string, mixed>, frames?: array<string, mixed>} $state */
             $state = $raw === false || $raw === '' ? [] : (json_decode($raw, true) ?: []);
-            $state += ['impressions' => [], 'clicks' => []];
+            $state += ['impressions' => [], 'clicks' => [], 'frames' => []];
 
             $apply($state);
 

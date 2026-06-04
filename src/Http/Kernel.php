@@ -13,12 +13,14 @@ use NeneServe\Http\Admin\ExportMetricsHandler as AdminExportMetricsHandler;
 use NeneServe\Http\Admin\ListCreativesHandler;
 use NeneServe\Http\Admin\ListUsersHandler;
 use NeneServe\Http\Admin\LoginHandler;
+use NeneServe\Http\Admin\ReviewQueueHandler;
 use NeneServe\Http\Admin\ReviseCreativeHandler;
 use NeneServe\Http\Admin\TransitionCreativeHandler;
 use NeneServe\Http\Auth\BearerTokenMiddleware;
 use NeneServe\Http\Auth\Jwt;
 use NeneServe\Http\Auth\ServiceTokenMiddleware;
 use NeneServe\Http\Auth\UnauthorizedException;
+use NeneServe\Http\PublicApi\CreativeFrameHandler;
 use NeneServe\Http\PublicApi\RecordImpressionHandler;
 use NeneServe\Http\PublicApi\RedirectClickHandler;
 use NeneServe\Http\PublicApi\ServeHandler;
@@ -37,8 +39,11 @@ use NeneServe\Service\ServiceTokenRepositoryInterface;
 use NeneServe\Serving\CreativeRepositoryInterface;
 use NeneServe\Serving\PlacementRepositoryInterface;
 use NeneServe\Serving\Review\ReviewAction;
+use NeneServe\Serving\Scan\BundleScannerInterface;
+use NeneServe\Serving\Scan\StubBundleScanner;
 use NeneServe\Serving\Token\InMemoryTokenStore;
 use NeneServe\Serving\Token\TokenStoreInterface;
+use NeneServe\Serving\UseCase\CreateHtml5CreativeUseCase;
 use NeneServe\Serving\UseCase\CreateImageCreativeUseCase;
 use NeneServe\Serving\UseCase\CreatePlacementUseCase;
 use NeneServe\Serving\UseCase\CreateVideoCreativeUseCase;
@@ -83,6 +88,7 @@ final class Kernel
     private readonly RateLimiterInterface $rateLimiter;
     private readonly AuditLogInterface $audit;
     private readonly EventStoreInterface $events;
+    private readonly BundleScannerInterface $scanner;
     private readonly Jwt $jwt;
 
     public function __construct(
@@ -96,6 +102,7 @@ final class Kernel
         ?ServiceTokenRepositoryInterface $serviceTokens = null,
         ?AuditLogInterface $audit = null,
         ?EventStoreInterface $events = null,
+        ?BundleScannerInterface $scanner = null,
     ) {
         $this->json = new JsonResponseFactory();
         $this->users = $users ?? DevFixtures::users();
@@ -106,6 +113,7 @@ final class Kernel
         $this->rateLimiter = $rateLimiter ?? new InMemoryRateLimiter();
         $this->audit = $audit ?? new InMemoryAuditLog();
         $this->events = $events ?? new InMemoryEventStore();
+        $this->scanner = $scanner ?? new StubBundleScanner();
         $this->jwt = $jwt ?? new Jwt(self::resolveSecret());
         $this->auth = new BearerTokenMiddleware($this->jwt, $this->users);
         $this->serviceAuth = new ServiceTokenMiddleware($serviceTokens ?? DevFixtures::serviceTokens());
@@ -162,6 +170,9 @@ final class Kernel
             $this->json,
         );
         $this->router->add('GET', '/public/clicks/{click_token}', $click->handle(...));
+
+        $frame = new CreativeFrameHandler($this->tokens, $this->creatives, $this->rateLimiter, $this->json);
+        $this->router->add('GET', '/public/frames/{frame_token}', $frame->handle(...));
     }
 
     /** Admin surface `/admin/*` — JWT + Capability (ADR 0006). */
@@ -194,12 +205,16 @@ final class Kernel
         $createCreative = new CreateCreativeHandler(
             new CreateImageCreativeUseCase($this->creatives, $this->audit),
             new CreateVideoCreativeUseCase($this->creatives, $this->audit),
+            new CreateHtml5CreativeUseCase($this->creatives, $this->scanner, $this->audit),
             $this->json,
         );
         $this->router->add('POST', '/admin/creatives', $this->admin(Capability::ManageCreatives, $createCreative->handle(...)));
 
         $listCreatives = new ListCreativesHandler($this->creatives, $this->json);
         $this->router->add('GET', '/admin/creatives', $this->admin(Capability::ManageCreatives, $listCreatives->handle(...)));
+
+        $reviewQueue = new ReviewQueueHandler($this->creatives, $this->json);
+        $this->router->add('GET', '/admin/review-queue', $this->admin(Capability::ReviewCreatives, $reviewQueue->handle(...)));
 
         $transition = new TransitionCreativeUseCase($this->creatives, $this->audit);
         // Author actions require `manage_creatives`; reviewer actions require `review_creatives` (four-eyes).

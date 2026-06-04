@@ -7,6 +7,7 @@ namespace NeneServe\Serving\UseCase;
 use NeneServe\Audit\AuditLogInterface;
 use NeneServe\Serving\Creative;
 use NeneServe\Serving\CreativeRepositoryInterface;
+use NeneServe\Serving\CreativeType;
 use NeneServe\Serving\Review\ReviewAction;
 use NeneServe\Tenant\AuthContext;
 
@@ -47,6 +48,13 @@ final class TransitionCreativeUseCase
         $reason = $reason !== null && trim($reason) !== '' ? trim($reason) : null;
         if ($action->requiresReason() && $reason === null) {
             throw new CreativeValidationException(sprintf('%s requires a review_reason.', $action->value));
+        }
+
+        // An HTML5 bundle may only enter review once its malware scan is clean (ADR 0021 §4).
+        if ($action === ReviewAction::Submit
+            && $creative->type === CreativeType::Html5Bundle
+            && !$creative->isScanClean()) {
+            throw new CreativeScanFailedException('HTML5 bundle scan must be clean before submission.');
         }
 
         if ($action === ReviewAction::Approve

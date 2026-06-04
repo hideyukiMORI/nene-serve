@@ -28,4 +28,12 @@ interface TokenStoreInterface
     public function recordImpression(string $token): ?ImpressionRecord;
 
     public function consumeClickToken(string $token): ?ClickRedirect;
+
+    /**
+     * Opaque, reusable (within TTL) token for the HTML5 sandbox frame URL, so
+     * the public payload never exposes the internal creative id (api-security §2).
+     */
+    public function issueFrameToken(string $organizationId, string $creativeId, int $ttlSeconds): string;
+
+    public function resolveFrameToken(string $token): ?FrameTarget;
 }

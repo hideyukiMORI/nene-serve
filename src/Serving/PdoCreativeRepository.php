@@ -8,7 +8,7 @@ use PDO;
 
 final class PdoCreativeRepository implements CreativeRepositoryInterface
 {
-    private const COLUMNS = 'id, organization_id, type, review_status, destination_url, asset_url, width, height, version, submitted_by, review_reason, poster_url, duration_seconds';
+    private const COLUMNS = 'id, organization_id, type, review_status, destination_url, asset_url, width, height, version, submitted_by, review_reason, poster_url, duration_seconds, bundle_id, bundle_size_bytes, scan_status';
 
     public function __construct(
         private readonly PDO $pdo,
@@ -40,8 +40,8 @@ final class PdoCreativeRepository implements CreativeRepositoryInterface
     {
         $stmt = $this->pdo->prepare(
             'REPLACE INTO creatives
-                (id, organization_id, type, review_status, destination_url, asset_url, width, height, version, submitted_by, review_reason, poster_url, duration_seconds)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                (id, organization_id, type, review_status, destination_url, asset_url, width, height, version, submitted_by, review_reason, poster_url, duration_seconds, bundle_id, bundle_size_bytes, scan_status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         );
         $stmt->execute([
             $creative->id,
@@ -57,6 +57,9 @@ final class PdoCreativeRepository implements CreativeRepositoryInterface
             $creative->reviewReason,
             $creative->posterUrl,
             $creative->durationSeconds,
+            $creative->bundleId,
+            $creative->bundleSizeBytes,
+            $creative->scanStatus?->value,
         ]);
     }
 
@@ -77,6 +80,9 @@ final class PdoCreativeRepository implements CreativeRepositoryInterface
             $row['review_reason'] !== null ? (string) $row['review_reason'] : null,
             $row['poster_url'] !== null ? (string) $row['poster_url'] : null,
             $row['duration_seconds'] !== null ? (int) $row['duration_seconds'] : null,
+            $row['bundle_id'] !== null ? (string) $row['bundle_id'] : null,
+            $row['bundle_size_bytes'] !== null ? (int) $row['bundle_size_bytes'] : null,
+            $row['scan_status'] !== null ? ScanStatus::from((string) $row['scan_status']) : null,
         );
     }
 }

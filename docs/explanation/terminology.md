@@ -230,14 +230,14 @@ match across OpenAPI, routes, and MCP tool catalog.
 | operationId | Surface |
 | --- | --- |
 | `getHealth` | System |
-| `serveCreative`, `recordImpression`, `redirectClick` | Public serve |
+| `serveCreative`, `recordImpression`, `redirectClick`, `getCreativeFrame` | Public serve |
 | `login`, `getCurrentUser` | Admin auth |
 | `listUsers` | Admin (tenant-scoped) |
 | `listPlacements`, `getPlacementById`, `createPlacement`, `updatePlacement` | Admin |
 | `createPlacement` | Admin (`manage_placements`) |
 | `listCreatives`, `createCreative`, `reviseCreative` | Admin (`manage_creatives`) |
 | `submitCreative` | Admin (`manage_creatives`) |
-| `startCreativeReview`, `approveCreative`, `rejectCreative`, `requestCreativeChanges` | Admin (`review_creatives`) |
+| `startCreativeReview`, `approveCreative`, `rejectCreative`, `requestCreativeChanges`, `listReviewQueue` | Admin (`review_creatives`) |
 | `publishCreative` | Admin |
 | `getDeliveryPlan`, `updateDeliveryPlan` | Admin |
 | `getPlacementMetrics`, `exportMetrics` | Admin / Service (read) |

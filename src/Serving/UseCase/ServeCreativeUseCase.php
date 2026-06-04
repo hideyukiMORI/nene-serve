@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Serving\UseCase;
 
 use NeneServe\Serving\CreativeRepositoryInterface;
+use NeneServe\Serving\CreativeType;
 use NeneServe\Serving\DestinationUrl;
 use NeneServe\Serving\PlacementRepositoryInterface;
 use NeneServe\Serving\Token\TokenStoreInterface;
@@ -62,7 +63,24 @@ final class ServeCreativeUseCase
             $this->clickTokenTtlSeconds,
         );
 
-        $payload = ['creative' => $creative->toServePayload()];
+        $creativePayload = $creative->toServePayload();
+
+        // HTML5 renders via an opaque, TTL-bound frame token so the public payload
+        // never exposes the internal creative id (api-security §2, ADR 0021 §4).
+        if ($creative->type === CreativeType::Html5Bundle) {
+            $frameToken = $this->tokens->issueFrameToken(
+                $placement->organizationId,
+                $creative->id,
+                $this->clickTokenTtlSeconds,
+            );
+            $creativePayload['render'] = [
+                'mode' => 'iframe_sandboxed',
+                'sandbox' => 'allow-scripts',
+                'frame_url' => '/public/frames/' . $frameToken,
+            ];
+        }
+
+        $payload = ['creative' => $creativePayload];
 
         // Privacy P2/§3: only issue the impression beacon token when the placement
         // opts into measurement. The click redirect is essential and always works.

@@ -29,6 +29,9 @@ final class Creative
         public readonly ?string $reviewReason = null,
         public readonly ?string $posterUrl = null,
         public readonly ?int $durationSeconds = null,
+        public readonly ?string $bundleId = null,
+        public readonly ?int $bundleSizeBytes = null,
+        public readonly ?ScanStatus $scanStatus = null,
     ) {
     }
 
@@ -59,7 +62,16 @@ final class Creative
             $reason,
             $this->posterUrl,
             $this->durationSeconds,
+            $this->bundleId,
+            $this->bundleSizeBytes,
+            $this->scanStatus,
         );
+    }
+
+    /** HTML5 bundle is servable only when its malware scan is clean (ADR 0021 §4). */
+    public function isScanClean(): bool
+    {
+        return $this->scanStatus === ScanStatus::Clean;
     }
 
     /**
@@ -83,6 +95,9 @@ final class Creative
             $payload['autoplay'] = false;
         }
 
+        // HTML5 `render` (sandbox + frame URL) is added by ServeCreativeUseCase,
+        // which holds the token store needed for the opaque frame URL.
+
         return array_filter($payload, static fn ($v) => $v !== null);
     }
 
@@ -103,6 +118,9 @@ final class Creative
             'height' => $this->height,
             'poster_url' => $this->posterUrl,
             'duration_seconds' => $this->durationSeconds,
+            'bundle_id' => $this->bundleId,
+            'bundle_size_bytes' => $this->bundleSizeBytes,
+            'scan_status' => $this->scanStatus?->value,
             'version' => $this->version,
             'review_reason' => $this->reviewReason,
         ];

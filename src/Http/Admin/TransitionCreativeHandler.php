@@ -9,6 +9,7 @@ use NeneServe\Http\Request;
 use NeneServe\Http\Response;
 use NeneServe\Serving\Review\ReviewAction;
 use NeneServe\Serving\UseCase\CreativeNotFoundException;
+use NeneServe\Serving\UseCase\CreativeScanFailedException;
 use NeneServe\Serving\UseCase\CreativeValidationException;
 use NeneServe\Serving\UseCase\InvalidReviewTransitionException;
 use NeneServe\Serving\UseCase\SelfApprovalForbiddenException;
@@ -49,6 +50,8 @@ final class TransitionCreativeHandler
             return $this->json->problem(409, 'invalid-review-transition', 'Invalid review transition', $e->getMessage());
         } catch (SelfApprovalForbiddenException) {
             return $this->json->problem(403, 'self-approval-forbidden', 'Self-approval is not allowed without an audited override');
+        } catch (CreativeScanFailedException $e) {
+            return $this->json->problem(422, 'creative-scan-failed', 'Bundle scan is not clean', $e->getMessage());
         } catch (CreativeValidationException $e) {
             return $this->json->problem(422, 'validation-failed', 'Invalid request', $e->getMessage());
         }
