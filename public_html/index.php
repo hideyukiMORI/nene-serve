@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use NeneServe\Http\Kernel;
 use NeneServe\Http\Request;
+use NeneServe\Measurement\FileEventStore;
 use NeneServe\Serving\Token\FileTokenStore;
 
 $autoload = dirname(__DIR__) . '/vendor/autoload.php';
@@ -37,6 +38,7 @@ if (PHP_SAPI === 'cli-server') {
 // per-request and suits tests). Production swaps a shared store; see #14.
 $kernel = new Kernel(
     tokens: new FileTokenStore(dirname(__DIR__) . '/var/tokens.json'),
+    events: new FileEventStore(dirname(__DIR__) . '/var/events.json'),
 );
 
 $kernel->handle(Request::fromGlobals())->send();

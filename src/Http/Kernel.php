@@ -9,6 +9,7 @@ use NeneServe\Audit\InMemoryAuditLog;
 use NeneServe\Http\Admin\CreateCreativeHandler;
 use NeneServe\Http\Admin\CreatePlacementHandler;
 use NeneServe\Http\Admin\CurrentUserHandler;
+use NeneServe\Http\Admin\ExportMetricsHandler as AdminExportMetricsHandler;
 use NeneServe\Http\Admin\ListCreativesHandler;
 use NeneServe\Http\Admin\ListUsersHandler;
 use NeneServe\Http\Admin\LoginHandler;
@@ -23,7 +24,13 @@ use NeneServe\Http\PublicApi\RedirectClickHandler;
 use NeneServe\Http\PublicApi\ServeHandler;
 use NeneServe\Http\RateLimit\InMemoryRateLimiter;
 use NeneServe\Http\RateLimit\RateLimiterInterface;
+use NeneServe\Http\Service\ExportMetricsHandler as ServiceExportMetricsHandler;
 use NeneServe\Http\Service\ListPlacementsHandler;
+use NeneServe\Measurement\EventStoreInterface;
+use NeneServe\Measurement\InMemoryEventStore;
+use NeneServe\Measurement\UseCase\ExportMetricsUseCase;
+use NeneServe\Measurement\UseCase\RecordClickUseCase;
+use NeneServe\Measurement\UseCase\RecordImpressionUseCase;
 use NeneServe\Service\Scope;
 use NeneServe\Service\ServiceContext;
 use NeneServe\Service\ServiceTokenRepositoryInterface;
@@ -74,6 +81,7 @@ final class Kernel
     private readonly TokenStoreInterface $tokens;
     private readonly RateLimiterInterface $rateLimiter;
     private readonly AuditLogInterface $audit;
+    private readonly EventStoreInterface $events;
     private readonly Jwt $jwt;
 
     public function __construct(
@@ -86,6 +94,7 @@ final class Kernel
         ?RateLimiterInterface $rateLimiter = null,
         ?ServiceTokenRepositoryInterface $serviceTokens = null,
         ?AuditLogInterface $audit = null,
+        ?EventStoreInterface $events = null,
     ) {
         $this->json = new JsonResponseFactory();
         $this->users = $users ?? DevFixtures::users();
@@ -95,6 +104,7 @@ final class Kernel
         $this->tokens = $tokens ?? new InMemoryTokenStore();
         $this->rateLimiter = $rateLimiter ?? new InMemoryRateLimiter();
         $this->audit = $audit ?? new InMemoryAuditLog();
+        $this->events = $events ?? new InMemoryEventStore();
         $this->jwt = $jwt ?? new Jwt(self::resolveSecret());
         $this->auth = new BearerTokenMiddleware($this->jwt, $this->users);
         $this->serviceAuth = new ServiceTokenMiddleware($serviceTokens ?? DevFixtures::serviceTokens());
@@ -138,10 +148,18 @@ final class Kernel
         );
         $this->router->add('GET', '/public/placements/{public_placement_key}/serve', $serve->handle(...));
 
-        $impression = new RecordImpressionHandler($this->tokens, $this->rateLimiter, $this->json);
+        $impression = new RecordImpressionHandler(
+            new RecordImpressionUseCase($this->tokens, $this->events, $this->placements),
+            $this->rateLimiter,
+            $this->json,
+        );
         $this->router->add('POST', '/public/events/impression', $impression->handle(...));
 
-        $click = new RedirectClickHandler($this->tokens, $this->rateLimiter, $this->json);
+        $click = new RedirectClickHandler(
+            new RecordClickUseCase($this->tokens, $this->events, $this->placements),
+            $this->rateLimiter,
+            $this->json,
+        );
         $this->router->add('GET', '/public/clicks/{click_token}', $click->handle(...));
     }
 
@@ -156,6 +174,9 @@ final class Kernel
 
         $listUsers = new ListUsersHandler(new ListUsersUseCase($this->users), $this->json);
         $this->router->add('GET', '/admin/users', $this->admin(Capability::ViewUsers, $listUsers->handle(...)));
+
+        $exportMetrics = new AdminExportMetricsHandler(new ExportMetricsUseCase($this->events), $this->json);
+        $this->router->add('GET', '/admin/metrics/export', $this->admin(Capability::ViewMetrics, $exportMetrics->handle(...)));
 
         $this->registerCreativeRoutes();
     }
@@ -201,6 +222,9 @@ final class Kernel
     {
         $listPlacements = new ListPlacementsHandler($this->placements, $this->json);
         $this->router->add('GET', '/api/placements', $this->service(Scope::ReadPlacements, $listPlacements->handle(...)));
+
+        $exportMetrics = new ServiceExportMetricsHandler(new ExportMetricsUseCase($this->events), $this->json);
+        $this->router->add('GET', '/api/metrics/export', $this->service(Scope::ReadMetrics, $exportMetrics->handle(...)));
     }
 
     /**

@@ -19,6 +19,8 @@ final class Placement
         public readonly array $allowedOrigins,
         public readonly string $status = 'active',
         public readonly ?string $defaultCreativeId = null,
+        /** Opt-out switch (privacy P2): when false, the creative serves but no tracking beacons fire. */
+        public readonly bool $measurementEnabled = true,
     ) {
     }
 

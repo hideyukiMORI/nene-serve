@@ -8,20 +8,20 @@ use NeneServe\Http\JsonResponseFactory;
 use NeneServe\Http\RateLimit\RateLimiterInterface;
 use NeneServe\Http\Request;
 use NeneServe\Http\Response;
+use NeneServe\Measurement\UseCase\RecordClickUseCase;
 use NeneServe\Serving\DestinationUrl;
-use NeneServe\Serving\Token\TokenStoreInterface;
 
 /**
- * GET /public/clicks/{click_token} (operationId `redirectClick`). Single-use,
- * short-TTL token → 302 to the creative's **registered** destination. No open
- * redirect: the target comes only from the token, and is re-validated as a safe
- * URL at redirect time (ADR 0019 §2–3). Expired/used/unknown → 404, never a
- * fallback redirect.
+ * GET /public/clicks/{click_token} (operationId `redirectClick`). Records the
+ * click (measurement-spec) then 302s to the creative's **registered**
+ * destination. Single-use, short-TTL token; expired/used/unknown → 404, never a
+ * fallback redirect. No open redirect — destination re-validated at redirect
+ * time (ADR 0019 §2–3).
  */
 final class RedirectClickHandler
 {
     public function __construct(
-        private readonly TokenStoreInterface $tokens,
+        private readonly RecordClickUseCase $recordClick,
         private readonly RateLimiterInterface $rateLimiter,
         private readonly JsonResponseFactory $json,
     ) {
@@ -34,13 +34,14 @@ final class RedirectClickHandler
         }
 
         $token = (string) $request->param('click_token');
-        $redirect = $this->tokens->consumeClickToken($token);
+        $countryCode = is_string($request->query['country_code'] ?? null) ? $request->query['country_code'] : null;
+
+        $redirect = $this->recordClick->execute($token, $countryCode);
         if ($redirect === null) {
             return $this->json->problem(404, 'click-token-invalid', 'Click token invalid or expired');
         }
 
         if (!DestinationUrl::isSafe($redirect->destinationUrl)) {
-            // Defense in depth: a stored unsafe destination must never redirect.
             return $this->json->problem(422, 'destination-url-not-registered', 'Destination is not a safe redirect target');
         }
 
