@@ -27,8 +27,9 @@ final class PdoChangePlanRepository implements ChangePlanRepositoryInterface
     public function save(ChangePlan $plan): void
     {
         $stmt = $this->pdo->prepare(
-            'REPLACE INTO change_plans (id, organization_id, placement_id, new_creative_id, status, created_at)
-             VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO change_plans (id, organization_id, placement_id, new_creative_id, status, created_at)
+             VALUES (?, ?, ?, ?, ?, ?) AS new
+             ON DUPLICATE KEY UPDATE placement_id = new.placement_id, new_creative_id = new.new_creative_id, status = new.status',
         );
         $stmt->execute([
             $plan->id,

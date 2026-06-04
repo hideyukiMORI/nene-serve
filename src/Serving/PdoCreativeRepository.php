@@ -39,9 +39,9 @@ final class PdoCreativeRepository implements CreativeRepositoryInterface
     public function save(Creative $creative): void
     {
         $stmt = $this->pdo->prepare(
-            'REPLACE INTO creatives
-                (id, organization_id, type, review_status, destination_url, asset_url, width, height, version, submitted_by, review_reason, poster_url, duration_seconds, bundle_id, bundle_size_bytes, scan_status, campaign_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO creatives (id, organization_id, type, review_status, destination_url, asset_url, width, height, version, submitted_by, review_reason, poster_url, duration_seconds, bundle_id, bundle_size_bytes, scan_status, campaign_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) AS new
+             ON DUPLICATE KEY UPDATE type = new.type, review_status = new.review_status, destination_url = new.destination_url, asset_url = new.asset_url, width = new.width, height = new.height, version = new.version, submitted_by = new.submitted_by, review_reason = new.review_reason, poster_url = new.poster_url, duration_seconds = new.duration_seconds, bundle_id = new.bundle_id, bundle_size_bytes = new.bundle_size_bytes, scan_status = new.scan_status, campaign_id = new.campaign_id',
         );
         $stmt->execute([
             $creative->id,

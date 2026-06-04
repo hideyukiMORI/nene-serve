@@ -30,8 +30,8 @@ final class PdoInvitationRepository implements InvitationRepositoryInterface
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO invitations (id, organization_id, user_id, token_hash, status, expires_at, accepted_at)
-             VALUES (:id, :org, :user, :hash, :status, :expires_at, :accepted_at)
-             ON DUPLICATE KEY UPDATE status = VALUES(status), accepted_at = VALUES(accepted_at)',
+             VALUES (:id, :org, :user, :hash, :status, :expires_at, :accepted_at) AS new
+             ON DUPLICATE KEY UPDATE status = new.status, accepted_at = new.accepted_at',
         );
         $stmt->execute([
             ':id' => $invitation->id,

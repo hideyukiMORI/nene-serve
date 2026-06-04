@@ -29,9 +29,9 @@ final class PdoInvoiceHandoffRepository implements InvoiceHandoffRepositoryInter
         // REPLACE keyed by the unique external_reference: amounts/units are stable;
         // only status / invoice_payment_id advance (handoff idempotency).
         $stmt = $this->pdo->prepare(
-            'REPLACE INTO invoice_handoffs
-                (id, organization_id, billing_period_id, external_reference, billable_impressions, billable_clicks, pricing_rule_version, amount_cents, reconciliation_status, status, invoice_payment_id, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO invoice_handoffs (id, organization_id, billing_period_id, external_reference, billable_impressions, billable_clicks, pricing_rule_version, amount_cents, reconciliation_status, status, invoice_payment_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) AS new
+             ON DUPLICATE KEY UPDATE billing_period_id = new.billing_period_id, external_reference = new.external_reference, billable_impressions = new.billable_impressions, billable_clicks = new.billable_clicks, pricing_rule_version = new.pricing_rule_version, amount_cents = new.amount_cents, reconciliation_status = new.reconciliation_status, status = new.status, invoice_payment_id = new.invoice_payment_id',
         );
         $stmt->execute([
             $handoff->id,
