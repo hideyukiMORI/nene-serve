@@ -54,7 +54,8 @@
 ## Road to v1 (operable product)
 
 - [x] #79 **serve.js embed client** (#1 critical path) — `public_html/serve.js`, vanilla/CSP-friendly, image/video/sandboxed-html5 render + viewable impression beacon + click-token wrap; served statically; jsdom test on the real artifact. PR #80.
-- [ ] #2/#3 Admin create/edit forms + provisioning (create-user, service-token issuance, first-org bootstrap).
+- [~] #2 Admin create forms — marketplace (advertiser/pricing/campaign, PR #82) + serving (placement/image-creative, PR #84) done; the operate loop is now drivable in the console. Remaining: billing-period close/handoff actions, edit forms, video/html5 creative (needs #4).
+- [ ] #3 Provisioning (create-user, service-token issuance, first-org bootstrap) — needs new backend endpoints + UI.
 - [ ] #4 Asset upload + storage + real malware scanner (replace StubBundleScanner).
 - [ ] Production deploy hardening (migrations on deploy, HTTPS/secrets, shared token/rate-limit/frequency store for multi-host).
 - [ ] Real sibling integrations (Invoice/Deal/Records) when those services exist.
