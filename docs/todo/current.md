@@ -55,6 +55,7 @@
 
 - [x] #65 OpenAPI 3.1 contracts for the three surfaces (`docs/api/` public · admin · service) — RFC 9457 Problem Details, registry-aligned operationIds, MCP→service-doc-only; `tests/Api/OpenApiContractTest.php` asserts documented paths == Kernel routes (bidirectional, no drift). PR #66.
 - [x] #67 Wire PDO repositories into production kernel boot — `Support\KernelFactory` (DB_HOST → database mode, else file/dev); migration 0029 `service_tokens` + `PdoServiceTokenRepository` + grants (append-only, no DELETE) closes the service-token gap; verified end-to-end on docker MySQL. PR #68.
+- [x] #69 Admin SPA scaffold (`frontend/`) following sibling NeNe convention — React+Vite+TS, FSD, Tailwind v4, TanStack Query, MSW mock-first, Storybook, six-locale i18n, openapi-typescript codegen; login + placements vertical slice; CI `frontend` job. PR #70. Next FE: creatives/review, metrics, marketplace/billing; backend admin read/list endpoints (`GET /admin/placements` …).
 
 ## Integrity & audit hardening (ADR 0022) — before Phase 3
 
@@ -92,4 +93,4 @@
 - **Three separated API surfaces; fail closed** (ADR 0018/0019); endpoint changes are gated by `docs/review/api-security.md`.
 - **Only approved creatives serve** (ADR 0020/0021); creative changes are gated by `docs/review/creative-review.md`.
 
-Last updated: 2026-06-04 (#67 production PDO boot wiring + service_tokens table landed)
+Last updated: 2026-06-04 (#69 admin SPA scaffold landed — frontend/, React+Vite, six-locale, mock-first)
