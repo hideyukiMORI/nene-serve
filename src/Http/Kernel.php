@@ -6,6 +6,7 @@ namespace NeneServe\Http;
 
 use NeneServe\Audit\AuditLogInterface;
 use NeneServe\Audit\InMemoryAuditLog;
+use NeneServe\Http\Admin\ArchivePlacementHandler;
 use NeneServe\Http\Admin\CreateCreativeHandler;
 use NeneServe\Http\Admin\CreatePlacementHandler;
 use NeneServe\Http\Admin\CurrentUserHandler;
@@ -50,6 +51,7 @@ use NeneServe\Serving\Scan\BundleScannerInterface;
 use NeneServe\Serving\Scan\StubBundleScanner;
 use NeneServe\Serving\Token\InMemoryTokenStore;
 use NeneServe\Serving\Token\TokenStoreInterface;
+use NeneServe\Serving\UseCase\ArchivePlacementUseCase;
 use NeneServe\Serving\UseCase\CreateHtml5CreativeUseCase;
 use NeneServe\Serving\UseCase\CreateImageCreativeUseCase;
 use NeneServe\Serving\UseCase\CreatePlacementUseCase;
@@ -58,6 +60,8 @@ use NeneServe\Serving\UseCase\ReviseCreativeUseCase;
 use NeneServe\Serving\UseCase\ServeCreativeUseCase;
 use NeneServe\Serving\UseCase\TransitionCreativeUseCase;
 use NeneServe\Support\DevFixtures;
+use NeneServe\Support\NullTransactionManager;
+use NeneServe\Support\TransactionManagerInterface;
 use NeneServe\Tenant\AuthContext;
 use NeneServe\Tenant\Capability;
 use NeneServe\Tenant\OrganizationRepositoryInterface;
@@ -97,6 +101,7 @@ final class Kernel
     private readonly EventStoreInterface $events;
     private readonly BundleScannerInterface $scanner;
     private readonly FrequencyCapStoreInterface $frequencyCaps;
+    private readonly TransactionManagerInterface $tx;
     private readonly Jwt $jwt;
 
     public function __construct(
@@ -112,6 +117,7 @@ final class Kernel
         ?EventStoreInterface $events = null,
         ?BundleScannerInterface $scanner = null,
         ?FrequencyCapStoreInterface $frequencyCaps = null,
+        ?TransactionManagerInterface $tx = null,
     ) {
         $this->json = new JsonResponseFactory();
         $this->users = $users ?? DevFixtures::users();
@@ -124,6 +130,7 @@ final class Kernel
         $this->events = $events ?? new InMemoryEventStore();
         $this->scanner = $scanner ?? new StubBundleScanner();
         $this->frequencyCaps = $frequencyCaps ?? new InMemoryFrequencyCapStore();
+        $this->tx = $tx ?? new NullTransactionManager();
         $this->jwt = $jwt ?? new Jwt(self::resolveSecret());
         $this->auth = new BearerTokenMiddleware($this->jwt, $this->users);
         $this->serviceAuth = new ServiceTokenMiddleware($serviceTokens ?? DevFixtures::serviceTokens());
@@ -213,15 +220,21 @@ final class Kernel
     private function registerCreativeRoutes(): void
     {
         $createPlacement = new CreatePlacementHandler(
-            new CreatePlacementUseCase($this->placements, $this->audit),
+            new CreatePlacementUseCase($this->placements, $this->audit, $this->tx),
             $this->json,
         );
         $this->router->add('POST', '/admin/placements', $this->admin(Capability::ManagePlacements, $createPlacement->handle(...)));
 
+        $archivePlacement = new ArchivePlacementHandler(
+            new ArchivePlacementUseCase($this->placements, $this->audit, $this->tx),
+            $this->json,
+        );
+        $this->router->add('POST', '/admin/placements/{id}/archive', $this->admin(Capability::ManagePlacements, $archivePlacement->handle(...)));
+
         $createCreative = new CreateCreativeHandler(
-            new CreateImageCreativeUseCase($this->creatives, $this->audit),
-            new CreateVideoCreativeUseCase($this->creatives, $this->audit),
-            new CreateHtml5CreativeUseCase($this->creatives, $this->scanner, $this->audit),
+            new CreateImageCreativeUseCase($this->creatives, $this->audit, $this->tx),
+            new CreateVideoCreativeUseCase($this->creatives, $this->audit, $this->tx),
+            new CreateHtml5CreativeUseCase($this->creatives, $this->scanner, $this->audit, $this->tx),
             $this->json,
         );
         $this->router->add('POST', '/admin/creatives', $this->admin(Capability::ManageCreatives, $createCreative->handle(...)));
@@ -232,7 +245,7 @@ final class Kernel
         $reviewQueue = new ReviewQueueHandler($this->creatives, $this->json);
         $this->router->add('GET', '/admin/review-queue', $this->admin(Capability::ReviewCreatives, $reviewQueue->handle(...)));
 
-        $transition = new TransitionCreativeUseCase($this->creatives, $this->audit);
+        $transition = new TransitionCreativeUseCase($this->creatives, $this->audit, $this->tx);
         // Author actions require `manage_creatives`; reviewer actions require `review_creatives` (four-eyes).
         $this->addTransition('submit', ReviewAction::Submit, Capability::ManageCreatives, $transition);
         $this->addTransition('start-review', ReviewAction::StartReview, Capability::ReviewCreatives, $transition);
@@ -240,7 +253,7 @@ final class Kernel
         $this->addTransition('reject', ReviewAction::Reject, Capability::ReviewCreatives, $transition);
         $this->addTransition('request-changes', ReviewAction::RequestChanges, Capability::ReviewCreatives, $transition);
 
-        $revise = new ReviseCreativeHandler(new ReviseCreativeUseCase($this->creatives, $this->audit), $this->json);
+        $revise = new ReviseCreativeHandler(new ReviseCreativeUseCase($this->creatives, $this->audit, $this->tx), $this->json);
         $this->router->add('POST', '/admin/creatives/{id}/revise', $this->admin(Capability::ManageCreatives, $revise->handle(...)));
     }
 

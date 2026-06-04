@@ -10,6 +10,7 @@ use NeneServe\Serving\CreativeRepositoryInterface;
 use NeneServe\Serving\CreativeType;
 use NeneServe\Serving\Review\ImageAcceptance;
 use NeneServe\Serving\ReviewStatus;
+use NeneServe\Support\TransactionManagerInterface;
 use NeneServe\Tenant\AuthContext;
 
 /**
@@ -22,6 +23,7 @@ final class CreateImageCreativeUseCase
     public function __construct(
         private readonly CreativeRepositoryInterface $creatives,
         private readonly AuditLogInterface $audit,
+        private readonly TransactionManagerInterface $tx,
     ) {
     }
 
@@ -44,17 +46,19 @@ final class CreateImageCreativeUseCase
             $width,
             $height,
         );
-        $this->creatives->save($creative);
 
-        $this->audit->record(
-            $actor->organizationId,
-            $actor->userId,
-            'creative.created',
-            'creative',
-            $creative->id,
-            ['type' => 'image'],
-        );
+        return $this->tx->transactional(function () use ($creative, $actor): Creative {
+            $this->creatives->save($creative);
+            $this->audit->record(
+                $actor->organizationId,
+                $actor->userId,
+                'creative.created',
+                'creative',
+                $creative->id,
+                ['after' => ['type' => 'image', 'review_status' => 'draft']],
+            );
 
-        return $creative;
+            return $creative;
+        });
     }
 }

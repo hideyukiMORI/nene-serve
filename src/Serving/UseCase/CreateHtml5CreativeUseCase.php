@@ -11,6 +11,7 @@ use NeneServe\Serving\CreativeType;
 use NeneServe\Serving\Review\Html5Acceptance;
 use NeneServe\Serving\ReviewStatus;
 use NeneServe\Serving\Scan\BundleScannerInterface;
+use NeneServe\Support\TransactionManagerInterface;
 use NeneServe\Tenant\AuthContext;
 
 /**
@@ -25,6 +26,7 @@ final class CreateHtml5CreativeUseCase
         private readonly CreativeRepositoryInterface $creatives,
         private readonly BundleScannerInterface $scanner,
         private readonly AuditLogInterface $audit,
+        private readonly TransactionManagerInterface $tx,
     ) {
     }
 
@@ -60,17 +62,18 @@ final class CreateHtml5CreativeUseCase
             $bundleSizeBytes,
             $scanStatus,
         );
-        $this->creatives->save($creative);
+        return $this->tx->transactional(function () use ($creative, $actor, $scanStatus): Creative {
+            $this->creatives->save($creative);
+            $this->audit->record(
+                $actor->organizationId,
+                $actor->userId,
+                'creative.scanned',
+                'creative',
+                $creative->id,
+                ['after' => ['type' => 'html5_bundle', 'review_status' => 'draft', 'scan_status' => $scanStatus->value]],
+            );
 
-        $this->audit->record(
-            $actor->organizationId,
-            $actor->userId,
-            'creative.scanned',
-            'creative',
-            $creative->id,
-            ['type' => 'html5_bundle', 'scan_status' => $scanStatus->value],
-        );
-
-        return $creative;
+            return $creative;
+        });
     }
 }

@@ -10,6 +10,7 @@ use NeneServe\Serving\CreativeRepositoryInterface;
 use NeneServe\Serving\CreativeType;
 use NeneServe\Serving\Review\VideoAcceptance;
 use NeneServe\Serving\ReviewStatus;
+use NeneServe\Support\TransactionManagerInterface;
 use NeneServe\Tenant\AuthContext;
 
 /**
@@ -22,6 +23,7 @@ final class CreateVideoCreativeUseCase
     public function __construct(
         private readonly CreativeRepositoryInterface $creatives,
         private readonly AuditLogInterface $audit,
+        private readonly TransactionManagerInterface $tx,
     ) {
     }
 
@@ -51,17 +53,18 @@ final class CreateVideoCreativeUseCase
             $posterUrl,
             $durationSeconds,
         );
-        $this->creatives->save($creative);
+        return $this->tx->transactional(function () use ($creative, $actor): Creative {
+            $this->creatives->save($creative);
+            $this->audit->record(
+                $actor->organizationId,
+                $actor->userId,
+                'creative.created',
+                'creative',
+                $creative->id,
+                ['after' => ['type' => 'video', 'review_status' => 'draft']],
+            );
 
-        $this->audit->record(
-            $actor->organizationId,
-            $actor->userId,
-            'creative.created',
-            'creative',
-            $creative->id,
-            ['type' => 'video'],
-        );
-
-        return $creative;
+            return $creative;
+        });
     }
 }
