@@ -15,6 +15,8 @@ Agent guide. Cursor rules: `.cursor/rules/`.
 | Creative review & safety (binding) | `docs/explanation/creative-review-and-safety.md` |
 | Audit & data integrity (binding) | `docs/explanation/audit-and-data-integrity-compliance.md` |
 | i18n | `docs/development/i18n.md` |
+| Console help (reference) | `docs/reference/admin-console.md` |
+| Tutorial (end-to-end) | `docs/tutorial/first-campaign.md` |
 | Tasks | `docs/todo/current.md` |
 
 ## Quick Rules

@@ -48,6 +48,8 @@ tracks impressions and clicks, and reports time-series metrics with CSV export â
 | **Billing & accounting compliance (binding)** | [`docs/explanation/billing-and-accounting-compliance.md`](./docs/explanation/billing-and-accounting-compliance.md) |
 | **Audit & data integrity (binding)** | [`docs/explanation/audit-and-data-integrity-compliance.md`](./docs/explanation/audit-and-data-integrity-compliance.md) |
 | **i18n (six locales)** | [`docs/development/i18n.md`](./docs/development/i18n.md) |
+| **Console help (reference)** | [`docs/reference/admin-console.md`](./docs/reference/admin-console.md) |
+| **Tutorial (end-to-end)** | [`docs/tutorial/first-campaign.md`](./docs/tutorial/first-campaign.md) |
 | **Terminology registry (binding)** | [`docs/explanation/terminology.md`](./docs/explanation/terminology.md) |
 | **Sibling integrations** | [`docs/integrations/sibling-products.md`](./docs/integrations/sibling-products.md) |
 | **Agents** | [`AGENTS.md`](./AGENTS.md) |
