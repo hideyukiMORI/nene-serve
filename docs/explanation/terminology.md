@@ -143,7 +143,8 @@ data has no delivery/measurement/billing/identity meaning.
 `invoice.handed_off`, `invoice.handoff_failed`, `invoice.reconciliation_discrepancy`,
 `legal_hold.placed`, `legal_hold.released`, `retention.purged`,
 `retention.purge_blocked`, `deal.opportunity_sent`, `deal.opportunity_failed`,
-`mcp.change_proposed`, `mcp.change_applied`. Register
+`mcp.change_proposed`, `mcp.change_applied`,
+`settings.smtp_updated`, `settings.smtp_tested`. Register
 new actions before use. Mutation audit metadata carries structured
 `before`/`after` (changed fields). Sensitive **reads** (`include_sensitive`
 metrics, DSR export, PII-link reads) are also audited; ordinary reads are not.
@@ -275,6 +276,9 @@ Base URL: `https://nene-serve.dev/problems/`. Register before use.
 | `deal-handoff-failed` | Deal transport failed; serving unaffected, retryable (502) |
 | `change-plan-not-found` | MCP change plan / confirmation token not found (404) |
 | `invalid-plan-state` | Change plan not in `proposed` state (already applied) (409) |
+| `smtp-not-configured` | SMTP settings missing for a test send (422) |
+| `smtp-test-failed` | SMTP test send failed at the transport (502) |
+| `encryption-unavailable` | `APP_ENCRYPTION_KEY` not configured for at-rest secrets (500) |
 
 Validation `errors[].field` uses snake_case paths; `errors[].code` is snake_case.
 
@@ -302,6 +306,7 @@ documented paths == Kernel routes.
 | `getDeliveryPlan`, `updateDeliveryPlan` | Admin |
 | `getPlacementMetrics`, `exportMetrics` | Admin / Service (read) |
 | `createDataSubjectRequest`, `placeLegalHold`, `releaseLegalHold` | Admin (`manage_settings`) |
+| `getSmtpSettings`, `updateSmtpSettings`, `testSmtpSettings` | Admin (`manage_settings`) |
 | `createAdvertiser`, `listAdvertisers`, `createPricingRule`, `listPricingRules` | Admin (`manage_marketplace`) |
 | `createCampaign`, `listCampaigns`, `getCampaign` | Admin (`manage_marketplace`) |
 | `openBillingPeriod`, `closeBillingPeriod`, `getBillingPeriod`, `handoffBillingPeriod` | Admin (`manage_marketplace`) |

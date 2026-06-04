@@ -24,6 +24,7 @@ use NeneServe\Serving\Frequency\FileFrequencyCapStore;
 use NeneServe\Serving\PdoCreativeRepository;
 use NeneServe\Serving\PdoPlacementRepository;
 use NeneServe\Serving\Token\FileTokenStore;
+use NeneServe\Settings\PdoSmtpSettingsRepository;
 use NeneServe\Tenant\PdoOrganizationRepository;
 use NeneServe\Tenant\PdoUserRepository;
 use NeneServe\Upstream\Deal\DealClientInterface;
@@ -103,6 +104,7 @@ final class KernelFactory
             dealOpportunities: new PdoDealOpportunityRepository($pdo),
             dealClient: self::dealClient($read),
             changePlans: new PdoChangePlanRepository($pdo),
+            smtpSettings: new PdoSmtpSettingsRepository($pdo),
         );
     }
 
