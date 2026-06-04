@@ -2,7 +2,7 @@ import type { ComponentType, SVGProps } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '@/entities/auth'
 import { useTranslation, type MessageKey } from '@/shared/i18n'
-import { IconBoard, IconLogo, IconShield } from '@/shared/ui/icons'
+import { IconBoard, IconLogo, IconShield, IconStages } from '@/shared/ui/icons'
 import { LangToggle, SignoutButton, ThemeToggle } from './Toggles'
 
 interface NavEntry {
@@ -15,6 +15,7 @@ const NAV: NavEntry[] = [
   { to: '/', label: 'nav.placements', Icon: IconBoard },
   { to: '/creatives', label: 'nav.creatives', Icon: IconBoard },
   { to: '/review', label: 'nav.review', Icon: IconShield },
+  { to: '/metrics', label: 'nav.metrics', Icon: IconStages },
 ]
 
 function isActive(to: string, pathname: string): boolean {
