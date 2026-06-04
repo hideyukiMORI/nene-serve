@@ -33,6 +33,7 @@ Single source of truth for identifiers. Register new terms in the same PR.
 | Default creative | `default_creative_id` | FK |
 | Impression event | `impression` | `Impression` |
 | Click event | `click` | `Click` |
+| Conversion event (ADR 0009) | `conversion` | `ConversionEvent` (not a Contact submission) |
 | Click redirect token | `click_token` | string |
 | Creative review status | `review_status` | enum: `draft`, `submitted`, `in_review`, `approved`, `rejected`, `changes_requested` |
 | Creative version | `creative_version` | integer ≥ 1 |
@@ -285,7 +286,7 @@ match across OpenAPI, routes, and MCP tool catalog.
 | operationId | Surface |
 | --- | --- |
 | `getHealth` | System |
-| `serveCreative`, `recordImpression`, `redirectClick`, `getCreativeFrame` | Public serve |
+| `serveCreative`, `recordImpression`, `redirectClick`, `getCreativeFrame`, `recordConversion` | Public serve |
 | `login`, `getCurrentUser` | Admin auth |
 | `listUsers` | Admin (tenant-scoped) |
 | `listPlacements`, `getPlacementById`, `createPlacement`, `updatePlacement` | Admin |
