@@ -14,7 +14,7 @@
 
 - [x] #10 (A) Runtime scaffold — NENE2 layout, `GET /health`, `composer locales:check` stub, Docker stack (8910/8911/3392)
 - [x] #11 (B) Multi-tenant org/auth model — roles/capabilities, JWT bearer auth, tenant isolation (ADR 0006/0018)
-- [ ] #12 (C) Three API surfaces + serve API baseline — origin gating, rate limits, short-lived click tokens (ADR 0018/0019)
+- [x] #12 (C) Three API surfaces + serve API baseline — origin gating, rate limits, short-lived single-use click tokens, no open redirect, idempotent impression, scoped service tokens (ADR 0018/0019)
 - [ ] #13 (D) Placement + image creative behind approval gate (ADR 0020/0021)
 - [ ] #14 (E) Impression/click measurement + daily metrics CSV (ADR 0012/0015/0017)
 - [ ] #15 (F) Locale CI — six-locale catalog check (ADR 0011)
@@ -47,4 +47,4 @@ Order: #10 first (foundation); then #11 → #12 → #13/#14; #15 after #10.
 - **Three separated API surfaces; fail closed** (ADR 0018/0019); endpoint changes are gated by `docs/review/api-security.md`.
 - **Only approved creatives serve** (ADR 0020/0021); creative changes are gated by `docs/review/creative-review.md`.
 
-Last updated: 2026-06-04 (#11 multi-tenant org/auth landed; next: #12 three API surfaces)
+Last updated: 2026-06-04 (#12 three API surfaces landed; next: #13 creative approval gate)

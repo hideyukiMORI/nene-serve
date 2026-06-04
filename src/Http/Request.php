@@ -13,6 +13,7 @@ final class Request
     /**
      * @param array<string, string> $headers header name (lower-case) => value
      * @param array<string, string> $query
+     * @param array<string, string> $params path parameters resolved by the router
      */
     public function __construct(
         public readonly string $method,
@@ -20,6 +21,8 @@ final class Request
         public readonly array $headers = [],
         public readonly array $query = [],
         public readonly string $body = '',
+        public readonly array $params = [],
+        public readonly string $clientIp = '',
     ) {
     }
 
@@ -39,12 +42,25 @@ final class Request
             $headers,
             array_map('strval', $_GET),
             (string) file_get_contents('php://input'),
+            [],
+            (string) ($_SERVER['REMOTE_ADDR'] ?? ''),
         );
     }
 
     public function header(string $name): ?string
     {
         return $this->headers[strtolower($name)] ?? null;
+    }
+
+    public function param(string $name): ?string
+    {
+        return $this->params[$name] ?? null;
+    }
+
+    /** @param array<string, string> $params */
+    public function withParams(array $params): self
+    {
+        return new self($this->method, $this->path, $this->headers, $this->query, $this->body, $params, $this->clientIp);
     }
 
     /**
