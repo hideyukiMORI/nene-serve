@@ -24,11 +24,13 @@ export const de: MessageCatalog = {
 
   'login.title': 'Anmelden',
   'login.subtitle': 'Betreiberkonsole',
+  'login.organization': 'Organisation',
   'login.email': 'E-Mail',
   'login.password': 'Passwort',
   'login.submit': 'Anmelden',
   'login.failed': 'Ungültige E-Mail oder ungültiges Passwort.',
   'login.secure': 'Verschlüsselter, auditierter Zugriff.',
+  'login.validation.organizationRequired': 'Organisation ist erforderlich.',
   'login.validation.emailRequired': 'E-Mail ist erforderlich.',
   'login.validation.passwordRequired': 'Passwort ist erforderlich.',
 

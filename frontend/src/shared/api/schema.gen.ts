@@ -736,6 +736,8 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** @description Organization slug (tenant). */
+                    organization: string;
                     /** Format: email */
                     email: string;
                     password: string;

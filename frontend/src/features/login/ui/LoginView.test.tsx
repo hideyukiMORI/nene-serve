@@ -20,11 +20,13 @@ describe('LoginView', () => {
     const onSubmit = vi.fn(() => Promise.resolve(true))
     renderWithProviders(<LoginView pending={false} errorMessage={null} onSubmit={onSubmit} />)
 
+    await user.type(screen.getByLabelText('Organization'), 'acme')
     await user.type(screen.getByLabelText('Email'), 'admin@acme.test')
     await user.type(screen.getByLabelText('Password'), 'password')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     expect(onSubmit).toHaveBeenCalledWith({
+      organization: 'acme',
       email: 'admin@acme.test',
       password: 'password',
     })

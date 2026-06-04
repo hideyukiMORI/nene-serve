@@ -24,11 +24,13 @@ export const zhHans: MessageCatalog = {
 
   'login.title': '登录',
   'login.subtitle': '运营控制台',
+  'login.organization': '组织',
   'login.email': '邮箱',
   'login.password': '密码',
   'login.submit': '登录',
   'login.failed': '邮箱或密码不正确。',
   'login.secure': '加密且经过审计的访问。',
+  'login.validation.organizationRequired': '请输入组织。',
   'login.validation.emailRequired': '请输入邮箱。',
   'login.validation.passwordRequired': '请输入密码。',
 

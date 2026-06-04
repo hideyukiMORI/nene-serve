@@ -26,11 +26,13 @@ export interface MessageCatalog {
 
   'login.title': string
   'login.subtitle': string
+  'login.organization': string
   'login.email': string
   'login.password': string
   'login.submit': string
   'login.failed': string
   'login.secure': string
+  'login.validation.organizationRequired': string
   'login.validation.emailRequired': string
   'login.validation.passwordRequired': string
 
@@ -208,11 +210,13 @@ export const en: MessageCatalog = {
 
   'login.title': 'Sign in',
   'login.subtitle': 'Operator console',
+  'login.organization': 'Organization',
   'login.email': 'Email',
   'login.password': 'Password',
   'login.submit': 'Sign in',
   'login.failed': 'Invalid email or password.',
   'login.secure': 'Encrypted, audited access.',
+  'login.validation.organizationRequired': 'Organization is required.',
   'login.validation.emailRequired': 'Email is required.',
   'login.validation.passwordRequired': 'Password is required.',
 

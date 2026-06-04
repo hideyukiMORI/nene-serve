@@ -24,11 +24,13 @@ export const ja: MessageCatalog = {
 
   'login.title': 'サインイン',
   'login.subtitle': '管理コンソール',
+  'login.organization': '組織',
   'login.email': 'メールアドレス',
   'login.password': 'パスワード',
   'login.submit': 'サインイン',
   'login.failed': 'メールアドレスまたはパスワードが正しくありません。',
   'login.secure': '暗号化・監査された接続。',
+  'login.validation.organizationRequired': '組織を入力してください。',
   'login.validation.emailRequired': 'メールアドレスを入力してください。',
   'login.validation.passwordRequired': 'パスワードを入力してください。',
 

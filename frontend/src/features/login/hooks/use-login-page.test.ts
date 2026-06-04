@@ -14,7 +14,11 @@ describe('useLoginPage', () => {
 
     let ok = false
     await act(async () => {
-      ok = await result.current.submit({ email: 'admin@acme.test', password: 'password' })
+      ok = await result.current.submit({
+        organization: 'acme',
+        email: 'admin@acme.test',
+        password: 'password',
+      })
     })
 
     expect(ok).toBe(true)
@@ -26,7 +30,11 @@ describe('useLoginPage', () => {
 
     let ok = true
     await act(async () => {
-      ok = await result.current.submit({ email: 'admin@acme.test', password: 'wrong' })
+      ok = await result.current.submit({
+        organization: 'acme',
+        email: 'admin@acme.test',
+        password: 'wrong',
+      })
     })
 
     expect(ok).toBe(false)

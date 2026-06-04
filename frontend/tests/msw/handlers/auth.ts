@@ -9,9 +9,17 @@ const USER = {
 
 export const authHandlers = [
   http.post('/admin/login', async ({ request }) => {
-    const body = (await request.json()) as { email?: string; password?: string }
+    const body = (await request.json()) as {
+      organization?: string
+      email?: string
+      password?: string
+    }
 
-    if (body.email === 'admin@acme.test' && body.password === 'password') {
+    if (
+      body.organization === 'acme' &&
+      body.email === 'admin@acme.test' &&
+      body.password === 'password'
+    ) {
       return HttpResponse.json({ token: 'header.payload.signature', user: USER })
     }
 
