@@ -11,6 +11,7 @@ use NeneServe\Http\Admin\CreatePlacementHandler;
 use NeneServe\Http\Admin\CurrentUserHandler;
 use NeneServe\Http\Admin\DataSubjectRequestHandler;
 use NeneServe\Http\Admin\ExportMetricsHandler as AdminExportMetricsHandler;
+use NeneServe\Http\Admin\GetMetricsHandler as AdminGetMetricsHandler;
 use NeneServe\Http\Admin\ListCreativesHandler;
 use NeneServe\Http\Admin\ListUsersHandler;
 use NeneServe\Http\Admin\LoginHandler;
@@ -28,11 +29,13 @@ use NeneServe\Http\PublicApi\ServeHandler;
 use NeneServe\Http\RateLimit\InMemoryRateLimiter;
 use NeneServe\Http\RateLimit\RateLimiterInterface;
 use NeneServe\Http\Service\ExportMetricsHandler as ServiceExportMetricsHandler;
+use NeneServe\Http\Service\GetMetricsHandler as ServiceGetMetricsHandler;
 use NeneServe\Http\Service\ListPlacementsHandler;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\InMemoryEventStore;
 use NeneServe\Measurement\UseCase\DataSubjectRequestUseCase;
 use NeneServe\Measurement\UseCase\ExportMetricsUseCase;
+use NeneServe\Measurement\UseCase\GetMetricsUseCase;
 use NeneServe\Measurement\UseCase\RecordClickUseCase;
 use NeneServe\Measurement\UseCase\RecordImpressionUseCase;
 use NeneServe\Service\Scope;
@@ -158,7 +161,7 @@ final class Kernel
     private function registerPublicRoutes(): void
     {
         $serve = new ServeHandler(
-            new ServeCreativeUseCase($this->placements, $this->creatives, $this->tokens, $this->frequencyCaps, self::clickTokenTtl()),
+            new ServeCreativeUseCase($this->placements, $this->creatives, $this->tokens, $this->frequencyCaps, $this->events, self::clickTokenTtl()),
             $this->rateLimiter,
             $this->json,
         );
@@ -196,6 +199,9 @@ final class Kernel
 
         $exportMetrics = new AdminExportMetricsHandler(new ExportMetricsUseCase($this->events), $this->json);
         $this->router->add('GET', '/admin/metrics/export', $this->admin(Capability::ViewMetrics, $exportMetrics->handle(...)));
+
+        $getMetrics = new AdminGetMetricsHandler(new GetMetricsUseCase($this->events), $this->json);
+        $this->router->add('GET', '/admin/metrics', $this->admin(Capability::ViewMetrics, $getMetrics->handle(...)));
 
         $dsr = new DataSubjectRequestHandler(new DataSubjectRequestUseCase($this->events, $this->audit), $this->json);
         $this->router->add('POST', '/admin/data-subject-requests', $this->admin(Capability::ManageSettings, $dsr->handle(...)));
@@ -252,6 +258,9 @@ final class Kernel
 
         $exportMetrics = new ServiceExportMetricsHandler(new ExportMetricsUseCase($this->events), $this->json);
         $this->router->add('GET', '/api/metrics/export', $this->service(Scope::ReadMetrics, $exportMetrics->handle(...)));
+
+        $getMetrics = new ServiceGetMetricsHandler(new GetMetricsUseCase($this->events), $this->json);
+        $this->router->add('GET', '/api/metrics', $this->service(Scope::ReadMetrics, $getMetrics->handle(...)));
     }
 
     /**

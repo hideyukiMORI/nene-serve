@@ -52,10 +52,11 @@ tracks impressions and clicks, and reports time-series metrics with CSV export �
 
 ## Status
 
-**Phase 1 — Foundation ✅ complete** (#10–#15). Runtime scaffold + three API
-surfaces (public serve / admin JWT+Capability / scoped service), multi-tenant
-auth, creative review & approval gate, impression/click measurement + daily CSV,
-and six-locale CI. Next: **Phase 2** (rich creatives, consent UI, review queue).
+**Phase 2 — Rich creatives ✅ complete** (#24–#28). Builds on Phase 1 (#10–#15):
+image/video/HTML5 creatives (scan + sandbox/CSP + review queue), consent-gated
+frequency cap, six-locale consent chrome + data-subject-request tooling, and JSON
+time-series reporting (CTR + fill rate). Next: **Phase 3** (marketplace —
+advertiser budgets; money SSOT stays in Invoice).
 
 ## Running locally
 

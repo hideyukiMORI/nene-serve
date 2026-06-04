@@ -56,6 +56,38 @@ final class PdoEventStore implements EventStoreInterface
         ]);
     }
 
+    public function recordServeRequest(string $organizationId, string $placementId, bool $filled): void
+    {
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO serve_requests (id, organization_id, placement_id, occurred_at, filled)
+             VALUES (?, ?, ?, ?, ?)',
+        );
+        $stmt->execute([bin2hex(random_bytes(16)), $organizationId, $placementId, gmdate('Y-m-d H:i:s'), $filled ? 1 : 0]);
+    }
+
+    public function dailyFillRates(string $organizationId, string $fromDate, string $toDate): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT DATE(occurred_at) AS date, placement_id,
+                    COUNT(*) AS serve_requests, SUM(filled) AS fills
+             FROM serve_requests
+             WHERE organization_id = ? AND DATE(occurred_at) BETWEEN ? AND ?
+             GROUP BY date, placement_id
+             ORDER BY date, placement_id',
+        );
+        $stmt->execute([$organizationId, $fromDate, $toDate]);
+
+        return array_map(
+            static fn (array $row): FillRow => new FillRow(
+                (string) $row['date'],
+                (string) $row['placement_id'],
+                (int) $row['serve_requests'],
+                (int) $row['fills'],
+            ),
+            array_values($stmt->fetchAll()),
+        );
+    }
+
     public function dailyMetrics(string $organizationId, string $fromDate, string $toDate): array
     {
         $sql =

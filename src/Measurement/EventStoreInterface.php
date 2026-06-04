@@ -15,6 +15,19 @@ interface EventStoreInterface
     public function recordClick(ClickEvent $event): void;
 
     /**
+     * Records a serve request (for fill rate). `filled` is true when a
+     * non-fallback creative was returned, false for an empty/capped serve.
+     */
+    public function recordServeRequest(string $organizationId, string $placementId, bool $filled): void;
+
+    /**
+     * Daily fill rate per date/placement over an inclusive [from, to] range.
+     *
+     * @return list<FillRow>
+     */
+    public function dailyFillRates(string $organizationId, string $fromDate, string $toDate): array;
+
+    /**
      * Daily metrics for one tenant over an inclusive [from, to] date range
      * (UTC `Y-m-d`), grouped by date/placement/creative.
      *
