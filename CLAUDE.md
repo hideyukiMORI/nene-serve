@@ -12,6 +12,7 @@ Agent guide. Cursor rules: `.cursor/rules/`.
 | Privacy & consent (binding) | `docs/explanation/privacy-and-ad-compliance.md` |
 | API security (binding) | `docs/explanation/api-security-spec.md` |
 | Creative review & safety (binding) | `docs/explanation/creative-review-and-safety.md` |
+| Audit & data integrity (binding) | `docs/explanation/audit-and-data-integrity-compliance.md` |
 | i18n | `docs/development/i18n.md` |
 | Tasks | `docs/todo/current.md` |
 
@@ -24,6 +25,7 @@ Agent guide. Cursor rules: `.cursor/rules/`.
 - **Operator is the data controller; privacy by default.** Consent-gated non-essential tracking, data minimization, no raw PII in event tables (ADR 0016/0017)
 - **Three API surfaces** (public `/public/*` none · admin `/admin/*` JWT+Capability · service `/api/*` scoped token); no open redirect, no `*` CORS for credentialed routes, opaque short-lived tokens (ADR 0018/0019)
 - **Only approved creatives serve.** Review workflow + four-eyes approval, immutable versions, html5 malware-scanned + sandboxed; no raw third-party tags (ADR 0020/0021)
+- **Governed data is append-only & fully audited.** Every governed write is audited (who/when/before→after/why); no ad-hoc/manual physical delete — "delete" = archive/disable/tombstone; FKs `RESTRICT` not `CASCADE`; app DB role lacks `DELETE`/`TRUNCATE`; only cosmetic "presentation" data (allowlist) is freely deletable/unaudited (ADR 0022)
 - MCP maps to Serve OpenAPI only
 
 ## Ports

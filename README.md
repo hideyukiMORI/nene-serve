@@ -45,6 +45,7 @@ tracks impressions and clicks, and reports time-series metrics with CSV export â
 | **Creative review & sandbox safety (binding)** | [`docs/explanation/creative-review-and-safety.md`](./docs/explanation/creative-review-and-safety.md) |
 | **Privacy, data protection & consent (binding)** | [`docs/explanation/privacy-and-ad-compliance.md`](./docs/explanation/privacy-and-ad-compliance.md) |
 | **Billing & accounting compliance (binding)** | [`docs/explanation/billing-and-accounting-compliance.md`](./docs/explanation/billing-and-accounting-compliance.md) |
+| **Audit & data integrity (binding)** | [`docs/explanation/audit-and-data-integrity-compliance.md`](./docs/explanation/audit-and-data-integrity-compliance.md) |
 | **i18n (six locales)** | [`docs/development/i18n.md`](./docs/development/i18n.md) |
 | **Terminology registry (binding)** | [`docs/explanation/terminology.md`](./docs/explanation/terminology.md) |
 | **Sibling integrations** | [`docs/integrations/sibling-products.md`](./docs/integrations/sibling-products.md) |
