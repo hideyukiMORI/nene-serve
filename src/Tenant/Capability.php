@@ -21,4 +21,5 @@ enum Capability: string
     case ManagePlacements = 'manage_placements';
     case ManageCreatives = 'manage_creatives';
     case ReviewCreatives = 'review_creatives';
+    case ManageMarketplace = 'manage_marketplace';
 }

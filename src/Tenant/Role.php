@@ -35,6 +35,7 @@ enum Role: string
                 Capability::ManagePlacements,
                 Capability::ManageCreatives,
                 Capability::ReviewCreatives,
+                Capability::ManageMarketplace,
             ],
             self::Editor => [
                 Capability::ViewMetrics,

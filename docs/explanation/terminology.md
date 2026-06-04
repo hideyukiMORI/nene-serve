@@ -136,7 +136,8 @@ data has no delivery/measurement/billing/identity meaning.
 
 **Audit `action` naming:** `{subject}.{verb}` snake_case — e.g. `creative.approved`,
 `placement.created`, `placement.archived`, `user.created`, `budget.changed`,
-`period.closed`, `dsr.erasure`, `dsr.export`, `metrics.read_sensitive`. Register
+`period.closed`, `dsr.erasure`, `dsr.export`, `metrics.read_sensitive`,
+`advertiser.created`, `pricing_rule.created`. Register
 new actions before use. Mutation audit metadata carries structured
 `before`/`after` (changed fields). Sensitive **reads** (`include_sensitive`
 metrics, DSR export, PII-link reads) are also audited; ordinary reads are not.
@@ -200,6 +201,7 @@ Roles map to capabilities; admin routes require a **capability**, not a role.
 | `manage_placements` | ✓ | ✓ | ✓ | |
 | `manage_creatives` | ✓ | ✓ | ✓ | |
 | `review_creatives` | ✓ | ✓ | | |
+| `manage_marketplace` | ✓ | ✓ | | |
 
 Role values (`users.role`): `superadmin`, `org_admin`, `editor`, `analyst`.
 Capability strings are snake_case and registered here before use.
@@ -278,6 +280,7 @@ match across OpenAPI, routes, and MCP tool catalog.
 | `getDeliveryPlan`, `updateDeliveryPlan` | Admin |
 | `getPlacementMetrics`, `exportMetrics` | Admin / Service (read) |
 | `createDataSubjectRequest` | Admin (`manage_settings`) |
+| `createAdvertiser`, `listAdvertisers`, `createPricingRule` | Admin (`manage_marketplace`) |
 
 ---
 
