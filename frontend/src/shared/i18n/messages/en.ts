@@ -90,6 +90,25 @@ export interface MessageCatalog {
   'metrics.column.impressions': string
   'metrics.column.clicks': string
   'metrics.column.ctr': string
+
+  'nav.marketplace': string
+  'marketplace.title': string
+  'marketplace.subtitle': string
+  'marketplace.loading': string
+  'marketplace.loadError': string
+  'marketplace.advertisers.title': string
+  'marketplace.advertisers.empty': string
+  'marketplace.pricingRules.title': string
+  'marketplace.pricingRules.empty': string
+  'marketplace.campaigns.title': string
+  'marketplace.campaigns.empty': string
+  'marketplace.column.name': string
+  'marketplace.column.status': string
+  'marketplace.column.model': string
+  'marketplace.column.rate': string
+  'marketplace.column.version': string
+  'marketplace.column.funding': string
+  'marketplace.column.budget': string
 }
 
 export const en: MessageCatalog = {
@@ -179,4 +198,23 @@ export const en: MessageCatalog = {
   'metrics.column.impressions': 'Impressions',
   'metrics.column.clicks': 'Clicks',
   'metrics.column.ctr': 'CTR',
+
+  'nav.marketplace': 'Marketplace',
+  'marketplace.title': 'Marketplace',
+  'marketplace.subtitle': 'Advertisers, pricing rules and campaigns',
+  'marketplace.loading': 'Loading…',
+  'marketplace.loadError': 'Could not load marketplace data.',
+  'marketplace.advertisers.title': 'Advertisers',
+  'marketplace.advertisers.empty': 'No advertisers yet.',
+  'marketplace.pricingRules.title': 'Pricing rules',
+  'marketplace.pricingRules.empty': 'No pricing rules yet.',
+  'marketplace.campaigns.title': 'Campaigns',
+  'marketplace.campaigns.empty': 'No campaigns yet.',
+  'marketplace.column.name': 'Name',
+  'marketplace.column.status': 'Status',
+  'marketplace.column.model': 'Model',
+  'marketplace.column.rate': 'Rate',
+  'marketplace.column.version': 'Version',
+  'marketplace.column.funding': 'Funding',
+  'marketplace.column.budget': 'Budget',
 }
