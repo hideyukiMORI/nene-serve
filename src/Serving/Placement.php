@@ -23,12 +23,29 @@ final class Placement
         public readonly bool $measurementEnabled = true,
         /** Max impressions per consent-gated visitor_bucket per day; null = uncapped. */
         public readonly ?int $frequencyCap = null,
+        /** Archive tombstone (ADR 0022): set instead of physically deleting. */
+        public readonly ?string $archivedAt = null,
     ) {
     }
 
     public function isActive(): bool
     {
-        return $this->status === 'active';
+        return $this->status === 'active' && $this->archivedAt === null;
+    }
+
+    public function archive(string $at): self
+    {
+        return new self(
+            $this->id,
+            $this->organizationId,
+            $this->publicPlacementKey,
+            $this->allowedOrigins,
+            'archived',
+            $this->defaultCreativeId,
+            $this->measurementEnabled,
+            $this->frequencyCap,
+            $at,
+        );
     }
 
     /**

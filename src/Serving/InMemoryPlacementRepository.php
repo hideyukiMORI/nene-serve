@@ -47,4 +47,12 @@ final class InMemoryPlacementRepository implements PlacementRepositoryInterface
     {
         $this->placements[$placement->id] = $placement;
     }
+
+    public function archive(string $id, string $organizationId, string $at): void
+    {
+        $placement = $this->findByIdInOrganization($id, $organizationId);
+        if ($placement !== null) {
+            $this->placements[$id] = $placement->archive($at);
+        }
+    }
 }
