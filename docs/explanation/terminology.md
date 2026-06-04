@@ -295,15 +295,15 @@ documented paths == Kernel routes.
 | `listUsers` | Admin (tenant-scoped) |
 | `listPlacements`, `getPlacementById`, `createPlacement`, `updatePlacement` | Admin |
 | `createPlacement`, `archivePlacement` | Admin (`manage_placements`) |
-| `listCreatives`, `createCreative`, `reviseCreative` | Admin (`manage_creatives`) |
+| `listCreatives`, `getCreativeById`, `createCreative`, `reviseCreative` | Admin (`manage_creatives`) |
 | `submitCreative`, `getRecordsAsset` | Admin (`manage_creatives`) |
 | `startCreativeReview`, `approveCreative`, `rejectCreative`, `requestCreativeChanges`, `listReviewQueue` | Admin (`review_creatives`) |
 | `publishCreative` | Admin |
 | `getDeliveryPlan`, `updateDeliveryPlan` | Admin |
 | `getPlacementMetrics`, `exportMetrics` | Admin / Service (read) |
 | `createDataSubjectRequest`, `placeLegalHold`, `releaseLegalHold` | Admin (`manage_settings`) |
-| `createAdvertiser`, `listAdvertisers`, `createPricingRule` | Admin (`manage_marketplace`) |
-| `createCampaign`, `getCampaign` | Admin (`manage_marketplace`) |
+| `createAdvertiser`, `listAdvertisers`, `createPricingRule`, `listPricingRules` | Admin (`manage_marketplace`) |
+| `createCampaign`, `listCampaigns`, `getCampaign` | Admin (`manage_marketplace`) |
 | `openBillingPeriod`, `closeBillingPeriod`, `getBillingPeriod`, `handoffBillingPeriod` | Admin (`manage_marketplace`) |
 | `handoffCampaignToDeal` | Admin (`manage_marketplace`) |
 | `proposeDeliveryPlanChange`, `applyDeliveryPlanChange` | Service (`write:delivery_plan`) |

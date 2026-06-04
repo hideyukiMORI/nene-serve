@@ -75,4 +75,28 @@ final class Placement
 
         return in_array($origin, $this->allowedOrigins, true);
     }
+
+    /**
+     * Admin projection (richer than the public/service serve projection): the
+     * operator console needs configuration fields. No visitor identifiers.
+     *
+     * @return array{
+     *     id: string, public_placement_key: string, status: string,
+     *     default_creative_id: ?string, allowed_origins: list<string>,
+     *     measurement_enabled: bool, frequency_cap: ?int, archived_at: ?string
+     * }
+     */
+    public function toAdminArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'public_placement_key' => $this->publicPlacementKey,
+            'status' => $this->status,
+            'default_creative_id' => $this->defaultCreativeId,
+            'allowed_origins' => $this->allowedOrigins,
+            'measurement_enabled' => $this->measurementEnabled,
+            'frequency_cap' => $this->frequencyCap,
+            'archived_at' => $this->archivedAt,
+        ];
+    }
 }
