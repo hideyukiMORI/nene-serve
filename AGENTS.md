@@ -43,3 +43,10 @@ See [ADR 0009](docs/adr/0009-separate-from-contact-and-concierge.md).
 ## Framework
 
 [NENE2](https://github.com/hideyukiMORI/NENE2) via Composer when runtime lands.
+
+## Frontend
+
+Admin SPA in `frontend/` follows the sibling NeNe convention (React+Vite+TS, Feature-Sliced,
+Tailwind v4, TanStack Query, react-hook-form+zod, MSW mock-first, Storybook, six-locale i18n
+per ADR 0011, `openapi-typescript` codegen). Dev port **5189**, Storybook **6107**; backend
+proxied from `APP_PORT` (8910). Quality gate: `npm run check`. See `frontend/README.md`.
