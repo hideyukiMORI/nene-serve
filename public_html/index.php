@@ -5,6 +5,7 @@ declare(strict_types=1);
 use NeneServe\Http\Kernel;
 use NeneServe\Http\Request;
 use NeneServe\Measurement\FileEventStore;
+use NeneServe\Serving\Frequency\FileFrequencyCapStore;
 use NeneServe\Serving\Token\FileTokenStore;
 
 $autoload = dirname(__DIR__) . '/vendor/autoload.php';
@@ -39,6 +40,7 @@ if (PHP_SAPI === 'cli-server') {
 $kernel = new Kernel(
     tokens: new FileTokenStore(dirname(__DIR__) . '/var/tokens.json'),
     events: new FileEventStore(dirname(__DIR__) . '/var/events.json'),
+    frequencyCaps: new FileFrequencyCapStore(dirname(__DIR__) . '/var/frequency.json'),
 );
 
 $kernel->handle(Request::fromGlobals())->send();

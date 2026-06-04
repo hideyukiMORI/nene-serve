@@ -8,7 +8,7 @@ use PDO;
 
 final class PdoPlacementRepository implements PlacementRepositoryInterface
 {
-    private const COLUMNS = 'id, organization_id, public_placement_key, allowed_origins, status, default_creative_id, measurement_enabled';
+    private const COLUMNS = 'id, organization_id, public_placement_key, allowed_origins, status, default_creative_id, measurement_enabled, frequency_cap';
 
     public function __construct(
         private readonly PDO $pdo,
@@ -49,8 +49,8 @@ final class PdoPlacementRepository implements PlacementRepositoryInterface
     {
         $stmt = $this->pdo->prepare(
             'REPLACE INTO placements
-                (id, organization_id, public_placement_key, allowed_origins, status, default_creative_id, measurement_enabled)
-             VALUES (?, ?, ?, ?, ?, ?, ?)',
+                (id, organization_id, public_placement_key, allowed_origins, status, default_creative_id, measurement_enabled, frequency_cap)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
         );
         $stmt->execute([
             $placement->id,
@@ -60,6 +60,7 @@ final class PdoPlacementRepository implements PlacementRepositoryInterface
             $placement->status,
             $placement->defaultCreativeId,
             $placement->measurementEnabled ? 1 : 0,
+            $placement->frequencyCap,
         ]);
     }
 
@@ -83,6 +84,7 @@ final class PdoPlacementRepository implements PlacementRepositoryInterface
             (string) $row['status'],
             $row['default_creative_id'] !== null ? (string) $row['default_creative_id'] : null,
             (bool) $row['measurement_enabled'],
+            $row['frequency_cap'] !== null ? (int) $row['frequency_cap'] : null,
         );
     }
 }

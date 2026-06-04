@@ -61,6 +61,8 @@ final class DevFixtures
             new Placement('plc-acme-side', 'org-acme', 'pk_acme_side', [], 'active', 'cr-acme-draft'),
             // Active + approved but measurement opted out (privacy P2): serves, no beacons counted.
             new Placement('plc-acme-quiet', 'org-acme', 'pk_acme_quiet', [], 'active', 'cr-acme-banner', false),
+            // Active + approved with a frequency cap of 1/visitor/day (consent-gated).
+            new Placement('plc-acme-capped', 'org-acme', 'pk_acme_capped', [], 'active', 'cr-acme-banner', true, 1),
         ]);
     }
 

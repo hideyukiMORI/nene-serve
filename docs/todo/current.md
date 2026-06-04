@@ -25,7 +25,7 @@
 
 - [x] #24 (A) Video creative acceptance — MP4/WebM, poster, max duration, no autoplay-with-sound (ADR 0021)
 - [x] #25 (B) HTML5 bundle + malware scan + sandbox/CSP + review queue — content policy, scan-clean submit gate, opaque frame token, strict-CSP sandbox (ADR 0020/0021)
-- [ ] #26 (C) Frequency cap (consent-gated visitor buckets) (ADR 0017)
+- [x] #26 (C) Frequency cap (consent-gated visitor buckets) — per-bucket daily cap, fail-open without consent (ADR 0017)
 - [ ] #27 (D) Consent UI (six-locale) + data-subject-request tooling (ADR 0016/0017)
 - [ ] #28 (E) Reporting polish — JSON time-series metrics (CTR, fill rate) (measurement-spec)
 
@@ -55,4 +55,4 @@
 - **Three separated API surfaces; fail closed** (ADR 0018/0019); endpoint changes are gated by `docs/review/api-security.md`.
 - **Only approved creatives serve** (ADR 0020/0021); creative changes are gated by `docs/review/creative-review.md`.
 
-Last updated: 2026-06-04 (#25 HTML5 bundle landed; next: #26 frequency cap)
+Last updated: 2026-06-04 (#26 frequency cap landed; next: #27 consent UI + DSR)

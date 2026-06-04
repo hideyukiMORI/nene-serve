@@ -8,6 +8,7 @@ use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\ImpressionEvent;
 use NeneServe\Measurement\PageUrl;
 use NeneServe\Measurement\VisitorBucket;
+use NeneServe\Serving\Frequency\FrequencyCapStoreInterface;
 use NeneServe\Serving\PlacementRepositoryInterface;
 use NeneServe\Serving\Token\TokenStoreInterface;
 
@@ -24,6 +25,7 @@ final class RecordImpressionUseCase
         private readonly TokenStoreInterface $tokens,
         private readonly EventStoreInterface $events,
         private readonly PlacementRepositoryInterface $placements,
+        private readonly FrequencyCapStoreInterface $frequencyCaps,
     ) {
     }
 
@@ -59,5 +61,11 @@ final class RecordImpressionUseCase
             PageUrl::truncate($pageUrl),
             $visitorBucket,
         ));
+
+        // Count toward the frequency cap only for a consent-gated bucket on a
+        // capped placement (privacy ADR 0017 §3).
+        if ($visitorBucket !== null && $placement->frequencyCap !== null) {
+            $this->frequencyCaps->increment($record->placementId, $visitorBucket);
+        }
     }
 }

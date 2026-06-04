@@ -21,6 +21,8 @@ final class Placement
         public readonly ?string $defaultCreativeId = null,
         /** Opt-out switch (privacy P2): when false, the creative serves but no tracking beacons fire. */
         public readonly bool $measurementEnabled = true,
+        /** Max impressions per consent-gated visitor_bucket per day; null = uncapped. */
+        public readonly ?int $frequencyCap = null,
     ) {
     }
 

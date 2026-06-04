@@ -29,6 +29,7 @@ Single source of truth for identifiers. Register new terms in the same PR.
 | Delivery plan | `delivery_plan` | `DeliveryPlan` |
 | Weight share | `weight` | integer ≥ 0 |
 | Impression cap | `max_impressions` | integer |
+| Frequency cap (per visitor/day) | `frequency_cap` | integer (consent-gated) |
 | Default creative | `default_creative_id` | FK |
 | Impression event | `impression` | `Impression` |
 | Click event | `click` | `Click` |
