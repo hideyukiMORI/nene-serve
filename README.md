@@ -52,7 +52,23 @@ tracks impressions and clicks, and reports time-series metrics with CSV export �
 
 ## Status
 
-**Phase 0** — governance and product design. Runtime scaffold follows Issue #4+.
+**Phase 1 — Foundation** (started). Phase 0 governance is complete; the runtime
+scaffold (`GET /health`, `composer locales:check`, Docker stack) landed in #10.
+Tracking: milestone **Phase 1: Foundation**, issues #10–#15.
+
+## Running locally
+
+```bash
+# Docker (full stack: API + MySQL + phpMyAdmin)
+docker compose up -d
+curl http://127.0.0.1:8910/health        # {"status":"ok",...}
+
+# Or without Docker (PHP 8.3+):
+composer install            # or `composer dump-autoload` for the scaffold only
+composer serve              # php -S 127.0.0.1:8910 -t public_html
+composer locales:check      # six-locale key parity (ADR 0011)
+composer test               # PHPUnit
+```
 
 ## Local ports (fixed)
 

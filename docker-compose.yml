@@ -1,0 +1,45 @@
+# NeNe Serve — local dev stack (scaffold, #10)
+# Ports (CLAUDE.md): API 8910 · phpMyAdmin 8911 · MySQL 3392
+services:
+  api:
+    build: .
+    ports:
+      - "8910:8910"
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: php -S 0.0.0.0:8910 -t public_html public_html/index.php
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: ${DB_DATABASE:-nene_serve}
+      DB_USERNAME: ${DB_USERNAME:-nene}
+      DB_PASSWORD: ${DB_PASSWORD:-nene}
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.4
+    ports:
+      - "3392:3306"
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-nene_serve}
+      MYSQL_USER: ${DB_USERNAME:-nene}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-nene}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    volumes:
+      - dbdata:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    ports:
+      - "8911:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: "3306"
+    depends_on:
+      - db
+
+volumes:
+  dbdata:
