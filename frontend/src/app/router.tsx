@@ -1,7 +1,9 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { CreativesPage } from '@/pages/creatives/CreativesPage'
 import { LoginPage } from '@/pages/login/LoginPage'
 import { NotFoundPage } from '@/pages/not-found/NotFoundPage'
 import { PlacementsPage } from '@/pages/placements/PlacementsPage'
+import { ReviewPage } from '@/pages/review/ReviewPage'
 import { AppShell } from './shell/AppShell'
 import { RequireAuth } from './auth-gate'
 
@@ -14,7 +16,11 @@ const router = createBrowserRouter([
       </RequireAuth>
     ),
     errorElement: <NotFoundPage />,
-    children: [{ path: '/', element: <PlacementsPage /> }],
+    children: [
+      { path: '/', element: <PlacementsPage /> },
+      { path: '/creatives', element: <CreativesPage /> },
+      { path: '/review', element: <ReviewPage /> },
+    ],
   },
   { path: '*', element: <NotFoundPage /> },
 ])
