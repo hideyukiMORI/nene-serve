@@ -112,6 +112,37 @@ precise geo coordinates, cross-publisher fingerprints.
 
 ---
 
+## Audit & data integrity (ADR 0022)
+
+Governed by [`audit-and-data-integrity-compliance.md`](./audit-and-data-integrity-compliance.md)
+(binding).
+
+**Governed data** (default — append-only, no hard delete, all writes audited):
+placements, creatives, campaigns, delivery plans, users/roles, advertisers/budgets,
+impressions/clicks/serve requests, consent records, audit events.
+
+**Presentation data** (allowlist — freely editable/deletable, not audited): UI
+theme, dashboard layout, column order, saved filters, a user's display-locale
+preference (`user_preferences.locale`). Add here only via a PR explaining why the
+data has no delivery/measurement/billing/identity meaning.
+
+| Concept | JSON / column | Notes |
+| --- | --- | --- |
+| Archive tombstone | `archived_at` | additive; replaces hard delete |
+| Disable tombstone | `disabled_at` | additive; e.g. users, tokens |
+| Erasure tombstone | `erased_at` | DSR; forgets the link, keeps the count (ADR 0017) |
+| Audit before-state | `before` | in audit metadata |
+| Audit after-state | `after` | in audit metadata |
+
+**Audit `action` naming:** `{subject}.{verb}` snake_case — e.g. `creative.approved`,
+`placement.updated`, `user.created`, `budget.changed`, `period.closed`,
+`dsr.erasure`. Register new actions before use.
+
+Tenant/parent foreign keys on governed tables use **`ON DELETE RESTRICT`** (never
+`CASCADE`). The application DB role has no `DELETE`/`TRUNCATE` on governed tables.
+
+---
+
 ## Campaign / placement status
 
 | Value | Meaning |
