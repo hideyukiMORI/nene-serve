@@ -57,7 +57,7 @@
 - [~] #2 Admin create forms — marketplace (advertiser/pricing/campaign, PR #82) + serving (placement/image-creative, PR #84) done; the operate loop is now drivable in the console. Remaining: billing-period close/handoff actions, edit forms, video/html5 creative (needs #4).
 - [x] #3 Provisioning (invite-link via email) — mail infra (#86), admin-managed SMTP encrypted at rest + test (#87), invite backend (#88), **provisioning UI (#90: Users+invite, Settings/SMTP, set-password)**. Operator console onboards teammates end-to-end (configure SMTP → invite → set password → sign in). Remaining sub-items: service-token issuance UI, first-org bootstrap CLI.
 - [x] Prod bug fixed (#92): all 9 `REPLACE INTO` → `INSERT .. AS new ON DUPLICATE KEY UPDATE` (no DELETE needed); verified create+update under the locked `nene` role on MySQL. Create/edit flows now work in production.
-- [ ] #4 Asset upload + storage + real malware scanner (replace StubBundleScanner).
+- [x] #4 Asset upload + storage + real malware scanner — local `Storage` + image/video upload + public serving (#4a, PR #93); **ClamAV** clamd scanner, fail-closed (#4b, PR #95, verified clean/EICAR live); image upload UI in the creative form (#4c, PR #97). Follow-ups: video/HTML5-bundle upload UI + multipart for large video.
 - [ ] Production deploy hardening (migrations on deploy, HTTPS/secrets, shared token/rate-limit/frequency store for multi-host).
 - [ ] Real sibling integrations (Invoice/Deal/Records) when those services exist.
 
