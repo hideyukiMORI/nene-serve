@@ -297,6 +297,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload an image/video asset (base64 JSON; allowlisted content types). Returns the public asset URL. */
+        post: operations["uploadAsset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/creatives/{id}": {
         parameters: {
             query?: never;
@@ -1248,6 +1265,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Creative"];
+                };
+            };
+            403: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+        };
+    };
+    uploadAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    content_type: "image/png" | "image/jpeg" | "image/gif" | "image/webp" | "video/mp4" | "video/webm";
+                    data_base64: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Stored. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id?: string;
+                        kind?: string;
+                        content_type?: string;
+                        byte_size?: number;
+                        asset_url?: string;
+                    };
                 };
             };
             403: components["responses"]["Problem"];

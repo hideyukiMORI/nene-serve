@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace NeneServe\Support;
 
+use NeneServe\Assets\PdoAssetRepository;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Http\Kernel;
 use NeneServe\Marketplace\Invoice\HttpInvoiceClient;
@@ -25,6 +26,7 @@ use NeneServe\Serving\PdoCreativeRepository;
 use NeneServe\Serving\PdoPlacementRepository;
 use NeneServe\Serving\Token\FileTokenStore;
 use NeneServe\Settings\PdoSmtpSettingsRepository;
+use NeneServe\Storage\LocalStorage;
 use NeneServe\Tenant\PdoInvitationRepository;
 use NeneServe\Tenant\PdoOrganizationRepository;
 use NeneServe\Tenant\PdoUserRepository;
@@ -107,6 +109,8 @@ final class KernelFactory
             changePlans: new PdoChangePlanRepository($pdo),
             smtpSettings: new PdoSmtpSettingsRepository($pdo),
             invitations: new PdoInvitationRepository($pdo),
+            assets: new PdoAssetRepository($pdo),
+            storage: new LocalStorage($storageDir . '/uploads'),
         );
     }
 
@@ -120,6 +124,7 @@ final class KernelFactory
             invoiceClient: self::invoiceClient($read),
             records: self::recordsClient($read),
             dealClient: self::dealClient($read),
+            storage: new LocalStorage($storageDir . '/uploads'),
         );
     }
 
