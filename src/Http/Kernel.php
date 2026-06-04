@@ -43,9 +43,11 @@ use NeneServe\Http\PublicApi\RedirectClickHandler;
 use NeneServe\Http\PublicApi\ServeHandler;
 use NeneServe\Http\RateLimit\InMemoryRateLimiter;
 use NeneServe\Http\RateLimit\RateLimiterInterface;
+use NeneServe\Http\Service\ApplyChangeHandler;
 use NeneServe\Http\Service\ExportMetricsHandler as ServiceExportMetricsHandler;
 use NeneServe\Http\Service\GetMetricsHandler as ServiceGetMetricsHandler;
 use NeneServe\Http\Service\ListPlacementsHandler;
+use NeneServe\Http\Service\ProposeChangeHandler;
 use NeneServe\Marketplace\AdvertiserRepositoryInterface;
 use NeneServe\Marketplace\BillingPeriodRepositoryInterface;
 use NeneServe\Marketplace\CampaignRepositoryInterface;
@@ -70,6 +72,10 @@ use NeneServe\Marketplace\UseCase\GetCampaignSpendUseCase;
 use NeneServe\Marketplace\UseCase\HandoffBillingPeriodUseCase;
 use NeneServe\Marketplace\UseCase\HandoffCampaignToDealUseCase;
 use NeneServe\Marketplace\UseCase\OpenBillingPeriodUseCase;
+use NeneServe\Mcp\ChangePlanRepositoryInterface;
+use NeneServe\Mcp\InMemoryChangePlanRepository;
+use NeneServe\Mcp\UseCase\ApplyChangePlanUseCase;
+use NeneServe\Mcp\UseCase\ProposePlacementChangeUseCase;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\InMemoryEventStore;
 use NeneServe\Measurement\UseCase\DataSubjectRequestUseCase;
@@ -160,6 +166,7 @@ final class Kernel
     private readonly RecordsClientInterface $records;
     private readonly DealOpportunityRepositoryInterface $dealOpportunities;
     private readonly DealClientInterface $dealClient;
+    private readonly ChangePlanRepositoryInterface $changePlans;
     private readonly Jwt $jwt;
 
     public function __construct(
@@ -187,6 +194,7 @@ final class Kernel
         ?RecordsClientInterface $records = null,
         ?DealOpportunityRepositoryInterface $dealOpportunities = null,
         ?DealClientInterface $dealClient = null,
+        ?ChangePlanRepositoryInterface $changePlans = null,
     ) {
         $this->json = new JsonResponseFactory();
         $this->users = $users ?? DevFixtures::users();
@@ -212,6 +220,7 @@ final class Kernel
         $this->records = $records ?? new FakeRecordsClient();
         $this->dealOpportunities = $dealOpportunities ?? new InMemoryDealOpportunityRepository();
         $this->dealClient = $dealClient ?? new FakeDealClient();
+        $this->changePlans = $changePlans ?? new InMemoryChangePlanRepository();
         $this->jwt = $jwt ?? new Jwt(self::resolveSecret());
         $this->auth = new BearerTokenMiddleware($this->jwt, $this->users);
         $this->serviceAuth = new ServiceTokenMiddleware($serviceTokens ?? DevFixtures::serviceTokens());
@@ -438,6 +447,19 @@ final class Kernel
 
         $getMetrics = new ServiceGetMetricsHandler(new GetMetricsUseCase($this->events, $this->audit, $this->tx), $this->json);
         $this->router->add('GET', '/api/metrics', $this->service(Scope::ReadMetrics, $getMetrics->handle(...)));
+
+        // MCP write plans: propose → confirm (token) → apply, audited (api-security §5).
+        $propose = new ProposeChangeHandler(
+            new ProposePlacementChangeUseCase($this->placements, $this->creatives, $this->changePlans, $this->audit, $this->tx),
+            $this->json,
+        );
+        $this->router->add('POST', '/api/delivery-plan-changes', $this->service(Scope::WriteDeliveryPlan, $propose->handle(...)));
+
+        $apply = new ApplyChangeHandler(
+            new ApplyChangePlanUseCase($this->placements, $this->creatives, $this->changePlans, $this->audit, $this->tx),
+            $this->json,
+        );
+        $this->router->add('POST', '/api/delivery-plan-changes/{token}/apply', $this->service(Scope::WriteDeliveryPlan, $apply->handle(...)));
     }
 
     /**

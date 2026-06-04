@@ -30,6 +30,7 @@ final class DevFixtures
 {
     public const PASSWORD = 'secret123';
     public const SERVICE_TOKEN = 'svc-acme-readonly-secret';
+    public const SERVICE_TOKEN_WRITE = 'svc-acme-write-secret';
 
     public static function organizations(): InMemoryOrganizationRepository
     {
@@ -98,6 +99,12 @@ final class DevFixtures
                 'org-acme',
                 hash('sha256', self::SERVICE_TOKEN),
                 [Scope::ReadPlacements],
+            ),
+            new ServiceToken(
+                'svctok-acme-write',
+                'org-acme',
+                hash('sha256', self::SERVICE_TOKEN_WRITE),
+                [Scope::ReadPlacements, Scope::ReadMetrics, Scope::WriteDeliveryPlan],
             ),
         ]);
     }
