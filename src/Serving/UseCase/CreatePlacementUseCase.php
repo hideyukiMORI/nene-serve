@@ -7,6 +7,7 @@ namespace NeneServe\Serving\UseCase;
 use NeneServe\Audit\AuditLogInterface;
 use NeneServe\Serving\Placement;
 use NeneServe\Serving\PlacementRepositoryInterface;
+use NeneServe\Support\TransactionManagerInterface;
 use NeneServe\Tenant\AuthContext;
 
 final class CreatePlacementUseCase
@@ -14,6 +15,7 @@ final class CreatePlacementUseCase
     public function __construct(
         private readonly PlacementRepositoryInterface $placements,
         private readonly AuditLogInterface $audit,
+        private readonly TransactionManagerInterface $tx,
     ) {
     }
 
@@ -39,17 +41,20 @@ final class CreatePlacementUseCase
             $status,
             $defaultCreativeId,
         );
-        $this->placements->save($placement);
 
-        $this->audit->record(
-            $actor->organizationId,
-            $actor->userId,
-            'placement.created',
-            'placement',
-            $placement->id,
-            ['public_placement_key' => $publicPlacementKey],
-        );
+        // Mutation + audit commit together (audit-and-data-integrity §2).
+        return $this->tx->transactional(function () use ($placement, $actor, $publicPlacementKey, $status): Placement {
+            $this->placements->save($placement);
+            $this->audit->record(
+                $actor->organizationId,
+                $actor->userId,
+                'placement.created',
+                'placement',
+                $placement->id,
+                ['after' => ['public_placement_key' => $publicPlacementKey, 'status' => $status]],
+            );
 
-        return $placement;
+            return $placement;
+        });
     }
 }

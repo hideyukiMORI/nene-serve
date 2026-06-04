@@ -10,6 +10,7 @@ use NeneServe\Serving\CreativeRepositoryInterface;
 use NeneServe\Serving\CreativeType;
 use NeneServe\Serving\Review\ImageAcceptance;
 use NeneServe\Serving\ReviewStatus;
+use NeneServe\Support\TransactionManagerInterface;
 use NeneServe\Tenant\AuthContext;
 
 /**
@@ -22,6 +23,7 @@ final class ReviseCreativeUseCase
     public function __construct(
         private readonly CreativeRepositoryInterface $creatives,
         private readonly AuditLogInterface $audit,
+        private readonly TransactionManagerInterface $tx,
     ) {
     }
 
@@ -56,17 +58,21 @@ final class ReviseCreativeUseCase
             $height,
             $newVersion,
         );
-        $this->creatives->save($revision); // prior version row is left untouched
+        return $this->tx->transactional(function () use ($revision, $current, $actor): Creative {
+            $this->creatives->save($revision); // prior version row is left untouched
+            $this->audit->record(
+                $actor->organizationId,
+                $actor->userId,
+                'creative.version_superseded',
+                'creative',
+                $current->id,
+                [
+                    'before' => ['version' => $current->version],
+                    'after' => ['version' => $revision->version, 'new_creative_id' => $revision->id, 'review_status' => 'draft'],
+                ],
+            );
 
-        $this->audit->record(
-            $actor->organizationId,
-            $actor->userId,
-            'creative.version_superseded',
-            'creative',
-            $current->id,
-            ['from_version' => $current->version, 'new_creative_id' => $revision->id],
-        );
-
-        return $revision;
+            return $revision;
+        });
     }
 }

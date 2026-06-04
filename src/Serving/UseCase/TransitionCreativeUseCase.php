@@ -9,6 +9,7 @@ use NeneServe\Serving\Creative;
 use NeneServe\Serving\CreativeRepositoryInterface;
 use NeneServe\Serving\CreativeType;
 use NeneServe\Serving\Review\ReviewAction;
+use NeneServe\Support\TransactionManagerInterface;
 use NeneServe\Tenant\AuthContext;
 
 /**
@@ -21,6 +22,7 @@ final class TransitionCreativeUseCase
     public function __construct(
         private readonly CreativeRepositoryInterface $creatives,
         private readonly AuditLogInterface $audit,
+        private readonly TransactionManagerInterface $tx,
     ) {
     }
 
@@ -65,22 +67,26 @@ final class TransitionCreativeUseCase
 
         $submittedBy = $action === ReviewAction::Submit ? $actor->userId : null;
         $updated = $creative->withReview($target, $submittedBy, $reason);
-        $this->creatives->save($updated);
 
-        $this->audit->record(
-            $actor->organizationId,
-            $actor->userId,
-            'creative.' . $action->value,
-            'creative',
-            $creative->id,
-            array_filter([
-                'from' => $creative->reviewStatus->value,
-                'to' => $target->value,
-                'reason' => $reason,
-                'self_approval_override' => $action === ReviewAction::Approve && $selfApprovalOverride ? true : null,
-            ], static fn ($v) => $v !== null),
-        );
+        $fromStatus = $creative->reviewStatus->value;
 
-        return $updated;
+        return $this->tx->transactional(function () use ($updated, $actor, $action, $fromStatus, $target, $reason, $selfApprovalOverride): Creative {
+            $this->creatives->save($updated);
+            $this->audit->record(
+                $actor->organizationId,
+                $actor->userId,
+                'creative.' . $action->value,
+                'creative',
+                $updated->id,
+                array_filter([
+                    'before' => ['review_status' => $fromStatus],
+                    'after' => ['review_status' => $target->value],
+                    'reason' => $reason,
+                    'self_approval_override' => $action === ReviewAction::Approve && $selfApprovalOverride ? true : null,
+                ], static fn ($v) => $v !== null),
+            );
+
+            return $updated;
+        });
     }
 }

@@ -135,8 +135,9 @@ data has no delivery/measurement/billing/identity meaning.
 | Audit after-state | `after` | in audit metadata |
 
 **Audit `action` naming:** `{subject}.{verb}` snake_case — e.g. `creative.approved`,
-`placement.updated`, `user.created`, `budget.changed`, `period.closed`,
-`dsr.erasure`. Register new actions before use.
+`placement.created`, `placement.archived`, `user.created`, `budget.changed`,
+`period.closed`, `dsr.erasure`. Register new actions before use. Mutation audit
+metadata carries structured `before`/`after` (changed fields).
 
 Tenant/parent foreign keys on governed tables use **`ON DELETE RESTRICT`** (never
 `CASCADE`). The application DB role has no `DELETE`/`TRUNCATE` on governed tables.
@@ -266,7 +267,7 @@ match across OpenAPI, routes, and MCP tool catalog.
 | `login`, `getCurrentUser` | Admin auth |
 | `listUsers` | Admin (tenant-scoped) |
 | `listPlacements`, `getPlacementById`, `createPlacement`, `updatePlacement` | Admin |
-| `createPlacement` | Admin (`manage_placements`) |
+| `createPlacement`, `archivePlacement` | Admin (`manage_placements`) |
 | `listCreatives`, `createCreative`, `reviseCreative` | Admin (`manage_creatives`) |
 | `submitCreative` | Admin (`manage_creatives`) |
 | `startCreativeReview`, `approveCreative`, `rejectCreative`, `requestCreativeChanges`, `listReviewQueue` | Admin (`review_creatives`) |
