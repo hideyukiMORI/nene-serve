@@ -34,7 +34,7 @@
 ## Integrity & audit hardening (ADR 0022) — before Phase 3
 
 - [x] Binding doc + ADR 0022 + self-review (`docs/explanation/audit-and-data-integrity-compliance.md`)
-- [ ] FK `ON DELETE CASCADE` → `RESTRICT` on governed tables (users/placements/creatives/audit_events) — **urgent: audit trail must survive org deletion**
+- [x] FK `ON DELETE CASCADE` → `RESTRICT` on governed tables (users/placements/creatives/audit_events) — #36; org delete now refused (error 1451), audit trail survives
 - [ ] Hash-chained tamper-evident `audit_events`
 - [ ] Audited-write coverage gaps + structured before→after (user/auth/settings paths); mutation+audit atomic
 - [ ] DB grants: app role without `DELETE`/`TRUNCATE` on governed tables; `archived_at`/`disabled_at` tombstones
