@@ -19,6 +19,7 @@ use NeneServe\Http\Admin\ExportMetricsHandler as AdminExportMetricsHandler;
 use NeneServe\Http\Admin\GetBillingPeriodHandler;
 use NeneServe\Http\Admin\GetCampaignHandler;
 use NeneServe\Http\Admin\GetMetricsHandler as AdminGetMetricsHandler;
+use NeneServe\Http\Admin\HandoffBillingPeriodHandler;
 use NeneServe\Http\Admin\ListAdvertisersHandler;
 use NeneServe\Http\Admin\ListCreativesHandler;
 use NeneServe\Http\Admin\ListUsersHandler;
@@ -46,8 +47,12 @@ use NeneServe\Marketplace\CampaignRepositoryInterface;
 use NeneServe\Marketplace\InMemoryAdvertiserRepository;
 use NeneServe\Marketplace\InMemoryBillingPeriodRepository;
 use NeneServe\Marketplace\InMemoryCampaignRepository;
+use NeneServe\Marketplace\InMemoryInvoiceHandoffRepository;
 use NeneServe\Marketplace\InMemoryPricingRuleRepository;
 use NeneServe\Marketplace\InMemorySpendSnapshotRepository;
+use NeneServe\Marketplace\Invoice\FakeInvoiceClient;
+use NeneServe\Marketplace\Invoice\InvoiceClientInterface;
+use NeneServe\Marketplace\InvoiceHandoffRepositoryInterface;
 use NeneServe\Marketplace\PricingRuleRepositoryInterface;
 use NeneServe\Marketplace\SpendSnapshotRepositoryInterface;
 use NeneServe\Marketplace\UseCase\CloseBillingPeriodUseCase;
@@ -55,6 +60,7 @@ use NeneServe\Marketplace\UseCase\CreateAdvertiserUseCase;
 use NeneServe\Marketplace\UseCase\CreateCampaignUseCase;
 use NeneServe\Marketplace\UseCase\CreatePricingRuleUseCase;
 use NeneServe\Marketplace\UseCase\GetCampaignSpendUseCase;
+use NeneServe\Marketplace\UseCase\HandoffBillingPeriodUseCase;
 use NeneServe\Marketplace\UseCase\OpenBillingPeriodUseCase;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\InMemoryEventStore;
@@ -132,6 +138,8 @@ final class Kernel
     private readonly GetCampaignSpendUseCase $campaignSpend;
     private readonly BillingPeriodRepositoryInterface $billingPeriods;
     private readonly SpendSnapshotRepositoryInterface $spendSnapshots;
+    private readonly InvoiceHandoffRepositoryInterface $invoiceHandoffs;
+    private readonly InvoiceClientInterface $invoiceClient;
     private readonly Jwt $jwt;
 
     public function __construct(
@@ -153,6 +161,8 @@ final class Kernel
         ?CampaignRepositoryInterface $campaigns = null,
         ?BillingPeriodRepositoryInterface $billingPeriods = null,
         ?SpendSnapshotRepositoryInterface $spendSnapshots = null,
+        ?InvoiceHandoffRepositoryInterface $invoiceHandoffs = null,
+        ?InvoiceClientInterface $invoiceClient = null,
     ) {
         $this->json = new JsonResponseFactory();
         $this->users = $users ?? DevFixtures::users();
@@ -172,6 +182,8 @@ final class Kernel
         $this->campaignSpend = new GetCampaignSpendUseCase($this->creatives, $this->events, $this->pricingRules);
         $this->billingPeriods = $billingPeriods ?? new InMemoryBillingPeriodRepository();
         $this->spendSnapshots = $spendSnapshots ?? new InMemorySpendSnapshotRepository();
+        $this->invoiceHandoffs = $invoiceHandoffs ?? new InMemoryInvoiceHandoffRepository();
+        $this->invoiceClient = $invoiceClient ?? new FakeInvoiceClient();
         $this->jwt = $jwt ?? new Jwt(self::resolveSecret());
         $this->auth = new BearerTokenMiddleware($this->jwt, $this->users);
         $this->serviceAuth = new ServiceTokenMiddleware($serviceTokens ?? DevFixtures::serviceTokens());
@@ -299,6 +311,22 @@ final class Kernel
 
         $getPeriod = new GetBillingPeriodHandler($this->billingPeriods, $this->spendSnapshots, $this->json);
         $this->router->add('GET', '/admin/billing-periods/{id}', $this->admin(Capability::ManageMarketplace, $getPeriod->handle(...)));
+
+        $handoff = new HandoffBillingPeriodHandler(
+            new HandoffBillingPeriodUseCase(
+                $this->billingPeriods,
+                $this->campaigns,
+                $this->advertisers,
+                $this->spendSnapshots,
+                $this->pricingRules,
+                $this->invoiceHandoffs,
+                $this->invoiceClient,
+                $this->audit,
+                $this->tx,
+            ),
+            $this->json,
+        );
+        $this->router->add('POST', '/admin/billing-periods/{id}/handoff', $this->admin(Capability::ManageMarketplace, $handoff->handle(...)));
     }
 
     /** Placement + creative management and the review state machine (ADR 0020/0021). */
