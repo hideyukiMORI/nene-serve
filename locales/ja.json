@@ -1,7 +1,7 @@
 {
   "_meta": {
     "locale": "ja",
-    "version": 1,
+    "version": 2,
     "note": "Keys must match en.json (ADR 0011)."
   },
   "embed": {
@@ -10,8 +10,10 @@
   },
   "consent": {
     "banner_title": "プライバシーについて",
+    "description": "広告効果測定は同意がある場合のみ行います。拒否も同意と同じ操作で行えます。",
     "accept": "同意する",
     "reject": "拒否する",
+    "save": "設定を保存",
     "measurement_label": "広告効果測定を許可する"
   },
   "admin": {

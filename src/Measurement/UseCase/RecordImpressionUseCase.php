@@ -60,6 +60,8 @@ final class RecordImpressionUseCase
             $countryCode,
             PageUrl::truncate($pageUrl),
             $visitorBucket,
+            null,
+            $consentGranted ? 'granted' : 'denied',
         ));
 
         // Count toward the frequency cap only for a consent-gated bucket on a

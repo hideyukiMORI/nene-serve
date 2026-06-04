@@ -9,6 +9,7 @@ use NeneServe\Audit\InMemoryAuditLog;
 use NeneServe\Http\Admin\CreateCreativeHandler;
 use NeneServe\Http\Admin\CreatePlacementHandler;
 use NeneServe\Http\Admin\CurrentUserHandler;
+use NeneServe\Http\Admin\DataSubjectRequestHandler;
 use NeneServe\Http\Admin\ExportMetricsHandler as AdminExportMetricsHandler;
 use NeneServe\Http\Admin\ListCreativesHandler;
 use NeneServe\Http\Admin\ListUsersHandler;
@@ -30,6 +31,7 @@ use NeneServe\Http\Service\ExportMetricsHandler as ServiceExportMetricsHandler;
 use NeneServe\Http\Service\ListPlacementsHandler;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\InMemoryEventStore;
+use NeneServe\Measurement\UseCase\DataSubjectRequestUseCase;
 use NeneServe\Measurement\UseCase\ExportMetricsUseCase;
 use NeneServe\Measurement\UseCase\RecordClickUseCase;
 use NeneServe\Measurement\UseCase\RecordImpressionUseCase;
@@ -194,6 +196,9 @@ final class Kernel
 
         $exportMetrics = new AdminExportMetricsHandler(new ExportMetricsUseCase($this->events), $this->json);
         $this->router->add('GET', '/admin/metrics/export', $this->admin(Capability::ViewMetrics, $exportMetrics->handle(...)));
+
+        $dsr = new DataSubjectRequestHandler(new DataSubjectRequestUseCase($this->events, $this->audit), $this->json);
+        $this->router->add('POST', '/admin/data-subject-requests', $this->admin(Capability::ManageSettings, $dsr->handle(...)));
 
         $this->registerCreativeRoutes();
     }

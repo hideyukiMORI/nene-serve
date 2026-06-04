@@ -1,7 +1,7 @@
 {
   "_meta": {
     "locale": "en",
-    "version": 1,
+    "version": 2,
     "note": "Canonical key set (ADR 0011). Other locales must match these keys."
   },
   "embed": {
@@ -10,8 +10,10 @@
   },
   "consent": {
     "banner_title": "Your privacy",
+    "description": "We measure ad performance only with your consent. You can refuse as easily as accept.",
     "accept": "Accept",
     "reject": "Reject",
+    "save": "Save preferences",
     "measurement_label": "Allow ad measurement"
   },
   "admin": {

@@ -242,6 +242,7 @@ match across OpenAPI, routes, and MCP tool catalog.
 | `publishCreative` | Admin |
 | `getDeliveryPlan`, `updateDeliveryPlan` | Admin |
 | `getPlacementMetrics`, `exportMetrics` | Admin / Service (read) |
+| `createDataSubjectRequest` | Admin (`manage_settings`) |
 
 ---
 

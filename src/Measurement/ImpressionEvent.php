@@ -22,6 +22,8 @@ final class ImpressionEvent
         public readonly ?string $placementPageUrl = null,
         public readonly ?string $visitorBucket = null,
         public readonly ?string $nonBillableReason = null,
+        /** Recorded consent decision in effect (privacy ADR 0017 §3); not inferred ad hoc. */
+        public readonly ?string $consentState = null,
     ) {
     }
 }

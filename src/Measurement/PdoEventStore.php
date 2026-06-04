@@ -21,8 +21,8 @@ final class PdoEventStore implements EventStoreInterface
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO impressions
-                (id, organization_id, placement_id, creative_id, occurred_at, country_code, placement_page_url, visitor_bucket, non_billable_reason)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                (id, organization_id, placement_id, creative_id, occurred_at, country_code, placement_page_url, visitor_bucket, non_billable_reason, consent_state)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         );
         $stmt->execute([
             $event->impressionId,
@@ -34,6 +34,7 @@ final class PdoEventStore implements EventStoreInterface
             $event->placementPageUrl,
             $event->visitorBucket,
             $event->nonBillableReason,
+            $event->consentState,
         ]);
     }
 
@@ -80,5 +81,40 @@ final class PdoEventStore implements EventStoreInterface
             ),
             array_values($stmt->fetchAll()),
         );
+    }
+
+    public function exportVisitorData(string $organizationId, string $visitorBucket): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT DATE(occurred_at) AS date, placement_id, creative_id
+             FROM impressions
+             WHERE organization_id = ? AND visitor_bucket = ? AND erased_at IS NULL
+             ORDER BY occurred_at',
+        );
+        $stmt->execute([$organizationId, $visitorBucket]);
+
+        return array_map(
+            static fn (array $row): array => [
+                'type' => 'impression',
+                'date' => (string) $row['date'],
+                'placement_id' => (string) $row['placement_id'],
+                'creative_id' => (string) $row['creative_id'],
+            ],
+            array_values($stmt->fetchAll()),
+        );
+    }
+
+    public function eraseVisitor(string $organizationId, string $visitorBucket): int
+    {
+        // Additive tombstone: stamp erased_at and forget the visitor link; the
+        // rows (and therefore the counts) are never deleted (privacy §5).
+        $stmt = $this->pdo->prepare(
+            'UPDATE impressions
+             SET erased_at = UTC_TIMESTAMP(), visitor_bucket = NULL
+             WHERE organization_id = ? AND visitor_bucket = ? AND erased_at IS NULL',
+        );
+        $stmt->execute([$organizationId, $visitorBucket]);
+
+        return $stmt->rowCount();
     }
 }
