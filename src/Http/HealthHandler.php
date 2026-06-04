@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace NeNe\Serve\Http;
+namespace NeneServe\Http;
 
 /**
  * Liveness probe. Operational endpoint (not one of the three business API
  * surfaces); requires no authentication and reveals no tenant data.
  */
-final class HealthController
+final class HealthHandler
 {
     public function __construct(
         private readonly JsonResponseFactory $json,

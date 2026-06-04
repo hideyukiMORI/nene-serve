@@ -6,7 +6,7 @@
 /.phpunit.result.cache/
 /.phpunit.cache/
 /.phpstan.cache/
-/.php-cs-fixer.cache/
+/.php-cs-fixer.cache
 /var/
 /composer.lock
 /public_html/assets/

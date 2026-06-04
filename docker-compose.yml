@@ -11,6 +11,7 @@ services:
     command: php -S 0.0.0.0:8910 -t public_html public_html/index.php
     environment:
       APP_ENV: ${APP_ENV:-local}
+      NENE_SERVE_JWT_SECRET: ${NENE_SERVE_JWT_SECRET:-dev-insecure-secret-change-me}
       DB_HOST: db
       DB_PORT: "3306"
       DB_DATABASE: ${DB_DATABASE:-nene_serve}

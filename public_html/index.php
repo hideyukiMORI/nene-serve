@@ -2,7 +2,8 @@
 
 declare(strict_types=1);
 
-use NeNe\Serve\Http\Kernel;
+use NeneServe\Http\Kernel;
+use NeneServe\Http\Request;
 
 $autoload = dirname(__DIR__) . '/vendor/autoload.php';
 if (is_file($autoload)) {
@@ -10,7 +11,7 @@ if (is_file($autoload)) {
 } else {
     // Fallback PSR-4 autoloader so the scaffold boots before `composer install`.
     spl_autoload_register(static function (string $class): void {
-        $prefix = 'NeNe\\Serve\\';
+        $prefix = 'NeneServe\\';
         if (!str_starts_with($class, $prefix)) {
             return;
         }
@@ -30,7 +31,4 @@ if (PHP_SAPI === 'cli-server') {
     }
 }
 
-(new Kernel())->handle(
-    (string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'),
-    parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH) ?: '/',
-)->send();
+(new Kernel())->handle(Request::fromGlobals())->send();

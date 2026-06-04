@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NeNe\Serve\Http;
+namespace NeneServe\Http;
 
 /**
  * Minimal value object for an HTTP response.
