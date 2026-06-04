@@ -37,6 +37,7 @@ use NeneServe\Http\Auth\Jwt;
 use NeneServe\Http\Auth\ServiceTokenMiddleware;
 use NeneServe\Http\Auth\UnauthorizedException;
 use NeneServe\Http\PublicApi\CreativeFrameHandler;
+use NeneServe\Http\PublicApi\RecordConversionHandler;
 use NeneServe\Http\PublicApi\RecordImpressionHandler;
 use NeneServe\Http\PublicApi\RedirectClickHandler;
 use NeneServe\Http\PublicApi\ServeHandler;
@@ -75,6 +76,7 @@ use NeneServe\Measurement\UseCase\DataSubjectRequestUseCase;
 use NeneServe\Measurement\UseCase\ExportMetricsUseCase;
 use NeneServe\Measurement\UseCase\GetMetricsUseCase;
 use NeneServe\Measurement\UseCase\RecordClickUseCase;
+use NeneServe\Measurement\UseCase\RecordConversionUseCase;
 use NeneServe\Measurement\UseCase\RecordImpressionUseCase;
 use NeneServe\Retention\InMemoryLegalHoldRepository;
 use NeneServe\Retention\LegalHoldRepositoryInterface;
@@ -269,6 +271,14 @@ final class Kernel
 
         $frame = new CreativeFrameHandler($this->tokens, $this->creatives, $this->rateLimiter, $this->json);
         $this->router->add('GET', '/public/frames/{frame_token}', $frame->handle(...));
+
+        // Concierge conversion beacon (ADR 0009): append-only, never a Contact submission.
+        $conversion = new RecordConversionHandler(
+            new RecordConversionUseCase($this->placements, $this->events),
+            $this->rateLimiter,
+            $this->json,
+        );
+        $this->router->add('POST', '/public/events/conversion', $conversion->handle(...));
     }
 
     /** Admin surface `/admin/*` — JWT + Capability (ADR 0006). */

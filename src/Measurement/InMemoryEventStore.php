@@ -20,6 +20,9 @@ final class InMemoryEventStore implements EventStoreInterface
     /** @var list<array{org: string, date: string, placement: string, filled: bool}> */
     private array $serves = [];
 
+    /** @var list<array{org: string, date: string, placement: string}> */
+    private array $conversions = [];
+
     public function recordImpression(ImpressionEvent $event): void
     {
         $this->impressions[] = [
@@ -40,6 +43,32 @@ final class InMemoryEventStore implements EventStoreInterface
             'placement' => $event->placementId,
             'creative' => $event->creativeId,
         ];
+    }
+
+    public function recordConversion(ConversionEvent $event): void
+    {
+        $this->conversions[] = [
+            'org' => $event->organizationId,
+            'date' => substr($event->occurredAt, 0, 10),
+            'placement' => $event->placementId,
+        ];
+    }
+
+    public function dailyConversions(string $organizationId, string $fromDate, string $toDate): array
+    {
+        /** @var array<string, array{date: string, placement_id: string, conversions: int}> $buckets */
+        $buckets = [];
+        foreach ($this->conversions as $row) {
+            if ($row['org'] !== $organizationId || $row['date'] < $fromDate || $row['date'] > $toDate) {
+                continue;
+            }
+            $key = $row['date'] . '|' . $row['placement'];
+            $buckets[$key] ??= ['date' => $row['date'], 'placement_id' => $row['placement'], 'conversions' => 0];
+            ++$buckets[$key]['conversions'];
+        }
+        ksort($buckets);
+
+        return array_values($buckets);
     }
 
     public function recordServeRequest(string $organizationId, string $placementId, bool $filled): void

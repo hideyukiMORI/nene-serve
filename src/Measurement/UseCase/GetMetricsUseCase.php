@@ -28,7 +28,7 @@ final class GetMetricsUseCase
     }
 
     /**
-     * @return array{from: string, to: string, rows: list<array<string, mixed>>, fill: list<array<string, mixed>>}
+     * @return array{from: string, to: string, rows: list<array<string, mixed>>, fill: list<array<string, mixed>>, conversions: list<array<string, mixed>>}
      */
     public function report(string $organizationId, string $fromDate, string $toDate): array
     {
@@ -55,7 +55,13 @@ final class GetMetricsUseCase
             $this->events->dailyFillRates($organizationId, $fromDate, $toDate),
         );
 
-        return ['from' => $fromDate, 'to' => $toDate, 'rows' => $rows, 'fill' => $fill];
+        return [
+            'from' => $fromDate,
+            'to' => $toDate,
+            'rows' => $rows,
+            'fill' => $fill,
+            'conversions' => $this->events->dailyConversions($organizationId, $fromDate, $toDate),
+        ];
     }
 
     /**
@@ -63,7 +69,7 @@ final class GetMetricsUseCase
      * `metrics.read_sensitive` audit event (atomic) — sensitive access is logged
      * (measurement-spec, ADR 0022 §4). Caller must have already checked capability.
      *
-     * @return array{from: string, to: string, rows: list<array<string, mixed>>, fill: list<array<string, mixed>>, sensitive: list<array<string, mixed>>}
+     * @return array{from: string, to: string, rows: list<array<string, mixed>>, fill: list<array<string, mixed>>, conversions: list<array<string, mixed>>, sensitive: list<array<string, mixed>>}
      */
     public function sensitiveReport(AuthContext $actor, string $fromDate, string $toDate): array
     {

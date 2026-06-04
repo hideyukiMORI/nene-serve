@@ -56,6 +56,43 @@ final class PdoEventStore implements EventStoreInterface
         ]);
     }
 
+    public function recordConversion(ConversionEvent $event): void
+    {
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO conversions (id, organization_id, placement_id, creative_id, occurred_at, country_code)
+             VALUES (?, ?, ?, ?, ?, ?)',
+        );
+        $stmt->execute([
+            $event->conversionId,
+            $event->organizationId,
+            $event->placementId,
+            $event->creativeId,
+            $event->occurredAt,
+            $event->countryCode,
+        ]);
+    }
+
+    public function dailyConversions(string $organizationId, string $fromDate, string $toDate): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT DATE(occurred_at) AS date, placement_id, COUNT(*) AS conversions
+             FROM conversions
+             WHERE organization_id = ? AND DATE(occurred_at) BETWEEN ? AND ?
+             GROUP BY date, placement_id
+             ORDER BY date, placement_id',
+        );
+        $stmt->execute([$organizationId, $fromDate, $toDate]);
+
+        return array_map(
+            static fn (array $row): array => [
+                'date' => (string) $row['date'],
+                'placement_id' => (string) $row['placement_id'],
+                'conversions' => (int) $row['conversions'],
+            ],
+            array_values($stmt->fetchAll()),
+        );
+    }
+
     public function recordServeRequest(string $organizationId, string $placementId, bool $filled): void
     {
         $stmt = $this->pdo->prepare(

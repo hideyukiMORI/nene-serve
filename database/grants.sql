@@ -24,6 +24,7 @@ GRANT SELECT, INSERT, UPDATE ON nene_serve.creatives      TO 'nene'@'%';
 GRANT SELECT, INSERT, UPDATE ON nene_serve.impressions    TO 'nene'@'%';
 GRANT SELECT, INSERT, UPDATE ON nene_serve.clicks         TO 'nene'@'%';
 GRANT SELECT, INSERT, UPDATE ON nene_serve.serve_requests TO 'nene'@'%';
+GRANT SELECT, INSERT         ON nene_serve.conversions    TO 'nene'@'%'; -- append-only
 GRANT SELECT, INSERT, UPDATE ON nene_serve.advertisers    TO 'nene'@'%';
 GRANT SELECT, INSERT, UPDATE ON nene_serve.campaigns        TO 'nene'@'%';
 GRANT SELECT, INSERT, UPDATE ON nene_serve.billing_periods  TO 'nene'@'%'; -- status advances

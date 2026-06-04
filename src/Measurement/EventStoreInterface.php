@@ -14,6 +14,16 @@ interface EventStoreInterface
 
     public function recordClick(ClickEvent $event): void;
 
+    /** Append a conversion attributed to delivery (ADR 0009; not a Contact submission). */
+    public function recordConversion(ConversionEvent $event): void;
+
+    /**
+     * Daily conversion counts per date/placement over an inclusive range.
+     *
+     * @return list<array{date: string, placement_id: string, conversions: int}>
+     */
+    public function dailyConversions(string $organizationId, string $fromDate, string $toDate): array;
+
     /**
      * Records a serve request (for fill rate). `filled` is true when a
      * non-fallback creative was returned, false for an empty/capped serve.

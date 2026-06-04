@@ -43,6 +43,38 @@ final class FileEventStore implements EventStoreInterface
         });
     }
 
+    public function recordConversion(ConversionEvent $event): void
+    {
+        $this->mutate(function (array &$state) use ($event): void {
+            $state['conversions'][] = [
+                'org' => $event->organizationId,
+                'date' => substr($event->occurredAt, 0, 10),
+                'placement' => $event->placementId,
+            ];
+        });
+    }
+
+    public function dailyConversions(string $organizationId, string $fromDate, string $toDate): array
+    {
+        /** @var array<string, array{date: string, placement_id: string, conversions: int}> $buckets */
+        $buckets = [];
+        foreach ($this->read()['conversions'] as $row) {
+            if (($row['org'] ?? null) !== $organizationId) {
+                continue;
+            }
+            $date = (string) ($row['date'] ?? '');
+            if ($date < $fromDate || $date > $toDate) {
+                continue;
+            }
+            $key = $date . '|' . (string) ($row['placement'] ?? '');
+            $buckets[$key] ??= ['date' => $date, 'placement_id' => (string) ($row['placement'] ?? ''), 'conversions' => 0];
+            ++$buckets[$key]['conversions'];
+        }
+        ksort($buckets);
+
+        return array_values($buckets);
+    }
+
     public function recordServeRequest(string $organizationId, string $placementId, bool $filled): void
     {
         $this->mutate(function (array &$state) use ($organizationId, $placementId, $filled): void {
@@ -179,7 +211,7 @@ final class FileEventStore implements EventStoreInterface
     }
 
     /**
-     * @param callable(array{impressions: list<array<string, mixed>>, clicks: list<array<string, mixed>>, serves: list<array<string, mixed>>}): void $apply
+     * @param callable(array{impressions: list<array<string, mixed>>, clicks: list<array<string, mixed>>, serves: list<array<string, mixed>>, conversions: list<array<string, mixed>>}): void $apply
      */
     private function mutate(callable $apply): void
     {
@@ -196,9 +228,9 @@ final class FileEventStore implements EventStoreInterface
         try {
             flock($handle, LOCK_EX);
             $raw = stream_get_contents($handle);
-            /** @var array{impressions?: list<array<string, mixed>>, clicks?: list<array<string, mixed>>, serves?: list<array<string, mixed>>} $state */
+            /** @var array{impressions?: list<array<string, mixed>>, clicks?: list<array<string, mixed>>, serves?: list<array<string, mixed>>, conversions?: list<array<string, mixed>>} $state */
             $state = $raw === false || $raw === '' ? [] : (json_decode($raw, true) ?: []);
-            $state += ['impressions' => [], 'clicks' => [], 'serves' => []];
+            $state += ['impressions' => [], 'clicks' => [], 'serves' => [], 'conversions' => []];
 
             $apply($state);
 
@@ -212,16 +244,16 @@ final class FileEventStore implements EventStoreInterface
         }
     }
 
-    /** @return array{impressions: list<array<string, mixed>>, clicks: list<array{org: string, date: string, placement: string, creative: string}>, serves: list<array<string, mixed>>} */
+    /** @return array{impressions: list<array<string, mixed>>, clicks: list<array{org: string, date: string, placement: string, creative: string}>, serves: list<array<string, mixed>>, conversions: list<array<string, mixed>>} */
     private function read(): array
     {
         if (!is_file($this->path)) {
-            return ['impressions' => [], 'clicks' => [], 'serves' => []];
+            return ['impressions' => [], 'clicks' => [], 'serves' => [], 'conversions' => []];
         }
         $raw = (string) file_get_contents($this->path);
-        /** @var array{impressions?: list<array<string, mixed>>, clicks?: list<array{org: string, date: string, placement: string, creative: string}>, serves?: list<array<string, mixed>>} $state */
+        /** @var array{impressions?: list<array<string, mixed>>, clicks?: list<array{org: string, date: string, placement: string, creative: string}>, serves?: list<array<string, mixed>>, conversions?: list<array<string, mixed>>} $state */
         $state = $raw === '' ? [] : (json_decode($raw, true) ?: []);
 
-        return ['impressions' => $state['impressions'] ?? [], 'clicks' => $state['clicks'] ?? [], 'serves' => $state['serves'] ?? []];
+        return ['impressions' => $state['impressions'] ?? [], 'clicks' => $state['clicks'] ?? [], 'serves' => $state['serves'] ?? [], 'conversions' => $state['conversions'] ?? []];
     }
 }
