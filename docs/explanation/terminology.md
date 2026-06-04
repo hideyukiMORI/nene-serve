@@ -327,5 +327,6 @@ explicit confirmation token + audited; Serve OpenAPI only — ADR 0018, api-secu
 | `NENE_SERVE_CLICK_TOKEN_TTL` | Click token TTL; default `900` (15 min) |
 | `DB_HOST` | When set, the live boot selects **database** persistence (PDO repositories); unset → file/dev defaults. See `Support\KernelFactory` |
 | `DB_PORT` · `DB_DATABASE` · `DB_USERNAME` · `DB_PASSWORD` | MySQL connection for `Support\Database::fromEnv()` (secrets via env only) |
+| `APP_ENCRYPTION_KEY` | base64 of 32 bytes; at-rest encryption key for stored secrets (`Support\Crypto`, e.g. the SMTP password). Env only |
 
 Last updated: 2026-06-04

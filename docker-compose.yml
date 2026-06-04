@@ -1,5 +1,5 @@
 # NeNe Serve — local dev stack (scaffold, #10)
-# Ports (CLAUDE.md): API 8910 · phpMyAdmin 8911 · MySQL 3392
+# Ports (CLAUDE.md): API 8910 · phpMyAdmin 8911 · MySQL 3392 · Mailpit UI 8913
 services:
   api:
     build: .
@@ -12,6 +12,9 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-local}
       NENE_SERVE_JWT_SECRET: ${NENE_SERVE_JWT_SECRET:-dev-insecure-secret-change-me}
+      # Base64 of 32 bytes — encrypts at-rest secrets (e.g. the SMTP password).
+      # Dev default only; production sets a real key out of band.
+      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:-bmVuZS1zZXJ2ZS1kZXYtaW5zZWN1cmUta2V5LTMyYnk=}
       DB_HOST: db
       DB_PORT: "3306"
       DB_DATABASE: ${DB_DATABASE:-nene_serve}
@@ -19,6 +22,17 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-nene}
     depends_on:
       - db
+      - mailpit
+
+  # Dev mail catcher: SMTP on 1025, web UI on 8913.
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8913:8025"
+      - "1025:1025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
 
   db:
     image: mysql:8.4
