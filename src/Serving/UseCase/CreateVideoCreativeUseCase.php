@@ -35,6 +35,7 @@ final class CreateVideoCreativeUseCase
         int $width,
         int $height,
         int $durationSeconds,
+        ?string $campaignId = null,
     ): Creative {
         VideoAcceptance::assertValid($assetUrl, $posterUrl, $destinationUrl, $durationSeconds);
 
@@ -52,6 +53,7 @@ final class CreateVideoCreativeUseCase
             null,
             $posterUrl,
             $durationSeconds,
+            campaignId: $campaignId,
         );
         return $this->tx->transactional(function () use ($creative, $actor): Creative {
             $this->creatives->save($creative);

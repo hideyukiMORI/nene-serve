@@ -36,4 +36,16 @@ final class InMemoryCreativeRepository implements CreativeRepositoryInterface
     {
         $this->creatives[$creative->id] = $creative;
     }
+
+    public function idsByCampaign(string $organizationId, string $campaignId): array
+    {
+        $ids = [];
+        foreach ($this->creatives as $c) {
+            if ($c->organizationId === $organizationId && $c->campaignId === $campaignId) {
+                $ids[] = $c->id;
+            }
+        }
+
+        return $ids;
+    }
 }

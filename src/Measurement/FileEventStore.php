@@ -74,6 +74,26 @@ final class FileEventStore implements EventStoreInterface
         return FillRateAggregator::aggregate($serves, $organizationId, $fromDate, $toDate);
     }
 
+    public function billableCountsForCreatives(string $organizationId, array $creativeIds): array
+    {
+        $ids = array_fill_keys($creativeIds, true);
+        $state = $this->read();
+        $impressions = 0;
+        $clicks = 0;
+        foreach ($state['impressions'] as $row) {
+            if (($row['org'] ?? null) === $organizationId && isset($ids[$row['creative'] ?? ''])) {
+                ++$impressions;
+            }
+        }
+        foreach ($state['clicks'] as $row) {
+            if ($row['org'] === $organizationId && isset($ids[$row['creative']])) {
+                ++$clicks;
+            }
+        }
+
+        return ['impressions' => $impressions, 'clicks' => $clicks];
+    }
+
     public function visitorBreakdown(string $organizationId, string $fromDate, string $toDate): array
     {
         /** @var array<string, array{date: string, placement_id: string, creative_id: string, visitor_bucket: string, impressions: int}> $buckets */

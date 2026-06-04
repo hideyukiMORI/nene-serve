@@ -33,6 +33,7 @@ final class CreateImageCreativeUseCase
         string $assetUrl,
         int $width,
         int $height,
+        ?string $campaignId = null,
     ): Creative {
         ImageAcceptance::assertValid($assetUrl, $destinationUrl, $width, $height);
 
@@ -45,6 +46,7 @@ final class CreateImageCreativeUseCase
             $assetUrl,
             $width,
             $height,
+            campaignId: $campaignId,
         );
 
         return $this->tx->transactional(function () use ($creative, $actor): Creative {

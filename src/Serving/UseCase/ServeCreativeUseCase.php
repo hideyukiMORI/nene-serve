@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\UseCase;
 
+use NeneServe\Marketplace\CampaignRepositoryInterface;
+use NeneServe\Marketplace\UseCase\GetCampaignSpendUseCase;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\VisitorBucket;
 use NeneServe\Serving\CreativeRepositoryInterface;
@@ -31,6 +33,8 @@ final class ServeCreativeUseCase
         private readonly TokenStoreInterface $tokens,
         private readonly FrequencyCapStoreInterface $frequencyCaps,
         private readonly EventStoreInterface $events,
+        private readonly CampaignRepositoryInterface $campaigns,
+        private readonly GetCampaignSpendUseCase $campaignSpend,
         private readonly int $clickTokenTtlSeconds = 900,
     ) {
     }
@@ -76,6 +80,14 @@ final class ServeCreativeUseCase
         if ($creative === null
             || !$creative->isServable()
             || !DestinationUrl::isSafe($creative->destinationUrl)) {
+            $this->events->recordServeRequest($placement->organizationId, $placement->id, false);
+            throw new NoEligibleCreativeException();
+        }
+
+        // Marketplace gate (billing §3.1/§3.5): a creative bound to a campaign serves
+        // (and is billable) only when the campaign is active + funded and within
+        // budget. Otherwise it is a non-billable empty serve — never an overspend.
+        if ($creative->campaignId !== null && !$this->campaignAllowsServe($creative->campaignId, $placement->organizationId)) {
             $this->events->recordServeRequest($placement->organizationId, $placement->id, false);
             throw new NoEligibleCreativeException();
         }
@@ -126,5 +138,23 @@ final class ServeCreativeUseCase
             : null;
 
         return new ServeResult($payload, $corsOrigin);
+    }
+
+    /**
+     * A campaign-bound creative may serve only when the campaign is active +
+     * funded and (if it auto-pauses) still within budget — derived spend never
+     * exceeds budget (no overspend, billing §3.5).
+     */
+    private function campaignAllowsServe(string $campaignId, string $organizationId): bool
+    {
+        $campaign = $this->campaigns->findByIdInOrganization($campaignId, $organizationId);
+        if ($campaign === null || !$campaign->isFundedForServe()) {
+            return false;
+        }
+        if ($campaign->pauseOnBudgetExhausted && $this->campaignSpend->forCampaign($campaign)->isExhausted()) {
+            return false;
+        }
+
+        return true;
     }
 }
