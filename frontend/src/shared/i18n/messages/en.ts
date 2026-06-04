@@ -75,6 +75,21 @@ export interface MessageCatalog {
   'review.action.requestChanges': string
   'review.fourEyes': string
   'review.actionFailed': string
+
+  'nav.metrics': string
+  'metrics.title': string
+  'metrics.subtitle': string
+  'metrics.loading': string
+  'metrics.loadError': string
+  'metrics.empty': string
+  'metrics.kpi.impressions': string
+  'metrics.kpi.clicks': string
+  'metrics.kpi.ctr': string
+  'metrics.kpi.fillRate': string
+  'metrics.column.date': string
+  'metrics.column.impressions': string
+  'metrics.column.clicks': string
+  'metrics.column.ctr': string
 }
 
 export const en: MessageCatalog = {
@@ -149,4 +164,19 @@ export const en: MessageCatalog = {
   'review.action.requestChanges': 'Request changes',
   'review.fourEyes': 'Four-eyes: you cannot approve a creative you submitted.',
   'review.actionFailed': 'The action could not be completed.',
+
+  'nav.metrics': 'Metrics',
+  'metrics.title': 'Metrics',
+  'metrics.subtitle': 'Delivery performance over the last 30 days',
+  'metrics.loading': 'Loading…',
+  'metrics.loadError': 'Could not load metrics.',
+  'metrics.empty': 'No metrics in this window.',
+  'metrics.kpi.impressions': 'Impressions',
+  'metrics.kpi.clicks': 'Clicks',
+  'metrics.kpi.ctr': 'CTR',
+  'metrics.kpi.fillRate': 'Fill rate',
+  'metrics.column.date': 'Date',
+  'metrics.column.impressions': 'Impressions',
+  'metrics.column.clicks': 'Clicks',
+  'metrics.column.ctr': 'CTR',
 }

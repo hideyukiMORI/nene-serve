@@ -74,4 +74,19 @@ export const de: MessageCatalog = {
   'review.fourEyes':
     'Vier-Augen-Prinzip: Sie können kein von Ihnen eingereichtes Creative genehmigen.',
   'review.actionFailed': 'Die Aktion konnte nicht abgeschlossen werden.',
+
+  'nav.metrics': 'Kennzahlen',
+  'metrics.title': 'Kennzahlen',
+  'metrics.subtitle': 'Auslieferungsleistung der letzten 30 Tage',
+  'metrics.loading': 'Wird geladen…',
+  'metrics.loadError': 'Kennzahlen konnten nicht geladen werden.',
+  'metrics.empty': 'Keine Kennzahlen in diesem Zeitraum.',
+  'metrics.kpi.impressions': 'Impressionen',
+  'metrics.kpi.clicks': 'Klicks',
+  'metrics.kpi.ctr': 'CTR',
+  'metrics.kpi.fillRate': 'Fill-Rate',
+  'metrics.column.date': 'Datum',
+  'metrics.column.impressions': 'Impressionen',
+  'metrics.column.clicks': 'Klicks',
+  'metrics.column.ctr': 'CTR',
 }
