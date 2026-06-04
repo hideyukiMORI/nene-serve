@@ -11,7 +11,7 @@ namespace NeneServe\Measurement;
  */
 final class InMemoryEventStore implements EventStoreInterface
 {
-    /** @var list<array{org: string, date: string, placement: string, creative: string}> */
+    /** @var list<array{org: string, date: string, placement: string, creative: string, bucket: ?string, erased: bool}> */
     private array $impressions = [];
 
     /** @var list<array{org: string, date: string, placement: string, creative: string}> */
@@ -24,6 +24,8 @@ final class InMemoryEventStore implements EventStoreInterface
             'date' => substr($event->occurredAt, 0, 10),
             'placement' => $event->placementId,
             'creative' => $event->creativeId,
+            'bucket' => $event->visitorBucket,
+            'erased' => false,
         ];
     }
 
@@ -39,6 +41,42 @@ final class InMemoryEventStore implements EventStoreInterface
 
     public function dailyMetrics(string $organizationId, string $fromDate, string $toDate): array
     {
-        return MetricsAggregator::aggregate($this->impressions, $this->clicks, $organizationId, $fromDate, $toDate);
+        $impressions = array_map(
+            static fn (array $r): array => ['org' => $r['org'], 'date' => $r['date'], 'placement' => $r['placement'], 'creative' => $r['creative']],
+            $this->impressions,
+        );
+
+        return MetricsAggregator::aggregate($impressions, $this->clicks, $organizationId, $fromDate, $toDate);
+    }
+
+    public function exportVisitorData(string $organizationId, string $visitorBucket): array
+    {
+        $out = [];
+        foreach ($this->impressions as $row) {
+            if ($row['org'] === $organizationId && $row['bucket'] === $visitorBucket && !$row['erased']) {
+                $out[] = [
+                    'type' => 'impression',
+                    'date' => $row['date'],
+                    'placement_id' => $row['placement'],
+                    'creative_id' => $row['creative'],
+                ];
+            }
+        }
+
+        return $out;
+    }
+
+    public function eraseVisitor(string $organizationId, string $visitorBucket): int
+    {
+        $count = 0;
+        foreach ($this->impressions as $i => $row) {
+            if ($row['org'] === $organizationId && $row['bucket'] === $visitorBucket && !$row['erased']) {
+                $this->impressions[$i]['erased'] = true;
+                $this->impressions[$i]['bucket'] = null; // forget the visitor link; keep the count
+                ++$count;
+            }
+        }
+
+        return $count;
     }
 }

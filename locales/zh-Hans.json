@@ -1,7 +1,7 @@
 {
   "_meta": {
     "locale": "zh-Hans",
-    "version": 1,
+    "version": 2,
     "note": "Keys must match en.json (ADR 0011)."
   },
   "embed": {
@@ -10,8 +10,10 @@
   },
   "consent": {
     "banner_title": "您的隐私",
+    "description": "我们仅在您同意后衡量广告效果。拒绝与接受同样方便。",
     "accept": "接受",
     "reject": "拒绝",
+    "save": "保存偏好",
     "measurement_label": "允许广告测量"
   },
   "admin": {

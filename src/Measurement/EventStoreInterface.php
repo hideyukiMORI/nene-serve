@@ -21,4 +21,19 @@ interface EventStoreInterface
      * @return list<MetricsRow>
      */
     public function dailyMetrics(string $organizationId, string $fromDate, string $toDate): array;
+
+    /**
+     * Data-subject access (privacy §5): non-erased impression records for one
+     * hashed visitor bucket in a tenant.
+     *
+     * @return list<array{type: string, date: string, placement_id: string, creative_id: string}>
+     */
+    public function exportVisitorData(string $organizationId, string $visitorBucket): array;
+
+    /**
+     * Data-subject erasure (privacy §5): an **additive tombstone** — sets
+     * `erased_at` and forgets the visitor link, but never edits the counts (the
+     * impression rows remain for aggregation). Returns the number tombstoned.
+     */
+    public function eraseVisitor(string $organizationId, string $visitorBucket): int;
 }

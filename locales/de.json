@@ -1,7 +1,7 @@
 {
   "_meta": {
     "locale": "de",
-    "version": 1,
+    "version": 2,
     "note": "Keys must match en.json (ADR 0011)."
   },
   "embed": {
@@ -10,8 +10,10 @@
   },
   "consent": {
     "banner_title": "Ihre Privatsphäre",
+    "description": "Wir messen die Anzeigenleistung nur mit Ihrer Einwilligung. Ablehnen ist so einfach wie Zustimmen.",
     "accept": "Akzeptieren",
     "reject": "Ablehnen",
+    "save": "Einstellungen speichern",
     "measurement_label": "Anzeigenmessung erlauben"
   },
   "admin": {
