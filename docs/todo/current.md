@@ -37,7 +37,7 @@
 - [x] FK `ON DELETE CASCADE` → `RESTRICT` on governed tables (users/placements/creatives/audit_events) — #36; org delete now refused (error 1451), audit trail survives
 - [x] Hash-chained tamper-evident `audit_events` — #37; per-tenant SHA-256 chain + verifier (edit/gap/reorder detectable)
 - [ ] Audited-write coverage gaps + structured before→after (user/auth/settings paths); mutation+audit atomic
-- [ ] DB grants: app role without `DELETE`/`TRUNCATE` on governed tables; `archived_at`/`disabled_at` tombstones
+- [x] DB grants: app role without `DELETE`/`TRUNCATE` on governed tables; `archived_at`/`disabled_at` tombstones — #39; `database/grants.sql`, Placement.archive(), presentation table `user_preferences`
 - [ ] Sensitive-read audit (`include_sensitive`, DSR export, PII-link reads)
 - [ ] Retention + legal-hold purge process (privileged role, audited)
 

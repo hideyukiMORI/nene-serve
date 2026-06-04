@@ -8,7 +8,7 @@ use PDO;
 
 final class PdoPlacementRepository implements PlacementRepositoryInterface
 {
-    private const COLUMNS = 'id, organization_id, public_placement_key, allowed_origins, status, default_creative_id, measurement_enabled, frequency_cap';
+    private const COLUMNS = 'id, organization_id, public_placement_key, allowed_origins, status, default_creative_id, measurement_enabled, frequency_cap, archived_at';
 
     public function __construct(
         private readonly PDO $pdo,
@@ -49,8 +49,8 @@ final class PdoPlacementRepository implements PlacementRepositoryInterface
     {
         $stmt = $this->pdo->prepare(
             'REPLACE INTO placements
-                (id, organization_id, public_placement_key, allowed_origins, status, default_creative_id, measurement_enabled, frequency_cap)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                (id, organization_id, public_placement_key, allowed_origins, status, default_creative_id, measurement_enabled, frequency_cap, archived_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
         );
         $stmt->execute([
             $placement->id,
@@ -61,6 +61,7 @@ final class PdoPlacementRepository implements PlacementRepositoryInterface
             $placement->defaultCreativeId,
             $placement->measurementEnabled ? 1 : 0,
             $placement->frequencyCap,
+            $placement->archivedAt,
         ]);
     }
 
@@ -85,6 +86,15 @@ final class PdoPlacementRepository implements PlacementRepositoryInterface
             $row['default_creative_id'] !== null ? (string) $row['default_creative_id'] : null,
             (bool) $row['measurement_enabled'],
             $row['frequency_cap'] !== null ? (int) $row['frequency_cap'] : null,
+            $row['archived_at'] !== null ? (string) $row['archived_at'] : null,
         );
+    }
+
+    public function archive(string $id, string $organizationId, string $at): void
+    {
+        $stmt = $this->pdo->prepare(
+            "UPDATE placements SET status = 'archived', archived_at = ? WHERE id = ? AND organization_id = ?",
+        );
+        $stmt->execute([$at, $id, $organizationId]);
     }
 }

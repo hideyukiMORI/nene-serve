@@ -66,6 +66,11 @@ advertiser budgets; money SSOT stays in Invoice).
 docker compose up -d
 curl http://127.0.0.1:8910/health        # {"status":"ok",...}
 
+# Apply migrations, then least-privilege DB grants (ADR 0022: app role cannot
+# DELETE/TRUNCATE governed tables):
+#   for f in database/migrations/*.sql; do mysql ... < "$f"; done
+#   mysql -uroot -p nene_serve < database/grants.sql
+
 # Or without Docker (PHP 8.3+):
 composer install            # or `composer dump-autoload` for the scaffold only
 composer serve              # php -S 127.0.0.1:8910 -t public_html

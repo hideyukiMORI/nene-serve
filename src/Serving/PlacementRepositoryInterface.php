@@ -18,4 +18,10 @@ interface PlacementRepositoryInterface
     public function listByOrganization(string $organizationId): array;
 
     public function save(Placement $placement): void;
+
+    /**
+     * Lifecycle "delete" = archive tombstone (ADR 0022). The row is retained;
+     * there is deliberately no hard-delete method.
+     */
+    public function archive(string $id, string $organizationId, string $at): void;
 }
