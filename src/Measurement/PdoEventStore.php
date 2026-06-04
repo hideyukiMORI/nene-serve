@@ -115,6 +115,31 @@ final class PdoEventStore implements EventStoreInterface
         );
     }
 
+    public function visitorBreakdown(string $organizationId, string $fromDate, string $toDate): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT DATE(occurred_at) AS date, placement_id, creative_id, visitor_bucket,
+                    COUNT(*) AS impressions
+             FROM impressions
+             WHERE organization_id = ? AND visitor_bucket IS NOT NULL AND erased_at IS NULL
+               AND DATE(occurred_at) BETWEEN ? AND ?
+             GROUP BY date, placement_id, creative_id, visitor_bucket
+             ORDER BY date, placement_id, creative_id, visitor_bucket',
+        );
+        $stmt->execute([$organizationId, $fromDate, $toDate]);
+
+        return array_map(
+            static fn (array $row): array => [
+                'date' => (string) $row['date'],
+                'placement_id' => (string) $row['placement_id'],
+                'creative_id' => (string) $row['creative_id'],
+                'visitor_bucket' => (string) $row['visitor_bucket'],
+                'impressions' => (int) $row['impressions'],
+            ],
+            array_values($stmt->fetchAll()),
+        );
+    }
+
     public function exportVisitorData(string $organizationId, string $visitorBucket): array
     {
         $stmt = $this->pdo->prepare(

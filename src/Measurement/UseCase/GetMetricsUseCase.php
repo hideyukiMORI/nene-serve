@@ -4,17 +4,26 @@ declare(strict_types=1);
 
 namespace NeneServe\Measurement\UseCase;
 
+use NeneServe\Audit\AuditLogInterface;
 use NeneServe\Measurement\EventStoreInterface;
+use NeneServe\Support\TransactionManagerInterface;
+use NeneServe\Tenant\AuthContext;
 
 /**
  * JSON daily time-series for one tenant (measurement-spec reporting): per
  * date/placement/creative impressions, clicks, CTR; plus per date/placement
  * fill rate. Aggregated only — no visitor identifiers (privacy N8).
+ *
+ * {@see self::sensitiveReport()} additionally returns the per-`visitor_bucket`
+ * breakdown for an admin with `include_sensitive`; that access is **audited**
+ * (ADR 0022 §4) — ordinary aggregate reads are not.
  */
 final class GetMetricsUseCase
 {
     public function __construct(
         private readonly EventStoreInterface $events,
+        private readonly AuditLogInterface $audit,
+        private readonly TransactionManagerInterface $tx,
     ) {
     }
 
@@ -47,5 +56,31 @@ final class GetMetricsUseCase
         );
 
         return ['from' => $fromDate, 'to' => $toDate, 'rows' => $rows, 'fill' => $fill];
+    }
+
+    /**
+     * Aggregate report plus the sensitive per-visitor_bucket breakdown. Records a
+     * `metrics.read_sensitive` audit event (atomic) — sensitive access is logged
+     * (measurement-spec, ADR 0022 §4). Caller must have already checked capability.
+     *
+     * @return array{from: string, to: string, rows: list<array<string, mixed>>, fill: list<array<string, mixed>>, sensitive: list<array<string, mixed>>}
+     */
+    public function sensitiveReport(AuthContext $actor, string $fromDate, string $toDate): array
+    {
+        $report = $this->report($actor->organizationId, $fromDate, $toDate);
+        $sensitive = $this->events->visitorBreakdown($actor->organizationId, $fromDate, $toDate);
+
+        $this->tx->transactional(function () use ($actor, $fromDate, $toDate, $sensitive): void {
+            $this->audit->record(
+                $actor->organizationId,
+                $actor->userId,
+                'metrics.read_sensitive',
+                'metrics',
+                $fromDate . '..' . $toDate,
+                ['from' => $fromDate, 'to' => $toDate, 'visitor_rows' => count($sensitive)],
+            );
+        });
+
+        return $report + ['sensitive' => $sensitive];
     }
 }

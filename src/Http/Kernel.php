@@ -207,7 +207,7 @@ final class Kernel
         $exportMetrics = new AdminExportMetricsHandler(new ExportMetricsUseCase($this->events), $this->json);
         $this->router->add('GET', '/admin/metrics/export', $this->admin(Capability::ViewMetrics, $exportMetrics->handle(...)));
 
-        $getMetrics = new AdminGetMetricsHandler(new GetMetricsUseCase($this->events), $this->json);
+        $getMetrics = new AdminGetMetricsHandler(new GetMetricsUseCase($this->events, $this->audit, $this->tx), $this->json);
         $this->router->add('GET', '/admin/metrics', $this->admin(Capability::ViewMetrics, $getMetrics->handle(...)));
 
         $dsr = new DataSubjectRequestHandler(new DataSubjectRequestUseCase($this->events, $this->audit), $this->json);
@@ -272,7 +272,7 @@ final class Kernel
         $exportMetrics = new ServiceExportMetricsHandler(new ExportMetricsUseCase($this->events), $this->json);
         $this->router->add('GET', '/api/metrics/export', $this->service(Scope::ReadMetrics, $exportMetrics->handle(...)));
 
-        $getMetrics = new ServiceGetMetricsHandler(new GetMetricsUseCase($this->events), $this->json);
+        $getMetrics = new ServiceGetMetricsHandler(new GetMetricsUseCase($this->events, $this->audit, $this->tx), $this->json);
         $this->router->add('GET', '/api/metrics', $this->service(Scope::ReadMetrics, $getMetrics->handle(...)));
     }
 

@@ -16,6 +16,7 @@ enum Capability: string
     case ViewUsers = 'view_users';
     case ManageUsers = 'manage_users';
     case ViewMetrics = 'view_metrics';
+    case ViewSensitiveMetrics = 'view_sensitive_metrics';
     case ManageSettings = 'manage_settings';
     case ManagePlacements = 'manage_placements';
     case ManageCreatives = 'manage_creatives';
