@@ -137,7 +137,8 @@ data has no delivery/measurement/billing/identity meaning.
 **Audit `action` naming:** `{subject}.{verb}` snake_case — e.g. `creative.approved`,
 `placement.created`, `placement.archived`, `user.created`, `budget.changed`,
 `period.closed`, `dsr.erasure`, `dsr.export`, `metrics.read_sensitive`,
-`advertiser.created`, `pricing_rule.created`, `campaign.created`. Register
+`advertiser.created`, `pricing_rule.created`, `campaign.created`,
+`billing_period.opened`, `billing_period.closed`. Register
 new actions before use. Mutation audit metadata carries structured
 `before`/`after` (changed fields). Sensitive **reads** (`include_sensitive`
 metrics, DSR export, PII-link reads) are also audited; ordinary reads are not.
@@ -256,6 +257,8 @@ Base URL: `https://nene-serve.dev/problems/`. Register before use.
 | `organization-mismatch` | User org ≠ URL-resolved org (403) |
 | `route-not-found` | No route matched the request path (404) |
 | `campaign-not-found` | Campaign id not found in the tenant (404) |
+| `billing-period-not-found` | Billing period id not found in the tenant (404) |
+| `invalid-period-transition` | Disallowed billing-period change, e.g. re-closing (409) |
 
 Validation `errors[].field` uses snake_case paths; `errors[].code` is snake_case.
 
@@ -283,6 +286,7 @@ match across OpenAPI, routes, and MCP tool catalog.
 | `createDataSubjectRequest` | Admin (`manage_settings`) |
 | `createAdvertiser`, `listAdvertisers`, `createPricingRule` | Admin (`manage_marketplace`) |
 | `createCampaign`, `getCampaign` | Admin (`manage_marketplace`) |
+| `openBillingPeriod`, `closeBillingPeriod`, `getBillingPeriod` | Admin (`manage_marketplace`) |
 
 ---
 
