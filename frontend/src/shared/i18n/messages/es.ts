@@ -24,11 +24,13 @@ export const es: MessageCatalog = {
 
   'login.title': 'Iniciar sesión',
   'login.subtitle': 'Consola del operador',
+  'login.organization': 'Organización',
   'login.email': 'Correo electrónico',
   'login.password': 'Contraseña',
   'login.submit': 'Iniciar sesión',
   'login.failed': 'Correo electrónico o contraseña no válidos.',
   'login.secure': 'Acceso cifrado y auditado.',
+  'login.validation.organizationRequired': 'La organización es obligatoria.',
   'login.validation.emailRequired': 'El correo electrónico es obligatorio.',
   'login.validation.passwordRequired': 'La contraseña es obligatoria.',
 

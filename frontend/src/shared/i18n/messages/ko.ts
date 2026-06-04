@@ -24,11 +24,13 @@ export const ko: MessageCatalog = {
 
   'login.title': '로그인',
   'login.subtitle': '운영 콘솔',
+  'login.organization': '조직',
   'login.email': '이메일',
   'login.password': '비밀번호',
   'login.submit': '로그인',
   'login.failed': '이메일 또는 비밀번호가 올바르지 않습니다.',
   'login.secure': '암호화되고 감사되는 접근.',
+  'login.validation.organizationRequired': '조직을 입력하세요.',
   'login.validation.emailRequired': '이메일을 입력하세요.',
   'login.validation.passwordRequired': '비밀번호를 입력하세요.',
 

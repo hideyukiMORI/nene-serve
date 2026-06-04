@@ -13,6 +13,7 @@ export interface LoginViewProps {
 }
 
 interface LoginFormValues {
+  organization: string
   email: string
   password: string
 }
@@ -21,6 +22,7 @@ export function LoginView({ pending, errorMessage, onSubmit }: LoginViewProps) {
   const { t } = useTranslation()
 
   const schema = z.object({
+    organization: z.string().trim().min(1, t('login.validation.organizationRequired')),
     email: z.string().trim().min(1, t('login.validation.emailRequired')),
     password: z.string().min(1, t('login.validation.passwordRequired')),
   })
@@ -31,7 +33,7 @@ export function LoginView({ pending, errorMessage, onSubmit }: LoginViewProps) {
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { organization: '', email: '', password: '' },
   })
 
   const submit = handleSubmit(async (values) => {
@@ -79,6 +81,20 @@ export function LoginView({ pending, errorMessage, onSubmit }: LoginViewProps) {
             </div>
 
             {errorMessage !== null ? <span className="t-cap danger">{errorMessage}</span> : null}
+
+            <div className="field">
+              <label htmlFor="login-organization">{t('login.organization')}</label>
+              <input
+                id="login-organization"
+                className="input"
+                type="text"
+                placeholder="acme"
+                {...register('organization')}
+              />
+              {errors.organization?.message !== undefined ? (
+                <span className="t-tiny danger">{errors.organization.message}</span>
+              ) : null}
+            </div>
 
             <div className="field">
               <label htmlFor="login-email">{t('login.email')}</label>

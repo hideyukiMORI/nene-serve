@@ -1,4 +1,5 @@
 export interface LoginRequestDto {
+  organization: string
   email: string
   password: string
 }
