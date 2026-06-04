@@ -17,6 +17,7 @@ Agent guide. Cursor rules: `.cursor/rules/`.
 | i18n | `docs/development/i18n.md` |
 | Console help (reference) | `docs/reference/admin-console.md` |
 | Tutorial (end-to-end) | `docs/tutorial/first-campaign.md` |
+| Design brief (for Claude Design) | `docs/design/design-brief.md` |
 | Tasks | `docs/todo/current.md` |
 
 ## Quick Rules
