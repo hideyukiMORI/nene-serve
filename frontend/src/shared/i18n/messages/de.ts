@@ -176,4 +176,8 @@ export const de: MessageCatalog = {
   'setPassword.doneTitle': 'Passwort festgelegt',
   'setPassword.doneBody': 'Sie können sich jetzt mit Ihrem neuen Passwort anmelden.',
   'setPassword.toLogin': 'Zur Anmeldung',
+  'creatives.field.file': 'Bilddatei',
+  'creatives.uploading': 'Wird hochgeladen…',
+  'creatives.uploaded': 'Hochgeladen.',
+  'creatives.uploadError': 'Laden Sie vor dem Anlegen eine Bilddatei hoch.',
 }

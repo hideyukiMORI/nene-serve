@@ -24,4 +24,17 @@ export const creativeHandlers = [
   http.post('/admin/creatives/:id/:action', ({ params }) =>
     HttpResponse.json(makeCreativeDto({ id: String(params['id']), review_status: 'approved' })),
   ),
+
+  http.post('/admin/assets', () =>
+    HttpResponse.json(
+      {
+        id: 'ast-1',
+        kind: 'image',
+        content_type: 'image/png',
+        byte_size: 10,
+        asset_url: '/public/assets/ast-1',
+      },
+      { status: 201 },
+    ),
+  ),
 ]

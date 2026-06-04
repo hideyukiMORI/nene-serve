@@ -68,6 +68,10 @@ export interface MessageCatalog {
   'creatives.field.asset': string
   'creatives.field.width': string
   'creatives.field.height': string
+  'creatives.field.file': string
+  'creatives.uploading': string
+  'creatives.uploaded': string
+  'creatives.uploadError': string
 
   'form.create': string
   'form.creating': string
@@ -246,6 +250,10 @@ export const en: MessageCatalog = {
   'creatives.field.asset': 'Asset URL',
   'creatives.field.width': 'Width',
   'creatives.field.height': 'Height',
+  'creatives.field.file': 'Image file',
+  'creatives.uploading': 'Uploading…',
+  'creatives.uploaded': 'Uploaded.',
+  'creatives.uploadError': 'Upload an image file before creating.',
 
   'form.create': 'Create',
   'form.creating': 'Creating…',
