@@ -164,10 +164,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List placements in the caller's tenant. */
+        get: operations["listPlacements"];
         put?: never;
         /** Create a placement (audited). */
         post: operations["createPlacement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/placements/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one placement (admin projection). */
+        get: operations["getPlacementById"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -203,6 +221,23 @@ export interface paths {
         put?: never;
         /** Create a creative draft (image/video/html5_bundle). */
         post: operations["createCreative"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/creatives/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one creative (admin projection). */
+        get: operations["getCreativeById"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -353,7 +388,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List pricing rules in the caller's tenant. */
+        get: operations["listPricingRules"];
         put?: never;
         /** Create an immutable, versioned pricing rule (JPY net, no tax/float). */
         post: operations["createPricingRule"];
@@ -370,7 +406,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List campaigns in the caller's tenant. */
+        get: operations["listCampaigns"];
         put?: never;
         /** Create a campaign with a budget (cents). */
         post: operations["createCampaign"];
@@ -819,6 +856,29 @@ export interface operations {
             502: components["responses"]["Problem"];
         };
     };
+    listPlacements: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Placements. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        placements?: components["schemas"]["Placement"][];
+                    };
+                };
+            };
+            403: components["responses"]["Problem"];
+        };
+    };
     createPlacement: {
         parameters: {
             query?: never;
@@ -843,6 +903,30 @@ export interface operations {
             };
             403: components["responses"]["Problem"];
             422: components["responses"]["Problem"];
+        };
+    };
+    getPlacementById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Placement. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Placement"];
+                };
+            };
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
         };
     };
     archivePlacement: {
@@ -914,6 +998,22 @@ export interface operations {
             };
             403: components["responses"]["Problem"];
             422: components["responses"]["Problem"];
+        };
+    };
+    getCreativeById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["Id"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["Creative"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
         };
     };
     submitCreative: {
@@ -1093,6 +1193,29 @@ export interface operations {
             422: components["responses"]["Problem"];
         };
     };
+    listPricingRules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pricing rules. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        pricing_rules?: Record<string, never>[];
+                    };
+                };
+            };
+            403: components["responses"]["Problem"];
+        };
+    };
     createPricingRule: {
         parameters: {
             query?: never;
@@ -1122,6 +1245,29 @@ export interface operations {
             };
             403: components["responses"]["Problem"];
             422: components["responses"]["Problem"];
+        };
+    };
+    listCampaigns: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Campaigns. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        campaigns?: Record<string, never>[];
+                    };
+                };
+            };
+            403: components["responses"]["Problem"];
         };
     };
     createCampaign: {

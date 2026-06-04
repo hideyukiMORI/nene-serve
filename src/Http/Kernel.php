@@ -18,12 +18,17 @@ use NeneServe\Http\Admin\DataSubjectRequestHandler;
 use NeneServe\Http\Admin\ExportMetricsHandler as AdminExportMetricsHandler;
 use NeneServe\Http\Admin\GetBillingPeriodHandler;
 use NeneServe\Http\Admin\GetCampaignHandler;
+use NeneServe\Http\Admin\GetCreativeHandler;
 use NeneServe\Http\Admin\GetMetricsHandler as AdminGetMetricsHandler;
+use NeneServe\Http\Admin\GetPlacementHandler;
 use NeneServe\Http\Admin\GetRecordsAssetHandler;
 use NeneServe\Http\Admin\HandoffBillingPeriodHandler;
 use NeneServe\Http\Admin\HandoffCampaignToDealHandler;
 use NeneServe\Http\Admin\ListAdvertisersHandler;
+use NeneServe\Http\Admin\ListCampaignsHandler;
 use NeneServe\Http\Admin\ListCreativesHandler;
+use NeneServe\Http\Admin\ListPlacementsHandler as AdminListPlacementsHandler;
+use NeneServe\Http\Admin\ListPricingRulesHandler;
 use NeneServe\Http\Admin\ListUsersHandler;
 use NeneServe\Http\Admin\LoginHandler;
 use NeneServe\Http\Admin\OpenBillingPeriodHandler;
@@ -339,11 +344,17 @@ final class Kernel
         );
         $this->router->add('POST', '/admin/pricing-rules', $this->admin(Capability::ManageMarketplace, $createPricingRule->handle(...)));
 
+        $listPricingRules = new ListPricingRulesHandler($this->pricingRules, $this->json);
+        $this->router->add('GET', '/admin/pricing-rules', $this->admin(Capability::ManageMarketplace, $listPricingRules->handle(...)));
+
         $createCampaign = new CreateCampaignHandler(
             new CreateCampaignUseCase($this->campaigns, $this->advertisers, $this->pricingRules, $this->audit, $this->tx),
             $this->json,
         );
         $this->router->add('POST', '/admin/campaigns', $this->admin(Capability::ManageMarketplace, $createCampaign->handle(...)));
+
+        $listCampaigns = new ListCampaignsHandler($this->campaigns, $this->json);
+        $this->router->add('GET', '/admin/campaigns', $this->admin(Capability::ManageMarketplace, $listCampaigns->handle(...)));
 
         $getCampaign = new GetCampaignHandler($this->campaigns, $this->campaignSpend, $this->json);
         $this->router->add('GET', '/admin/campaigns/{id}', $this->admin(Capability::ManageMarketplace, $getCampaign->handle(...)));
@@ -395,6 +406,12 @@ final class Kernel
         );
         $this->router->add('POST', '/admin/placements', $this->admin(Capability::ManagePlacements, $createPlacement->handle(...)));
 
+        $listPlacements = new AdminListPlacementsHandler($this->placements, $this->json);
+        $this->router->add('GET', '/admin/placements', $this->admin(Capability::ManagePlacements, $listPlacements->handle(...)));
+
+        $getPlacement = new GetPlacementHandler($this->placements, $this->json);
+        $this->router->add('GET', '/admin/placements/{id}', $this->admin(Capability::ManagePlacements, $getPlacement->handle(...)));
+
         $archivePlacement = new ArchivePlacementHandler(
             new ArchivePlacementUseCase($this->placements, $this->audit, $this->tx),
             $this->json,
@@ -411,6 +428,9 @@ final class Kernel
 
         $listCreatives = new ListCreativesHandler($this->creatives, $this->json);
         $this->router->add('GET', '/admin/creatives', $this->admin(Capability::ManageCreatives, $listCreatives->handle(...)));
+
+        $getCreative = new GetCreativeHandler($this->creatives, $this->json);
+        $this->router->add('GET', '/admin/creatives/{id}', $this->admin(Capability::ManageCreatives, $getCreative->handle(...)));
 
         $reviewQueue = new ReviewQueueHandler($this->creatives, $this->json);
         $this->router->add('GET', '/admin/review-queue', $this->admin(Capability::ReviewCreatives, $reviewQueue->handle(...)));
