@@ -136,6 +136,49 @@ export interface MessageCatalog {
   'marketplace.createError': string
   'marketplace.validation.required': string
   'marketplace.validation.nonNegative': string
+
+  'nav.users': string
+  'nav.settings': string
+
+  'users.title': string
+  'users.subtitle': string
+  'users.invite': string
+  'users.loading': string
+  'users.empty': string
+  'users.field.email': string
+  'users.field.role': string
+  'users.action.invite': string
+  'users.inviteSent': string
+  'users.inviteNotSent': string
+  'users.column.email': string
+  'users.column.role': string
+
+  'settings.title': string
+  'settings.loading': string
+  'settings.saved': string
+  'settings.testOk': string
+  'settings.smtp.subtitle': string
+  'settings.smtp.host': string
+  'settings.smtp.port': string
+  'settings.smtp.encryption': string
+  'settings.smtp.username': string
+  'settings.smtp.password': string
+  'settings.smtp.passwordSet': string
+  'settings.smtp.fromAddress': string
+  'settings.smtp.fromName': string
+  'settings.action.save': string
+  'settings.action.test': string
+  'settings.action.testing': string
+
+  'setPassword.title': string
+  'setPassword.validating': string
+  'setPassword.invalid': string
+  'setPassword.password': string
+  'setPassword.submit': string
+  'setPassword.tooShort': string
+  'setPassword.doneTitle': string
+  'setPassword.doneBody': string
+  'setPassword.toLogin': string
 }
 
 export const en: MessageCatalog = {
@@ -271,4 +314,48 @@ export const en: MessageCatalog = {
   'marketplace.createError': 'Could not create. Check the form and try again.',
   'marketplace.validation.required': 'This field is required.',
   'marketplace.validation.nonNegative': 'Enter 0 or a positive whole number.',
+
+  'nav.users': 'Users',
+  'nav.settings': 'Settings',
+
+  'users.title': 'Users',
+  'users.subtitle': 'Operators in your organization',
+  'users.invite': 'Invite a user',
+  'users.loading': 'Loading…',
+  'users.empty': 'No users yet.',
+  'users.field.email': 'Email',
+  'users.field.role': 'Role',
+  'users.action.invite': 'Send invite',
+  'users.inviteSent': 'Invitation email sent.',
+  'users.inviteNotSent':
+    'User created, but the invite email could not be sent (check SMTP settings).',
+  'users.column.email': 'Email',
+  'users.column.role': 'Role',
+
+  'settings.title': 'Settings',
+  'settings.loading': 'Loading…',
+  'settings.saved': 'Saved.',
+  'settings.testOk': 'Test email sent.',
+  'settings.smtp.subtitle': 'Outbound email (SMTP) for invitations',
+  'settings.smtp.host': 'Host',
+  'settings.smtp.port': 'Port',
+  'settings.smtp.encryption': 'Encryption',
+  'settings.smtp.username': 'Username',
+  'settings.smtp.password': 'Password',
+  'settings.smtp.passwordSet': 'Password (leave blank to keep)',
+  'settings.smtp.fromAddress': 'From address',
+  'settings.smtp.fromName': 'From name',
+  'settings.action.save': 'Save',
+  'settings.action.test': 'Send test email',
+  'settings.action.testing': 'Sending…',
+
+  'setPassword.title': 'Set your password',
+  'setPassword.validating': 'Checking your invitation…',
+  'setPassword.invalid': 'This invitation is invalid, used, or expired.',
+  'setPassword.password': 'New password',
+  'setPassword.submit': 'Set password',
+  'setPassword.tooShort': 'Password must be at least 8 characters.',
+  'setPassword.doneTitle': 'Password set',
+  'setPassword.doneBody': 'You can now sign in with your new password.',
+  'setPassword.toLogin': 'Go to sign in',
 }
