@@ -142,8 +142,8 @@ data has no delivery/measurement/billing/identity meaning.
 `billing_period.opened`, `billing_period.closed`, `invoice.reconciled`,
 `invoice.handed_off`, `invoice.handoff_failed`, `invoice.reconciliation_discrepancy`,
 `legal_hold.placed`, `legal_hold.released`, `retention.purged`,
-`retention.purge_blocked`, `deal.opportunity_sent`, `deal.opportunity_failed`.
-Register
+`retention.purge_blocked`, `deal.opportunity_sent`, `deal.opportunity_failed`,
+`mcp.change_proposed`, `mcp.change_applied`. Register
 new actions before use. Mutation audit metadata carries structured
 `before`/`after` (changed fields). Sensitive **reads** (`include_sensitive`
 metrics, DSR export, PII-link reads) are also audited; ordinary reads are not.
@@ -273,6 +273,8 @@ Base URL: `https://nene-serve.dev/problems/`. Register before use.
 | `records-asset-not-found` | Records asset ref not found (404) |
 | `records-unavailable` | Records read transport error (502) |
 | `deal-handoff-failed` | Deal transport failed; serving unaffected, retryable (502) |
+| `change-plan-not-found` | MCP change plan / confirmation token not found (404) |
+| `invalid-plan-state` | Change plan not in `proposed` state (already applied) (409) |
 
 Validation `errors[].field` uses snake_case paths; `errors[].code` is snake_case.
 
@@ -302,13 +304,16 @@ match across OpenAPI, routes, and MCP tool catalog.
 | `createCampaign`, `getCampaign` | Admin (`manage_marketplace`) |
 | `openBillingPeriod`, `closeBillingPeriod`, `getBillingPeriod`, `handoffBillingPeriod` | Admin (`manage_marketplace`) |
 | `handoffCampaignToDeal` | Admin (`manage_marketplace`) |
+| `proposeDeliveryPlanChange`, `applyDeliveryPlanChange` | Service (`write:delivery_plan`) |
 
 ---
 
 ## MCP tools (planned naming)
 
-`listServePlacements`, `getPlacementMetrics`, `proposeDeliveryPlanChange`, …
-(read-first; audited writes; Serve OpenAPI only — ADR 0018).
+`listServePlacements`, `getPlacementMetrics`, `proposeDeliveryPlanChange`,
+`applyDeliveryPlanChange`, … (read-first; **writes are plans** requiring an
+explicit confirmation token + audited; Serve OpenAPI only — ADR 0018, api-security
+§5). Reads use `read:*` scopes; writes need `write:delivery_plan`.
 
 ---
 

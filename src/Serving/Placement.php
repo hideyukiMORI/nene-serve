@@ -33,6 +33,21 @@ final class Placement
         return $this->status === 'active' && $this->archivedAt === null;
     }
 
+    public function withDefaultCreative(string $creativeId): self
+    {
+        return new self(
+            $this->id,
+            $this->organizationId,
+            $this->publicPlacementKey,
+            $this->allowedOrigins,
+            $this->status,
+            $creativeId,
+            $this->measurementEnabled,
+            $this->frequencyCap,
+            $this->archivedAt,
+        );
+    }
+
     public function archive(string $at): self
     {
         return new self(

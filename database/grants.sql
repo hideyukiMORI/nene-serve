@@ -35,6 +35,7 @@ GRANT SELECT, INSERT         ON nene_serve.spend_snapshots  TO 'nene'@'%'; -- ap
 GRANT SELECT, INSERT         ON nene_serve.audit_events   TO 'nene'@'%'; -- append-only
 
 GRANT SELECT, INSERT, UPDATE ON nene_serve.legal_holds     TO 'nene'@'%';
+GRANT SELECT, INSERT, UPDATE ON nene_serve.change_plans    TO 'nene'@'%'; -- status advances
 
 -- Presentation data: cosmetic UI state may be deleted.
 GRANT SELECT, INSERT, UPDATE, DELETE ON nene_serve.user_preferences TO 'nene'@'%';

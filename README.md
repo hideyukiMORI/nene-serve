@@ -59,7 +59,10 @@ billable spend accrual (no overspend), tamper-evident spend snapshots + immutabl
 billing-period close, idempotent net Invoice handoff + reconciliation, and
 statutory retention + legal hold. **Money SSOT stays in NeNe Invoice; Serve is
 tax-neutral** (ADR 0014/0015). Also shipped: **integrity & audit hardening**
-(#36–#41) — append-only governed data, hash-chained audit, DB-enforced no-delete.
+(#36–#41) — append-only governed data, hash-chained audit, DB-enforced no-delete —
+and **Phase 4 — Ecosystem** (#57–#60): Records read, Deal opportunity handoff,
+Concierge conversion beacon, and an MCP write-plan mechanism (propose→confirm→apply,
+read-first, audited; Serve OpenAPI only).
 
 ## Running locally
 

@@ -47,7 +47,9 @@
 - [x] #57 (A) Upstream HTTP client framework + Records read client (asset metadata) (ADR 0002)
 - [x] #58 (B) Deal opportunity handoff — net-only, idempotent on external_reference, audited, failure-isolated
 - [x] #59 (C) Concierge conversion beacon — append-only conversion, no Contact submission, opt-out aware, in reporting (ADR 0009)
-- [ ] #60 (D) MCP write-plan mechanism (propose → confirm → apply, read-first, audited)
+- [x] #60 (D) MCP write-plan mechanism — propose → confirm token → apply, read-first, audited, write:delivery_plan scope
+
+**Phase 4 — Ecosystem ✅ complete (2026-06-04): #57–#60 all merged.**
 
 ## Integrity & audit hardening (ADR 0022) — before Phase 3
 
@@ -85,4 +87,4 @@
 - **Three separated API surfaces; fail closed** (ADR 0018/0019); endpoint changes are gated by `docs/review/api-security.md`.
 - **Only approved creatives serve** (ADR 0020/0021); creative changes are gated by `docs/review/creative-review.md`.
 
-Last updated: 2026-06-04 (#59 conversion beacon landed; next: #60 MCP write-plan)
+Last updated: 2026-06-04 (#60 MCP write-plan landed — Phase 4 Ecosystem complete)
