@@ -115,6 +115,34 @@ final class PdoEventStore implements EventStoreInterface
         );
     }
 
+    public function purgeExpiredEvents(string $organizationId, string $ordinaryBefore, string $billingBefore, array $billingCreativeIds): int
+    {
+        return $this->purgeTable('impressions', $organizationId, $ordinaryBefore, $billingBefore, $billingCreativeIds)
+            + $this->purgeTable('clicks', $organizationId, $ordinaryBefore, $billingBefore, $billingCreativeIds);
+    }
+
+    /** @param list<string> $billingCreativeIds */
+    private function purgeTable(string $table, string $organizationId, string $ordinaryBefore, string $billingBefore, array $billingCreativeIds): int
+    {
+        if ($billingCreativeIds === []) {
+            // No billing-relevant creatives: everything older than the ordinary cutoff goes.
+            $stmt = $this->pdo->prepare("DELETE FROM {$table} WHERE organization_id = ? AND DATE(occurred_at) < ?");
+            $stmt->execute([$organizationId, $ordinaryBefore]);
+
+            return $stmt->rowCount();
+        }
+
+        $in = implode(',', array_fill(0, count($billingCreativeIds), '?'));
+        $sql = "DELETE FROM {$table} WHERE organization_id = ? AND (
+                    (creative_id NOT IN ($in) AND DATE(occurred_at) < ?)
+                 OR (creative_id IN ($in) AND DATE(occurred_at) < ?)
+                )";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(array_merge([$organizationId], $billingCreativeIds, [$ordinaryBefore], $billingCreativeIds, [$billingBefore]));
+
+        return $stmt->rowCount();
+    }
+
     public function billableCountsForCreatives(string $organizationId, array $creativeIds): array
     {
         if ($creativeIds === []) {

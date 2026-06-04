@@ -63,6 +63,18 @@ interface EventStoreInterface
     public function exportVisitorData(string $organizationId, string $visitorBucket): array;
 
     /**
+     * Governed retention purge (billing §7, privacy §6, ADR 0022 §7). Physically
+     * removes events past retention: ordinary measurement older than
+     * `ordinaryBefore`, and billing-relevant events (creative in
+     * `$billingCreativeIds`) only once older than `billingBefore` (statutory).
+     * Run by the privileged role; spend snapshots and audit are never touched.
+     *
+     * @param list<string> $billingCreativeIds
+     * @return int rows purged
+     */
+    public function purgeExpiredEvents(string $organizationId, string $ordinaryBefore, string $billingBefore, array $billingCreativeIds): int;
+
+    /**
      * Data-subject erasure (privacy §5): an **additive tombstone** — sets
      * `erased_at` and forgets the visitor link, but never edits the counts (the
      * impression rows remain for aggregation). Returns the number tombstoned.

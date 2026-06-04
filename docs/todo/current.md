@@ -37,7 +37,10 @@
 - [x] #48 (B) Campaign + budget + funding + billable spend accrual — derived reproducible spend, cap/pause_on_budget_exhausted (no overspend), only active+funded serves billable
 - [x] #49 (C) BillingPeriod + tamper-evident SpendSnapshot + audited close — versioned/reproducible snapshot, immutable on close (re-close 409)
 - [x] #50 (D) Invoice handoff (idempotent on external_reference) + reconciliation + HTTP client (net-only, failure-isolated)
-- [ ] #51 (E) Billing-relevant statutory retention + legal hold (closes Integrity #41)
+- [x] #51 (E) Billing-relevant statutory retention + legal hold — two regimes, legal-hold gate, privileged audited purge (closes Integrity #41)
+
+**Phase 3 — Marketplace ✅ complete (2026-06-04): #47–#51 all merged.**
+**Integrity & audit hardening ✅ complete: #36–#41 (#41 closed by #51).**
 
 ## Integrity & audit hardening (ADR 0022) — before Phase 3
 
@@ -47,7 +50,7 @@
 - [x] Audited-write coverage + structured before→after; mutation+audit atomic — #38; TransactionManager (Null+Pdo), all mutating use cases wrapped, archive now audited
 - [x] DB grants: app role without `DELETE`/`TRUNCATE` on governed tables; `archived_at`/`disabled_at` tombstones — #39; `database/grants.sql`, Placement.archive(), presentation table `user_preferences`
 - [x] Sensitive-read audit (`include_sensitive`, DSR export, PII-link reads) — #40; `view_sensitive_metrics` gate + `metrics.read_sensitive` audit; aggregate reads unaudited
-- [ ] Retention + legal-hold purge process (privileged role, audited)
+- [x] Retention + legal-hold purge process (privileged role, audited) — #51
 
 ## Governance hardening (2026-06-04)
 
@@ -75,4 +78,4 @@
 - **Three separated API surfaces; fail closed** (ADR 0018/0019); endpoint changes are gated by `docs/review/api-security.md`.
 - **Only approved creatives serve** (ADR 0020/0021); creative changes are gated by `docs/review/creative-review.md`.
 
-Last updated: 2026-06-04 (#50 Invoice handoff + reconciliation landed; next: #51 statutory retention + legal hold)
+Last updated: 2026-06-04 (#51 retention + legal hold landed — Phase 3 Marketplace complete; #41 closed)

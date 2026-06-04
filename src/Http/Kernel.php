@@ -25,6 +25,8 @@ use NeneServe\Http\Admin\ListCreativesHandler;
 use NeneServe\Http\Admin\ListUsersHandler;
 use NeneServe\Http\Admin\LoginHandler;
 use NeneServe\Http\Admin\OpenBillingPeriodHandler;
+use NeneServe\Http\Admin\PlaceLegalHoldHandler;
+use NeneServe\Http\Admin\ReleaseLegalHoldHandler;
 use NeneServe\Http\Admin\ReviewQueueHandler;
 use NeneServe\Http\Admin\ReviseCreativeHandler;
 use NeneServe\Http\Admin\TransitionCreativeHandler;
@@ -69,6 +71,9 @@ use NeneServe\Measurement\UseCase\ExportMetricsUseCase;
 use NeneServe\Measurement\UseCase\GetMetricsUseCase;
 use NeneServe\Measurement\UseCase\RecordClickUseCase;
 use NeneServe\Measurement\UseCase\RecordImpressionUseCase;
+use NeneServe\Retention\InMemoryLegalHoldRepository;
+use NeneServe\Retention\LegalHoldRepositoryInterface;
+use NeneServe\Retention\UseCase\PlaceLegalHoldUseCase;
 use NeneServe\Service\Scope;
 use NeneServe\Service\ServiceContext;
 use NeneServe\Service\ServiceTokenRepositoryInterface;
@@ -140,6 +145,7 @@ final class Kernel
     private readonly SpendSnapshotRepositoryInterface $spendSnapshots;
     private readonly InvoiceHandoffRepositoryInterface $invoiceHandoffs;
     private readonly InvoiceClientInterface $invoiceClient;
+    private readonly LegalHoldRepositoryInterface $legalHolds;
     private readonly Jwt $jwt;
 
     public function __construct(
@@ -163,6 +169,7 @@ final class Kernel
         ?SpendSnapshotRepositoryInterface $spendSnapshots = null,
         ?InvoiceHandoffRepositoryInterface $invoiceHandoffs = null,
         ?InvoiceClientInterface $invoiceClient = null,
+        ?LegalHoldRepositoryInterface $legalHolds = null,
     ) {
         $this->json = new JsonResponseFactory();
         $this->users = $users ?? DevFixtures::users();
@@ -184,6 +191,7 @@ final class Kernel
         $this->spendSnapshots = $spendSnapshots ?? new InMemorySpendSnapshotRepository();
         $this->invoiceHandoffs = $invoiceHandoffs ?? new InMemoryInvoiceHandoffRepository();
         $this->invoiceClient = $invoiceClient ?? new FakeInvoiceClient();
+        $this->legalHolds = $legalHolds ?? new InMemoryLegalHoldRepository();
         $this->jwt = $jwt ?? new Jwt(self::resolveSecret());
         $this->auth = new BearerTokenMiddleware($this->jwt, $this->users);
         $this->serviceAuth = new ServiceTokenMiddleware($serviceTokens ?? DevFixtures::serviceTokens());
@@ -265,6 +273,12 @@ final class Kernel
 
         $dsr = new DataSubjectRequestHandler(new DataSubjectRequestUseCase($this->events, $this->audit), $this->json);
         $this->router->add('POST', '/admin/data-subject-requests', $this->admin(Capability::ManageSettings, $dsr->handle(...)));
+
+        $placeHold = new PlaceLegalHoldHandler(new PlaceLegalHoldUseCase($this->legalHolds, $this->audit, $this->tx), $this->json);
+        $this->router->add('POST', '/admin/legal-holds', $this->admin(Capability::ManageSettings, $placeHold->handle(...)));
+
+        $releaseHold = new ReleaseLegalHoldHandler(new PlaceLegalHoldUseCase($this->legalHolds, $this->audit, $this->tx), $this->json);
+        $this->router->add('POST', '/admin/legal-holds/{id}/release', $this->admin(Capability::ManageSettings, $releaseHold->handle(...)));
 
         $this->registerCreativeRoutes();
         $this->registerMarketplaceRoutes();

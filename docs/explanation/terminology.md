@@ -139,8 +139,9 @@ data has no delivery/measurement/billing/identity meaning.
 `period.closed`, `dsr.erasure`, `dsr.export`, `metrics.read_sensitive`,
 `advertiser.created`, `pricing_rule.created`, `campaign.created`,
 `billing_period.opened`, `billing_period.closed`, `invoice.reconciled`,
-`invoice.handed_off`, `invoice.handoff_failed`, `invoice.reconciliation_discrepancy`.
-Register
+`invoice.handed_off`, `invoice.handoff_failed`, `invoice.reconciliation_discrepancy`,
+`legal_hold.placed`, `legal_hold.released`, `retention.purged`,
+`retention.purge_blocked`. Register
 new actions before use. Mutation audit metadata carries structured
 `before`/`after` (changed fields). Sensitive **reads** (`include_sensitive`
 metrics, DSR export, PII-link reads) are also audited; ordinary reads are not.
@@ -287,7 +288,7 @@ match across OpenAPI, routes, and MCP tool catalog.
 | `publishCreative` | Admin |
 | `getDeliveryPlan`, `updateDeliveryPlan` | Admin |
 | `getPlacementMetrics`, `exportMetrics` | Admin / Service (read) |
-| `createDataSubjectRequest` | Admin (`manage_settings`) |
+| `createDataSubjectRequest`, `placeLegalHold`, `releaseLegalHold` | Admin (`manage_settings`) |
 | `createAdvertiser`, `listAdvertisers`, `createPricingRule` | Admin (`manage_marketplace`) |
 | `createCampaign`, `getCampaign` | Admin (`manage_marketplace`) |
 | `openBillingPeriod`, `closeBillingPeriod`, `getBillingPeriod`, `handoffBillingPeriod` | Admin (`manage_marketplace`) |

@@ -67,6 +67,30 @@ final class InMemoryEventStore implements EventStoreInterface
         return MetricsAggregator::aggregate($impressions, $this->clicks, $organizationId, $fromDate, $toDate);
     }
 
+    public function purgeExpiredEvents(string $organizationId, string $ordinaryBefore, string $billingBefore, array $billingCreativeIds): int
+    {
+        $billing = array_fill_keys($billingCreativeIds, true);
+        $purged = 0;
+        $keep = static function (array $row) use ($organizationId, $ordinaryBefore, $billingBefore, $billing, &$purged): bool {
+            if ($row['org'] !== $organizationId) {
+                return true;
+            }
+            $cutoff = isset($billing[$row['creative']]) ? $billingBefore : $ordinaryBefore;
+            if ($row['date'] < $cutoff) {
+                ++$purged;
+
+                return false;
+            }
+
+            return true;
+        };
+
+        $this->impressions = array_values(array_filter($this->impressions, $keep));
+        $this->clicks = array_values(array_filter($this->clicks, $keep));
+
+        return $purged;
+    }
+
     public function billableCountsForCreatives(string $organizationId, array $creativeIds): array
     {
         $ids = array_fill_keys($creativeIds, true);
