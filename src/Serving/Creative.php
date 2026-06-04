@@ -10,7 +10,8 @@ namespace NeneServe\Serving;
  * endpoint will use (no open redirect — ADR 0019/0021).
  *
  * Instances are immutable; review transitions and revisions return new
- * instances (an approved version is frozen — creative-review §0.3).
+ * instances (an approved version is frozen — creative-review §0.3). `posterUrl`
+ * and `durationSeconds` apply to video creatives (ADR 0021 §3).
  */
 final class Creative
 {
@@ -26,6 +27,8 @@ final class Creative
         public readonly int $version = 1,
         public readonly ?string $submittedBy = null,
         public readonly ?string $reviewReason = null,
+        public readonly ?string $posterUrl = null,
+        public readonly ?int $durationSeconds = null,
     ) {
     }
 
@@ -54,23 +57,33 @@ final class Creative
             $this->version,
             $submittedBy ?? $this->submittedBy,
             $reason,
+            $this->posterUrl,
+            $this->durationSeconds,
         );
     }
 
     /**
      * Public render payload — no internal ids, org data, or review metadata
-     * (least exposure, api-security §2).
+     * (least exposure, api-security §2). Video carries a poster and an explicit
+     * `autoplay:false` (no autoplay-with-sound by default — ADR 0021 §3).
      *
      * @return array<string, mixed>
      */
     public function toServePayload(): array
     {
-        return array_filter([
+        $payload = [
             'type' => $this->type->value,
             'asset_url' => $this->assetUrl,
             'width' => $this->width,
             'height' => $this->height,
-        ], static fn ($v) => $v !== null);
+        ];
+
+        if ($this->type === CreativeType::Video) {
+            $payload['poster_url'] = $this->posterUrl;
+            $payload['autoplay'] = false;
+        }
+
+        return array_filter($payload, static fn ($v) => $v !== null);
     }
 
     /**
@@ -88,6 +101,8 @@ final class Creative
             'asset_url' => $this->assetUrl,
             'width' => $this->width,
             'height' => $this->height,
+            'poster_url' => $this->posterUrl,
+            'duration_seconds' => $this->durationSeconds,
             'version' => $this->version,
             'review_reason' => $this->reviewReason,
         ];

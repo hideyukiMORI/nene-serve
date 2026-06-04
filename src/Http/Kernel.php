@@ -41,6 +41,7 @@ use NeneServe\Serving\Token\InMemoryTokenStore;
 use NeneServe\Serving\Token\TokenStoreInterface;
 use NeneServe\Serving\UseCase\CreateImageCreativeUseCase;
 use NeneServe\Serving\UseCase\CreatePlacementUseCase;
+use NeneServe\Serving\UseCase\CreateVideoCreativeUseCase;
 use NeneServe\Serving\UseCase\ReviseCreativeUseCase;
 use NeneServe\Serving\UseCase\ServeCreativeUseCase;
 use NeneServe\Serving\UseCase\TransitionCreativeUseCase;
@@ -192,6 +193,7 @@ final class Kernel
 
         $createCreative = new CreateCreativeHandler(
             new CreateImageCreativeUseCase($this->creatives, $this->audit),
+            new CreateVideoCreativeUseCase($this->creatives, $this->audit),
             $this->json,
         );
         $this->router->add('POST', '/admin/creatives', $this->admin(Capability::ManageCreatives, $createCreative->handle(...)));

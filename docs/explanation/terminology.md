@@ -23,6 +23,8 @@ Single source of truth for identifiers. Register new terms in the same PR.
 | Public placement key | `public_placement_key` | string |
 | Creative | `creative` | `Creative` |
 | Creative type | `creative_type` | enum: `image`, `video`, `html5_bundle` |
+| Video poster image | `poster_url` | string (https) |
+| Video duration | `duration_seconds` | integer |
 | Campaign / delivery group | `campaign` | `Campaign` |
 | Delivery plan | `delivery_plan` | `DeliveryPlan` |
 | Weight share | `weight` | integer ≥ 0 |
