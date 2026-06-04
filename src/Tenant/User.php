@@ -27,7 +27,15 @@ final class User
 
     public function verifyPassword(string $plain): bool
     {
-        return password_verify($plain, $this->passwordHash);
+        // An empty hash (invited, not yet set) never matches — login stays closed
+        // until the invitation is accepted and a password is set.
+        return $this->passwordHash !== '' && password_verify($plain, $this->passwordHash);
+    }
+
+    /** New instance with the password set (invitation acceptance / reset). */
+    public function withPasswordHash(string $passwordHash): self
+    {
+        return new self($this->id, $this->organizationId, $this->email, $this->role, $passwordHash, $this->status);
     }
 
     /**

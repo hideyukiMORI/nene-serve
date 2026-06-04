@@ -6,6 +6,7 @@ namespace NeneServe\Http;
 
 use NeneServe\Audit\AuditLogInterface;
 use NeneServe\Audit\InMemoryAuditLog;
+use NeneServe\Http\Admin\AcceptInvitationHandler;
 use NeneServe\Http\Admin\ArchivePlacementHandler;
 use NeneServe\Http\Admin\CloseBillingPeriodHandler;
 use NeneServe\Http\Admin\CreateAdvertiserHandler;
@@ -13,6 +14,7 @@ use NeneServe\Http\Admin\CreateCampaignHandler;
 use NeneServe\Http\Admin\CreateCreativeHandler;
 use NeneServe\Http\Admin\CreatePlacementHandler;
 use NeneServe\Http\Admin\CreatePricingRuleHandler;
+use NeneServe\Http\Admin\CreateUserHandler;
 use NeneServe\Http\Admin\CurrentUserHandler;
 use NeneServe\Http\Admin\DataSubjectRequestHandler;
 use NeneServe\Http\Admin\ExportMetricsHandler as AdminExportMetricsHandler;
@@ -34,6 +36,7 @@ use NeneServe\Http\Admin\ListUsersHandler;
 use NeneServe\Http\Admin\LoginHandler;
 use NeneServe\Http\Admin\OpenBillingPeriodHandler;
 use NeneServe\Http\Admin\PlaceLegalHoldHandler;
+use NeneServe\Http\Admin\PreviewInvitationHandler;
 use NeneServe\Http\Admin\ReleaseLegalHoldHandler;
 use NeneServe\Http\Admin\ReviewQueueHandler;
 use NeneServe\Http\Admin\ReviseCreativeHandler;
@@ -118,6 +121,7 @@ use NeneServe\Serving\UseCase\ReviseCreativeUseCase;
 use NeneServe\Serving\UseCase\ServeCreativeUseCase;
 use NeneServe\Serving\UseCase\TransitionCreativeUseCase;
 use NeneServe\Settings\InMemorySmtpSettingsRepository;
+use NeneServe\Settings\SmtpConfigResolver;
 use NeneServe\Settings\SmtpSettingsRepositoryInterface;
 use NeneServe\Support\Crypto;
 use NeneServe\Support\DevFixtures;
@@ -125,7 +129,11 @@ use NeneServe\Support\NullTransactionManager;
 use NeneServe\Support\TransactionManagerInterface;
 use NeneServe\Tenant\AuthContext;
 use NeneServe\Tenant\Capability;
+use NeneServe\Tenant\InMemoryInvitationRepository;
+use NeneServe\Tenant\InvitationRepositoryInterface;
 use NeneServe\Tenant\OrganizationRepositoryInterface;
+use NeneServe\Tenant\UseCase\AcceptInvitationUseCase;
+use NeneServe\Tenant\UseCase\CreateInvitedUserUseCase;
 use NeneServe\Tenant\UseCase\ListUsersUseCase;
 use NeneServe\Tenant\UseCase\LoginUseCase;
 use NeneServe\Tenant\UserRepositoryInterface;
@@ -183,6 +191,7 @@ final class Kernel
     private readonly SmtpSettingsRepositoryInterface $smtpSettings;
     private readonly MailerFactoryInterface $mailerFactory;
     private readonly Crypto $crypto;
+    private readonly InvitationRepositoryInterface $invitations;
     private readonly Jwt $jwt;
 
     public function __construct(
@@ -214,6 +223,7 @@ final class Kernel
         ?SmtpSettingsRepositoryInterface $smtpSettings = null,
         ?MailerFactoryInterface $mailerFactory = null,
         ?Crypto $crypto = null,
+        ?InvitationRepositoryInterface $invitations = null,
     ) {
         $this->json = new JsonResponseFactory();
         $this->users = $users ?? DevFixtures::users();
@@ -243,6 +253,7 @@ final class Kernel
         $this->smtpSettings = $smtpSettings ?? new InMemorySmtpSettingsRepository();
         $this->mailerFactory = $mailerFactory ?? new SmtpMailerFactory();
         $this->crypto = $crypto ?? new Crypto();
+        $this->invitations = $invitations ?? new InMemoryInvitationRepository();
         $this->jwt = $jwt ?? new Jwt(self::resolveSecret());
         $this->auth = new BearerTokenMiddleware($this->jwt, $this->users);
         $this->serviceAuth = new ServiceTokenMiddleware($serviceTokens ?? DevFixtures::serviceTokens());
@@ -323,6 +334,22 @@ final class Kernel
 
         $listUsers = new ListUsersHandler(new ListUsersUseCase($this->users), $this->json);
         $this->router->add('GET', '/admin/users', $this->admin(Capability::ViewUsers, $listUsers->handle(...)));
+
+        $createUser = new CreateUserHandler(
+            new CreateInvitedUserUseCase($this->users, $this->invitations, $this->audit, $this->tx),
+            new SmtpConfigResolver($this->smtpSettings, $this->crypto),
+            $this->mailerFactory,
+            $this->json,
+            self::resolveAppBaseUrl(),
+        );
+        $this->router->add('POST', '/admin/users', $this->admin(Capability::ManageUsers, $createUser->handle(...)));
+
+        // Unauthenticated onboarding (like login): the invitee sets their password.
+        $acceptUseCase = new AcceptInvitationUseCase($this->users, $this->invitations, $this->audit, $this->tx);
+        $acceptInvite = new AcceptInvitationHandler($acceptUseCase, $this->json);
+        $this->router->add('POST', '/admin/invitations/accept', $acceptInvite->handle(...));
+        $previewInvite = new PreviewInvitationHandler($acceptUseCase, $this->json);
+        $this->router->add('GET', '/admin/invitations/{token}', $previewInvite->handle(...));
 
         $exportMetrics = new AdminExportMetricsHandler(new ExportMetricsUseCase($this->events), $this->json);
         $this->router->add('GET', '/admin/metrics/export', $this->admin(Capability::ViewMetrics, $exportMetrics->handle(...)));
@@ -576,6 +603,14 @@ final class Kernel
         // Local-only fallback so the scaffold boots without configuration.
         // Production MUST set NENE_SERVE_JWT_SECRET (api-security §6).
         return 'dev-insecure-secret-change-me';
+    }
+
+    /** Frontend base URL used in invitation links (APP_BASE_URL); dev default. */
+    private static function resolveAppBaseUrl(): string
+    {
+        $url = getenv('APP_BASE_URL');
+
+        return is_string($url) && $url !== '' ? $url : 'http://localhost:5189';
     }
 
     private static function clickTokenTtl(): int

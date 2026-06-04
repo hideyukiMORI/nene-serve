@@ -144,7 +144,8 @@ data has no delivery/measurement/billing/identity meaning.
 `legal_hold.placed`, `legal_hold.released`, `retention.purged`,
 `retention.purge_blocked`, `deal.opportunity_sent`, `deal.opportunity_failed`,
 `mcp.change_proposed`, `mcp.change_applied`,
-`settings.smtp_updated`, `settings.smtp_tested`. Register
+`settings.smtp_updated`, `settings.smtp_tested`,
+`user.created`, `invitation.sent`, `invitation.accepted`. Register
 new actions before use. Mutation audit metadata carries structured
 `before`/`after` (changed fields). Sensitive **reads** (`include_sensitive`
 metrics, DSR export, PII-link reads) are also audited; ordinary reads are not.
@@ -279,6 +280,9 @@ Base URL: `https://nene-serve.dev/problems/`. Register before use.
 | `smtp-not-configured` | SMTP settings missing for a test send (422) |
 | `smtp-test-failed` | SMTP test send failed at the transport (502) |
 | `encryption-unavailable` | `APP_ENCRYPTION_KEY` not configured for at-rest secrets (500) |
+| `user-invalid` | Invalid user create input or duplicate email (422) |
+| `invitation-invalid` | Invitation token unknown, used, or expired (404) |
+| `weak-password` | Password below policy on invitation acceptance (422) |
 
 Validation `errors[].field` uses snake_case paths; `errors[].code` is snake_case.
 
@@ -296,7 +300,8 @@ documented paths == Kernel routes.
 | `getHealth` | System |
 | `serveCreative`, `recordImpression`, `redirectClick`, `getCreativeFrame`, `recordConversion` | Public serve |
 | `login`, `getCurrentUser` | Admin auth |
-| `listUsers` | Admin (tenant-scoped) |
+| `listUsers`, `createUser` | Admin (tenant-scoped; `manage_users`) |
+| `acceptInvitation`, `getInvitation` | Admin auth (unauthenticated; single-use token) |
 | `listPlacements`, `getPlacementById`, `createPlacement`, `updatePlacement` | Admin |
 | `createPlacement`, `archivePlacement` | Admin (`manage_placements`) |
 | `listCreatives`, `getCreativeById`, `createCreative`, `reviseCreative` | Admin (`manage_creatives`) |

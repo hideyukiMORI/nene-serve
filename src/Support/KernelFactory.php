@@ -25,6 +25,7 @@ use NeneServe\Serving\PdoCreativeRepository;
 use NeneServe\Serving\PdoPlacementRepository;
 use NeneServe\Serving\Token\FileTokenStore;
 use NeneServe\Settings\PdoSmtpSettingsRepository;
+use NeneServe\Tenant\PdoInvitationRepository;
 use NeneServe\Tenant\PdoOrganizationRepository;
 use NeneServe\Tenant\PdoUserRepository;
 use NeneServe\Upstream\Deal\DealClientInterface;
@@ -105,6 +106,7 @@ final class KernelFactory
             dealClient: self::dealClient($read),
             changePlans: new PdoChangePlanRepository($pdo),
             smtpSettings: new PdoSmtpSettingsRepository($pdo),
+            invitations: new PdoInvitationRepository($pdo),
         );
     }
 

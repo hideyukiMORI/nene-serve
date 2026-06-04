@@ -42,6 +42,18 @@ final class InMemoryUserRepository implements UserRepositoryInterface
         return null;
     }
 
+    public function save(User $user): void
+    {
+        foreach ($this->users as $index => $existing) {
+            if ($existing->id === $user->id) {
+                $this->users[$index] = $user;
+
+                return;
+            }
+        }
+        $this->users[] = $user;
+    }
+
     public function listByOrganization(string $organizationId): array
     {
         return array_values(array_filter(
