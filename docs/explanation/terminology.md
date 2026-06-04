@@ -325,5 +325,7 @@ explicit confirmation token + audited; Serve OpenAPI only — ADR 0018, api-secu
 | --- | --- |
 | `NENE_SERVE_JWT_SECRET` | Admin JWT signing secret (`.env` only) |
 | `NENE_SERVE_CLICK_TOKEN_TTL` | Click token TTL; default `900` (15 min) |
+| `DB_HOST` | When set, the live boot selects **database** persistence (PDO repositories); unset → file/dev defaults. See `Support\KernelFactory` |
+| `DB_PORT` · `DB_DATABASE` · `DB_USERNAME` · `DB_PASSWORD` | MySQL connection for `Support\Database::fromEnv()` (secrets via env only) |
 
 Last updated: 2026-06-04
