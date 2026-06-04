@@ -1,6 +1,7 @@
 import type { Creative } from '@/entities/creative'
 import { useTranslation } from '@/shared/i18n'
 import { EmptyState, Stack, Text } from '@/shared/ui'
+import { CreateImageCreativeForm } from './CreateImageCreativeForm'
 
 export interface CreativesViewProps {
   creatives: Creative[]
@@ -19,6 +20,8 @@ export function CreativesView({ creatives, loading, errorMessage }: CreativesVie
         </Text>
         <Text muted>{t('creatives.subtitle')}</Text>
       </Stack>
+
+      <CreateImageCreativeForm />
 
       {loading ? <Text muted>{t('creatives.loading')}</Text> : null}
       {errorMessage !== null ? <Text className="danger">{errorMessage}</Text> : null}

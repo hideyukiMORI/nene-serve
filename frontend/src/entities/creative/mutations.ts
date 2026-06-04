@@ -30,3 +30,33 @@ export function useReviewTransition(): UseMutationResult<
     },
   })
 }
+
+export interface CreateImageCreativeInput {
+  destinationUrl: string
+  assetUrl: string
+  width: number
+  height: number
+}
+
+export function useCreateImageCreative(): UseMutationResult<
+  Creative,
+  AppError,
+  CreateImageCreativeInput
+> {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input) => {
+      const dto = await apiClient.post<CreativeDto>('/admin/creatives', {
+        type: 'image',
+        destination_url: input.destinationUrl,
+        asset_url: input.assetUrl,
+        width: input.width,
+        height: input.height,
+      })
+      return mapCreativeDtoToModel(dto)
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: creativeKeys.all })
+    },
+  })
+}

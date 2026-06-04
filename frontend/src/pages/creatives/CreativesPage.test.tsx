@@ -11,4 +11,11 @@ describe('CreativesPage', () => {
     })
     expect(screen.getByText('cr-acme-draft')).toBeInTheDocument()
   })
+
+  it('shows the create-image-creative form', async () => {
+    renderWithProviders(<CreativesPage />)
+    await waitFor(() => {
+      expect(screen.getByText('New image creative')).toBeInTheDocument()
+    })
+  })
 })

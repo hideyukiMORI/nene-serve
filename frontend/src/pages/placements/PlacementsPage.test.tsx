@@ -14,4 +14,11 @@ describe('PlacementsPage', () => {
     // The side placement has no default creative → em dash fallback.
     expect(screen.getByText('—')).toBeInTheDocument()
   })
+
+  it('shows the create-placement form', async () => {
+    renderWithProviders(<PlacementsPage />)
+    await waitFor(() => {
+      expect(screen.getByText('New placement')).toBeInTheDocument()
+    })
+  })
 })

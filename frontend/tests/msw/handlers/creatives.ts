@@ -17,6 +17,10 @@ export const creativeHandlers = [
     }),
   ),
 
+  http.post('/admin/creatives', () =>
+    HttpResponse.json(makeCreativeDto({ id: 'cr-new', review_status: 'draft' }), { status: 201 }),
+  ),
+
   http.post('/admin/creatives/:id/:action', ({ params }) =>
     HttpResponse.json(makeCreativeDto({ id: String(params['id']), review_status: 'approved' })),
   ),
