@@ -18,6 +18,9 @@ final class InMemoryTokenStore implements TokenStoreInterface
     /** @var array<string, array{org: string, placement: string, creative: string, dest: string, expires: int, used: bool}> */
     private array $clicks = [];
 
+    /** @var array<string, array{org: string, creative: string, expires: int}> */
+    private array $frames = [];
+
     /** @var callable(): int */
     private $now;
 
@@ -87,6 +90,28 @@ final class InMemoryTokenStore implements TokenStoreInterface
         $entry['used'] = true; // single use
 
         return new ClickRedirect($entry['org'], $entry['placement'], $entry['creative'], $entry['dest']);
+    }
+
+    public function issueFrameToken(string $organizationId, string $creativeId, int $ttlSeconds): string
+    {
+        $token = self::random();
+        $this->frames[$token] = [
+            'org' => $organizationId,
+            'creative' => $creativeId,
+            'expires' => ($this->now)() + $ttlSeconds,
+        ];
+
+        return $token;
+    }
+
+    public function resolveFrameToken(string $token): ?FrameTarget
+    {
+        $entry = $this->frames[$token] ?? null;
+        if ($entry === null || $entry['expires'] < ($this->now)()) {
+            return null;
+        }
+
+        return new FrameTarget($entry['org'], $entry['creative']);
     }
 
     private static function random(): string

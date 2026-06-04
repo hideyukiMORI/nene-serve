@@ -7,6 +7,7 @@ namespace NeneServe\Http\Admin;
 use NeneServe\Http\JsonResponseFactory;
 use NeneServe\Http\Request;
 use NeneServe\Http\Response;
+use NeneServe\Serving\UseCase\CreateHtml5CreativeUseCase;
 use NeneServe\Serving\UseCase\CreateImageCreativeUseCase;
 use NeneServe\Serving\UseCase\CreateVideoCreativeUseCase;
 use NeneServe\Serving\UseCase\CreativeValidationException;
@@ -23,6 +24,7 @@ final class CreateCreativeHandler
     public function __construct(
         private readonly CreateImageCreativeUseCase $createImage,
         private readonly CreateVideoCreativeUseCase $createVideo,
+        private readonly CreateHtml5CreativeUseCase $createHtml5,
         private readonly JsonResponseFactory $json,
     ) {
     }
@@ -35,8 +37,38 @@ final class CreateCreativeHandler
         return match ($type) {
             'image' => $this->image($body, $context),
             'video' => $this->video($body, $context),
-            default => $this->json->problem(422, 'validation-failed', 'Only image and video creatives are supported (ADR 0021); html5 is #25'),
+            'html5_bundle' => $this->html5($body, $context),
+            default => $this->json->problem(422, 'validation-failed', 'Unsupported creative type; third_party_tag is forbidden (ADR 0013/0021)'),
         };
+    }
+
+    /** @param array<string, mixed> $body */
+    private function html5(array $body, AuthContext $context): Response
+    {
+        $destination = $body['destination_url'] ?? null;
+        $bundleId = $body['bundle_id'] ?? null;
+        $size = $body['bundle_size_bytes'] ?? null;
+        $assetCount = $body['asset_count'] ?? null;
+        $htmlEntry = $body['html_entry'] ?? null;
+        if (!is_string($destination) || !is_string($bundleId) || !is_int($size)
+            || !is_int($assetCount) || !is_string($htmlEntry)) {
+            return $this->json->problem(
+                422,
+                'validation-failed',
+                'destination_url, bundle_id, html_entry (string) and bundle_size_bytes, asset_count (int) are required',
+            );
+        }
+
+        $width = is_int($body['width'] ?? null) ? $body['width'] : null;
+        $height = is_int($body['height'] ?? null) ? $body['height'] : null;
+
+        try {
+            $creative = $this->createHtml5->execute($context, $destination, $bundleId, $size, $assetCount, $htmlEntry, $width, $height);
+        } catch (CreativeValidationException $e) {
+            return $this->json->problem(422, 'validation-failed', 'HTML5 bundle rejected', $e->getMessage());
+        }
+
+        return $this->json->ok($creative->toAdminArray(), 201);
     }
 
     /** @param array<string, mixed> $body */
