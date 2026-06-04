@@ -21,6 +21,7 @@ use NeneServe\Http\Admin\GetCampaignHandler;
 use NeneServe\Http\Admin\GetMetricsHandler as AdminGetMetricsHandler;
 use NeneServe\Http\Admin\GetRecordsAssetHandler;
 use NeneServe\Http\Admin\HandoffBillingPeriodHandler;
+use NeneServe\Http\Admin\HandoffCampaignToDealHandler;
 use NeneServe\Http\Admin\ListAdvertisersHandler;
 use NeneServe\Http\Admin\ListCreativesHandler;
 use NeneServe\Http\Admin\ListUsersHandler;
@@ -47,9 +48,11 @@ use NeneServe\Http\Service\ListPlacementsHandler;
 use NeneServe\Marketplace\AdvertiserRepositoryInterface;
 use NeneServe\Marketplace\BillingPeriodRepositoryInterface;
 use NeneServe\Marketplace\CampaignRepositoryInterface;
+use NeneServe\Marketplace\DealOpportunityRepositoryInterface;
 use NeneServe\Marketplace\InMemoryAdvertiserRepository;
 use NeneServe\Marketplace\InMemoryBillingPeriodRepository;
 use NeneServe\Marketplace\InMemoryCampaignRepository;
+use NeneServe\Marketplace\InMemoryDealOpportunityRepository;
 use NeneServe\Marketplace\InMemoryInvoiceHandoffRepository;
 use NeneServe\Marketplace\InMemoryPricingRuleRepository;
 use NeneServe\Marketplace\InMemorySpendSnapshotRepository;
@@ -64,6 +67,7 @@ use NeneServe\Marketplace\UseCase\CreateCampaignUseCase;
 use NeneServe\Marketplace\UseCase\CreatePricingRuleUseCase;
 use NeneServe\Marketplace\UseCase\GetCampaignSpendUseCase;
 use NeneServe\Marketplace\UseCase\HandoffBillingPeriodUseCase;
+use NeneServe\Marketplace\UseCase\HandoffCampaignToDealUseCase;
 use NeneServe\Marketplace\UseCase\OpenBillingPeriodUseCase;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\InMemoryEventStore;
@@ -104,6 +108,8 @@ use NeneServe\Tenant\OrganizationRepositoryInterface;
 use NeneServe\Tenant\UseCase\ListUsersUseCase;
 use NeneServe\Tenant\UseCase\LoginUseCase;
 use NeneServe\Tenant\UserRepositoryInterface;
+use NeneServe\Upstream\Deal\DealClientInterface;
+use NeneServe\Upstream\Deal\FakeDealClient;
 use NeneServe\Upstream\Records\FakeRecordsClient;
 use NeneServe\Upstream\Records\RecordsClientInterface;
 
@@ -150,6 +156,8 @@ final class Kernel
     private readonly InvoiceClientInterface $invoiceClient;
     private readonly LegalHoldRepositoryInterface $legalHolds;
     private readonly RecordsClientInterface $records;
+    private readonly DealOpportunityRepositoryInterface $dealOpportunities;
+    private readonly DealClientInterface $dealClient;
     private readonly Jwt $jwt;
 
     public function __construct(
@@ -175,6 +183,8 @@ final class Kernel
         ?InvoiceClientInterface $invoiceClient = null,
         ?LegalHoldRepositoryInterface $legalHolds = null,
         ?RecordsClientInterface $records = null,
+        ?DealOpportunityRepositoryInterface $dealOpportunities = null,
+        ?DealClientInterface $dealClient = null,
     ) {
         $this->json = new JsonResponseFactory();
         $this->users = $users ?? DevFixtures::users();
@@ -198,6 +208,8 @@ final class Kernel
         $this->invoiceClient = $invoiceClient ?? new FakeInvoiceClient();
         $this->legalHolds = $legalHolds ?? new InMemoryLegalHoldRepository();
         $this->records = $records ?? new FakeRecordsClient();
+        $this->dealOpportunities = $dealOpportunities ?? new InMemoryDealOpportunityRepository();
+        $this->dealClient = $dealClient ?? new FakeDealClient();
         $this->jwt = $jwt ?? new Jwt(self::resolveSecret());
         $this->auth = new BearerTokenMiddleware($this->jwt, $this->users);
         $this->serviceAuth = new ServiceTokenMiddleware($serviceTokens ?? DevFixtures::serviceTokens());
@@ -316,6 +328,12 @@ final class Kernel
 
         $getCampaign = new GetCampaignHandler($this->campaigns, $this->campaignSpend, $this->json);
         $this->router->add('GET', '/admin/campaigns/{id}', $this->admin(Capability::ManageMarketplace, $getCampaign->handle(...)));
+
+        $dealHandoff = new HandoffCampaignToDealHandler(
+            new HandoffCampaignToDealUseCase($this->campaigns, $this->advertisers, $this->dealOpportunities, $this->dealClient, $this->audit, $this->tx),
+            $this->json,
+        );
+        $this->router->add('POST', '/admin/campaigns/{id}/deal-handoff', $this->admin(Capability::ManageMarketplace, $dealHandoff->handle(...)));
 
         $openPeriod = new OpenBillingPeriodHandler(
             new OpenBillingPeriodUseCase($this->billingPeriods, $this->campaigns, $this->audit, $this->tx),
