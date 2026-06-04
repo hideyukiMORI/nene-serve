@@ -187,6 +187,8 @@ capability; self-approval is disallowed by default.
 | `NENE_SERVE_PORT` | Default `8910` |
 | `NENE_INVOICE_API_BASE_URL` | Advertiser billing handoff |
 | `NENE_INVOICE_SERVICE_TOKEN` | Scoped Invoice `/api/*` |
+| `NENE_RECORDS_API_BASE_URL` | Records read (creative assets) |
+| `NENE_RECORDS_SERVICE_TOKEN` | Scoped Records `/api/*` (read-only) |
 
 ---
 
@@ -264,6 +266,8 @@ Base URL: `https://nene-serve.dev/problems/`. Register before use.
 | `invalid-period-transition` | Disallowed billing-period change, e.g. re-closing (409) |
 | `reconciliation-failed` | Snapshot did not reconcile; handoff refused (409) |
 | `invoice-handoff-failed` | Invoice transport failed; not paused, retryable (502) |
+| `records-asset-not-found` | Records asset ref not found (404) |
+| `records-unavailable` | Records read transport error (502) |
 
 Validation `errors[].field` uses snake_case paths; `errors[].code` is snake_case.
 
@@ -283,7 +287,7 @@ match across OpenAPI, routes, and MCP tool catalog.
 | `listPlacements`, `getPlacementById`, `createPlacement`, `updatePlacement` | Admin |
 | `createPlacement`, `archivePlacement` | Admin (`manage_placements`) |
 | `listCreatives`, `createCreative`, `reviseCreative` | Admin (`manage_creatives`) |
-| `submitCreative` | Admin (`manage_creatives`) |
+| `submitCreative`, `getRecordsAsset` | Admin (`manage_creatives`) |
 | `startCreativeReview`, `approveCreative`, `rejectCreative`, `requestCreativeChanges`, `listReviewQueue` | Admin (`review_creatives`) |
 | `publishCreative` | Admin |
 | `getDeliveryPlan`, `updateDeliveryPlan` | Admin |

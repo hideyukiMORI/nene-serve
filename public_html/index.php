@@ -6,6 +6,7 @@ use NeneServe\Http\Kernel;
 use NeneServe\Http\Request;
 use NeneServe\Marketplace\Invoice\HttpInvoiceClient;
 use NeneServe\Measurement\FileEventStore;
+use NeneServe\Upstream\Records\HttpRecordsClient;
 use NeneServe\Serving\Frequency\FileFrequencyCapStore;
 use NeneServe\Serving\Token\FileTokenStore;
 
@@ -46,11 +47,19 @@ $invoiceClient = (is_string($invoiceBase) && $invoiceBase !== '' && is_string($i
     ? new HttpInvoiceClient($invoiceBase, $invoiceToken)
     : null;
 
+// NeNe Records read client is used only when configured (read-only, ADR 0002).
+$recordsBase = getenv('NENE_RECORDS_API_BASE_URL');
+$recordsToken = getenv('NENE_RECORDS_SERVICE_TOKEN');
+$recordsClient = (is_string($recordsBase) && $recordsBase !== '' && is_string($recordsToken) && $recordsToken !== '')
+    ? new HttpRecordsClient($recordsBase, $recordsToken)
+    : null;
+
 $kernel = new Kernel(
     tokens: new FileTokenStore(dirname(__DIR__) . '/var/tokens.json'),
     events: new FileEventStore(dirname(__DIR__) . '/var/events.json'),
     frequencyCaps: new FileFrequencyCapStore(dirname(__DIR__) . '/var/frequency.json'),
     invoiceClient: $invoiceClient,
+    records: $recordsClient,
 );
 
 $kernel->handle(Request::fromGlobals())->send();
