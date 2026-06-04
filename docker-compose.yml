@@ -20,6 +20,9 @@ services:
       DB_DATABASE: ${DB_DATABASE:-nene_serve}
       DB_USERNAME: ${DB_USERNAME:-nene}
       DB_PASSWORD: ${DB_PASSWORD:-nene}
+      # HTML5 bundle malware scan (clamd). Unset → StubBundleScanner.
+      CLAMAV_HOST: ${CLAMAV_HOST:-clamav}
+      CLAMAV_PORT: "3310"
     depends_on:
       - db
       - mailpit
@@ -33,6 +36,13 @@ services:
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: "1"
       MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+
+  # HTML5 bundle malware scanner (clamd on 3310). First start loads the virus DB
+  # and can take a few minutes before it accepts scans.
+  clamav:
+    image: clamav/clamav:latest
+    ports:
+      - "3310:3310"
 
   db:
     image: mysql:8.4

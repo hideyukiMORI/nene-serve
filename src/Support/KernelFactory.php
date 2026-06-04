@@ -24,6 +24,8 @@ use NeneServe\Service\PdoServiceTokenRepository;
 use NeneServe\Serving\Frequency\FileFrequencyCapStore;
 use NeneServe\Serving\PdoCreativeRepository;
 use NeneServe\Serving\PdoPlacementRepository;
+use NeneServe\Serving\Scan\BundleScannerInterface;
+use NeneServe\Serving\Scan\ClamAvScanner;
 use NeneServe\Serving\Token\FileTokenStore;
 use NeneServe\Settings\PdoSmtpSettingsRepository;
 use NeneServe\Storage\LocalStorage;
@@ -111,6 +113,7 @@ final class KernelFactory
             invitations: new PdoInvitationRepository($pdo),
             assets: new PdoAssetRepository($pdo),
             storage: new LocalStorage($storageDir . '/uploads'),
+            scanner: self::scanner($read),
         );
     }
 
@@ -125,7 +128,25 @@ final class KernelFactory
             records: self::recordsClient($read),
             dealClient: self::dealClient($read),
             storage: new LocalStorage($storageDir . '/uploads'),
+            scanner: self::scanner($read),
         );
+    }
+
+    /**
+     * Real ClamAV (clamd) when CLAMAV_HOST is set; otherwise the kernel default
+     * StubBundleScanner. The scanner is fail-closed when unreachable.
+     *
+     * @param callable(string): ?string $read
+     */
+    private static function scanner(callable $read): ?BundleScannerInterface
+    {
+        $host = $read('CLAMAV_HOST');
+        if ($host === null || $host === '') {
+            return null;
+        }
+        $port = $read('CLAMAV_PORT');
+
+        return new ClamAvScanner($host, $port !== null && $port !== '' ? (int) $port : 3310);
     }
 
     /**
