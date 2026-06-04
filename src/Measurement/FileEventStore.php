@@ -74,6 +74,31 @@ final class FileEventStore implements EventStoreInterface
         return FillRateAggregator::aggregate($serves, $organizationId, $fromDate, $toDate);
     }
 
+    public function visitorBreakdown(string $organizationId, string $fromDate, string $toDate): array
+    {
+        /** @var array<string, array{date: string, placement_id: string, creative_id: string, visitor_bucket: string, impressions: int}> $buckets */
+        $buckets = [];
+        foreach ($this->read()['impressions'] as $row) {
+            $bucket = $row['bucket'] ?? null;
+            if ($row['org'] !== $organizationId || !is_string($bucket) || ($row['erased'] ?? false)
+                || $row['date'] < $fromDate || $row['date'] > $toDate) {
+                continue;
+            }
+            $key = $row['date'] . '|' . $row['placement'] . '|' . $row['creative'] . '|' . $bucket;
+            $buckets[$key] ??= [
+                'date' => (string) $row['date'],
+                'placement_id' => (string) $row['placement'],
+                'creative_id' => (string) $row['creative'],
+                'visitor_bucket' => $bucket,
+                'impressions' => 0,
+            ];
+            ++$buckets[$key]['impressions'];
+        }
+        ksort($buckets);
+
+        return array_values($buckets);
+    }
+
     public function exportVisitorData(string $organizationId, string $visitorBucket): array
     {
         $out = [];

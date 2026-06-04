@@ -38,7 +38,7 @@
 - [x] Hash-chained tamper-evident `audit_events` — #37; per-tenant SHA-256 chain + verifier (edit/gap/reorder detectable)
 - [x] Audited-write coverage + structured before→after; mutation+audit atomic — #38; TransactionManager (Null+Pdo), all mutating use cases wrapped, archive now audited
 - [x] DB grants: app role without `DELETE`/`TRUNCATE` on governed tables; `archived_at`/`disabled_at` tombstones — #39; `database/grants.sql`, Placement.archive(), presentation table `user_preferences`
-- [ ] Sensitive-read audit (`include_sensitive`, DSR export, PII-link reads)
+- [x] Sensitive-read audit (`include_sensitive`, DSR export, PII-link reads) — #40; `view_sensitive_metrics` gate + `metrics.read_sensitive` audit; aggregate reads unaudited
 - [ ] Retention + legal-hold purge process (privileged role, audited)
 
 ## Governance hardening (2026-06-04)

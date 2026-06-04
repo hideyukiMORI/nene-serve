@@ -30,6 +30,7 @@ enum Role: string
                 Capability::ViewUsers,
                 Capability::ManageUsers,
                 Capability::ViewMetrics,
+                Capability::ViewSensitiveMetrics,
                 Capability::ManageSettings,
                 Capability::ManagePlacements,
                 Capability::ManageCreatives,

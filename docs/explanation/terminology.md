@@ -136,8 +136,10 @@ data has no delivery/measurement/billing/identity meaning.
 
 **Audit `action` naming:** `{subject}.{verb}` snake_case — e.g. `creative.approved`,
 `placement.created`, `placement.archived`, `user.created`, `budget.changed`,
-`period.closed`, `dsr.erasure`. Register new actions before use. Mutation audit
-metadata carries structured `before`/`after` (changed fields).
+`period.closed`, `dsr.erasure`, `dsr.export`, `metrics.read_sensitive`. Register
+new actions before use. Mutation audit metadata carries structured
+`before`/`after` (changed fields). Sensitive **reads** (`include_sensitive`
+metrics, DSR export, PII-link reads) are also audited; ordinary reads are not.
 
 Tenant/parent foreign keys on governed tables use **`ON DELETE RESTRICT`** (never
 `CASCADE`). The application DB role has no `DELETE`/`TRUNCATE` on governed tables.
@@ -193,6 +195,7 @@ Roles map to capabilities; admin routes require a **capability**, not a role.
 | `view_users` | ✓ | ✓ | | |
 | `manage_users` | ✓ | ✓ | | |
 | `view_metrics` | ✓ | ✓ | ✓ | ✓ |
+| `view_sensitive_metrics` | ✓ | ✓ | | |
 | `manage_settings` | ✓ | ✓ | | |
 | `manage_placements` | ✓ | ✓ | ✓ | |
 | `manage_creatives` | ✓ | ✓ | ✓ | |

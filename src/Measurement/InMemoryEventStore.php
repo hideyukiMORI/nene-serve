@@ -67,6 +67,31 @@ final class InMemoryEventStore implements EventStoreInterface
         return MetricsAggregator::aggregate($impressions, $this->clicks, $organizationId, $fromDate, $toDate);
     }
 
+    public function visitorBreakdown(string $organizationId, string $fromDate, string $toDate): array
+    {
+        /** @var array<string, array{date: string, placement_id: string, creative_id: string, visitor_bucket: string, impressions: int}> $buckets */
+        $buckets = [];
+        foreach ($this->impressions as $row) {
+            $bucket = $row['bucket'];
+            if ($row['org'] !== $organizationId || $bucket === null || $row['erased']
+                || $row['date'] < $fromDate || $row['date'] > $toDate) {
+                continue;
+            }
+            $key = $row['date'] . '|' . $row['placement'] . '|' . $row['creative'] . '|' . $bucket;
+            $buckets[$key] ??= [
+                'date' => $row['date'],
+                'placement_id' => $row['placement'],
+                'creative_id' => $row['creative'],
+                'visitor_bucket' => $bucket,
+                'impressions' => 0,
+            ];
+            ++$buckets[$key]['impressions'];
+        }
+        ksort($buckets);
+
+        return array_values($buckets);
+    }
+
     public function exportVisitorData(string $organizationId, string $visitorBucket): array
     {
         $out = [];

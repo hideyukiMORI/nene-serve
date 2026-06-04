@@ -36,6 +36,15 @@ interface EventStoreInterface
     public function dailyMetrics(string $organizationId, string $fromDate, string $toDate): array;
 
     /**
+     * Sensitive per-visitor breakdown (visitor_bucket level) for an admin tool
+     * with `include_sensitive` (measurement-spec MCP/AI). Excludes erased rows
+     * and rows without a bucket. The caller MUST gate + audit this access.
+     *
+     * @return list<array{date: string, placement_id: string, creative_id: string, visitor_bucket: string, impressions: int}>
+     */
+    public function visitorBreakdown(string $organizationId, string $fromDate, string $toDate): array;
+
+    /**
      * Data-subject access (privacy §5): non-erased impression records for one
      * hashed visitor bucket in a tenant.
      *
