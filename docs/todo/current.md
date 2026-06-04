@@ -31,6 +31,14 @@
 
 **Phase 2 — Rich creatives ✅ complete (2026-06-04): #24–#28 all merged.**
 
+## Next (Phase 3 — milestone "Phase 3: Marketplace")
+
+- [x] #47 (A) Money primitives + Advertiser + PricingRule (versioned, JPY net, no tax/float) (ADR 0014/0015)
+- [ ] #48 (B) Campaign + budget + funding + billable spend accrual (cap, pause_on_budget_exhausted)
+- [ ] #49 (C) BillingPeriod + tamper-evident SpendSnapshot + audited close (immutability)
+- [ ] #50 (D) Invoice handoff (idempotent) + reconciliation + HTTP client (net-only)
+- [ ] #51 (E) Billing-relevant statutory retention + legal hold (closes Integrity #41)
+
 ## Integrity & audit hardening (ADR 0022) — before Phase 3
 
 - [x] Binding doc + ADR 0022 + self-review (`docs/explanation/audit-and-data-integrity-compliance.md`)
@@ -67,4 +75,4 @@
 - **Three separated API surfaces; fail closed** (ADR 0018/0019); endpoint changes are gated by `docs/review/api-security.md`.
 - **Only approved creatives serve** (ADR 0020/0021); creative changes are gated by `docs/review/creative-review.md`.
 
-Last updated: 2026-06-04 (#28 reporting polish landed — Phase 2 Rich creatives complete; next: Phase 3)
+Last updated: 2026-06-04 (Phase 3 opened; #47 money/advertiser/pricing landed; next: #48 campaign + spend accrual)

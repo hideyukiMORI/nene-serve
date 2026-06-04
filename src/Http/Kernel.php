@@ -7,12 +7,15 @@ namespace NeneServe\Http;
 use NeneServe\Audit\AuditLogInterface;
 use NeneServe\Audit\InMemoryAuditLog;
 use NeneServe\Http\Admin\ArchivePlacementHandler;
+use NeneServe\Http\Admin\CreateAdvertiserHandler;
 use NeneServe\Http\Admin\CreateCreativeHandler;
 use NeneServe\Http\Admin\CreatePlacementHandler;
+use NeneServe\Http\Admin\CreatePricingRuleHandler;
 use NeneServe\Http\Admin\CurrentUserHandler;
 use NeneServe\Http\Admin\DataSubjectRequestHandler;
 use NeneServe\Http\Admin\ExportMetricsHandler as AdminExportMetricsHandler;
 use NeneServe\Http\Admin\GetMetricsHandler as AdminGetMetricsHandler;
+use NeneServe\Http\Admin\ListAdvertisersHandler;
 use NeneServe\Http\Admin\ListCreativesHandler;
 use NeneServe\Http\Admin\ListUsersHandler;
 use NeneServe\Http\Admin\LoginHandler;
@@ -32,6 +35,12 @@ use NeneServe\Http\RateLimit\RateLimiterInterface;
 use NeneServe\Http\Service\ExportMetricsHandler as ServiceExportMetricsHandler;
 use NeneServe\Http\Service\GetMetricsHandler as ServiceGetMetricsHandler;
 use NeneServe\Http\Service\ListPlacementsHandler;
+use NeneServe\Marketplace\AdvertiserRepositoryInterface;
+use NeneServe\Marketplace\InMemoryAdvertiserRepository;
+use NeneServe\Marketplace\InMemoryPricingRuleRepository;
+use NeneServe\Marketplace\PricingRuleRepositoryInterface;
+use NeneServe\Marketplace\UseCase\CreateAdvertiserUseCase;
+use NeneServe\Marketplace\UseCase\CreatePricingRuleUseCase;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\InMemoryEventStore;
 use NeneServe\Measurement\UseCase\DataSubjectRequestUseCase;
@@ -102,6 +111,8 @@ final class Kernel
     private readonly BundleScannerInterface $scanner;
     private readonly FrequencyCapStoreInterface $frequencyCaps;
     private readonly TransactionManagerInterface $tx;
+    private readonly AdvertiserRepositoryInterface $advertisers;
+    private readonly PricingRuleRepositoryInterface $pricingRules;
     private readonly Jwt $jwt;
 
     public function __construct(
@@ -118,6 +129,8 @@ final class Kernel
         ?BundleScannerInterface $scanner = null,
         ?FrequencyCapStoreInterface $frequencyCaps = null,
         ?TransactionManagerInterface $tx = null,
+        ?AdvertiserRepositoryInterface $advertisers = null,
+        ?PricingRuleRepositoryInterface $pricingRules = null,
     ) {
         $this->json = new JsonResponseFactory();
         $this->users = $users ?? DevFixtures::users();
@@ -131,6 +144,8 @@ final class Kernel
         $this->scanner = $scanner ?? new StubBundleScanner();
         $this->frequencyCaps = $frequencyCaps ?? new InMemoryFrequencyCapStore();
         $this->tx = $tx ?? new NullTransactionManager();
+        $this->advertisers = $advertisers ?? new InMemoryAdvertiserRepository();
+        $this->pricingRules = $pricingRules ?? new InMemoryPricingRuleRepository();
         $this->jwt = $jwt ?? new Jwt(self::resolveSecret());
         $this->auth = new BearerTokenMiddleware($this->jwt, $this->users);
         $this->serviceAuth = new ServiceTokenMiddleware($serviceTokens ?? DevFixtures::serviceTokens());
@@ -214,6 +229,26 @@ final class Kernel
         $this->router->add('POST', '/admin/data-subject-requests', $this->admin(Capability::ManageSettings, $dsr->handle(...)));
 
         $this->registerCreativeRoutes();
+        $this->registerMarketplaceRoutes();
+    }
+
+    /** Marketplace money management (Phase 3, billing-and-accounting-compliance). */
+    private function registerMarketplaceRoutes(): void
+    {
+        $createAdvertiser = new CreateAdvertiserHandler(
+            new CreateAdvertiserUseCase($this->advertisers, $this->audit, $this->tx),
+            $this->json,
+        );
+        $this->router->add('POST', '/admin/advertisers', $this->admin(Capability::ManageMarketplace, $createAdvertiser->handle(...)));
+
+        $listAdvertisers = new ListAdvertisersHandler($this->advertisers, $this->json);
+        $this->router->add('GET', '/admin/advertisers', $this->admin(Capability::ManageMarketplace, $listAdvertisers->handle(...)));
+
+        $createPricingRule = new CreatePricingRuleHandler(
+            new CreatePricingRuleUseCase($this->pricingRules, $this->audit, $this->tx),
+            $this->json,
+        );
+        $this->router->add('POST', '/admin/pricing-rules', $this->admin(Capability::ManageMarketplace, $createPricingRule->handle(...)));
     }
 
     /** Placement + creative management and the review state machine (ADR 0020/0021). */
