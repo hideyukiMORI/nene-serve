@@ -32,11 +32,11 @@ final class PdoSmtpSettingsRepository implements SmtpSettingsRepositoryInterface
         // DUPLICATE KEY UPDATE, so the single per-org row is created or updated.
         $stmt = $this->pdo->prepare(
             'INSERT INTO smtp_settings (organization_id, host, port, username, password_encrypted, from_address, from_name, encryption)
-             VALUES (:org, :host, :port, :username, :password, :from_address, :from_name, :encryption)
+             VALUES (:org, :host, :port, :username, :password, :from_address, :from_name, :encryption) AS new
              ON DUPLICATE KEY UPDATE
-                host = VALUES(host), port = VALUES(port), username = VALUES(username),
-                password_encrypted = VALUES(password_encrypted), from_address = VALUES(from_address),
-                from_name = VALUES(from_name), encryption = VALUES(encryption)',
+                host = new.host, port = new.port, username = new.username,
+                password_encrypted = new.password_encrypted, from_address = new.from_address,
+                from_name = new.from_name, encryption = new.encryption',
         );
         $stmt->execute([
             ':org' => $record->organizationId,

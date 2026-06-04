@@ -48,9 +48,9 @@ final class PdoPlacementRepository implements PlacementRepositoryInterface
     public function save(Placement $placement): void
     {
         $stmt = $this->pdo->prepare(
-            'REPLACE INTO placements
-                (id, organization_id, public_placement_key, allowed_origins, status, default_creative_id, measurement_enabled, frequency_cap, archived_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO placements (id, organization_id, public_placement_key, allowed_origins, status, default_creative_id, measurement_enabled, frequency_cap, archived_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) AS new
+             ON DUPLICATE KEY UPDATE public_placement_key = new.public_placement_key, allowed_origins = new.allowed_origins, status = new.status, default_creative_id = new.default_creative_id, measurement_enabled = new.measurement_enabled, frequency_cap = new.frequency_cap, archived_at = new.archived_at',
         );
         $stmt->execute([
             $placement->id,

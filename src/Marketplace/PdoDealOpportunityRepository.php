@@ -27,8 +27,9 @@ final class PdoDealOpportunityRepository implements DealOpportunityRepositoryInt
     public function save(DealOpportunity $opportunity): void
     {
         $stmt = $this->pdo->prepare(
-            'REPLACE INTO deal_opportunities (id, organization_id, campaign_id, external_reference, amount_cents, status, opportunity_id, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO deal_opportunities (id, organization_id, campaign_id, external_reference, amount_cents, status, opportunity_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?) AS new
+             ON DUPLICATE KEY UPDATE campaign_id = new.campaign_id, external_reference = new.external_reference, amount_cents = new.amount_cents, status = new.status, opportunity_id = new.opportunity_id',
         );
         $stmt->execute([
             $opportunity->id,

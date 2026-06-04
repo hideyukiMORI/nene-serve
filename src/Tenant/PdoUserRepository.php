@@ -47,10 +47,10 @@ final class PdoUserRepository implements UserRepositoryInterface
         // DUPLICATE KEY UPDATE. Email/role/password/status may change; org is fixed.
         $stmt = $this->pdo->prepare(
             'INSERT INTO users (id, organization_id, email, password_hash, role, status)
-             VALUES (:id, :org, :email, :password_hash, :role, :status)
+             VALUES (:id, :org, :email, :password_hash, :role, :status) AS new
              ON DUPLICATE KEY UPDATE
-                email = VALUES(email), password_hash = VALUES(password_hash),
-                role = VALUES(role), status = VALUES(status)',
+                email = new.email, password_hash = new.password_hash,
+                role = new.role, status = new.status',
         );
         $stmt->execute([
             ':id' => $user->id,

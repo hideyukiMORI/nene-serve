@@ -35,8 +35,9 @@ final class PdoAdvertiserRepository implements AdvertiserRepositoryInterface
     public function save(Advertiser $advertiser): void
     {
         $stmt = $this->pdo->prepare(
-            'REPLACE INTO advertisers (id, organization_id, name, status, invoice_client_id, disabled_at)
-             VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO advertisers (id, organization_id, name, status, invoice_client_id, disabled_at)
+             VALUES (?, ?, ?, ?, ?, ?) AS new
+             ON DUPLICATE KEY UPDATE name = new.name, status = new.status, invoice_client_id = new.invoice_client_id, disabled_at = new.disabled_at',
         );
         $stmt->execute([
             $advertiser->id,

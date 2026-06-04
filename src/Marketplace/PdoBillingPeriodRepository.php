@@ -35,8 +35,9 @@ final class PdoBillingPeriodRepository implements BillingPeriodRepositoryInterfa
     public function save(BillingPeriod $period): void
     {
         $stmt = $this->pdo->prepare(
-            'REPLACE INTO billing_periods (id, organization_id, campaign_id, period_start, period_end, status)
-             VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO billing_periods (id, organization_id, campaign_id, period_start, period_end, status)
+             VALUES (?, ?, ?, ?, ?, ?) AS new
+             ON DUPLICATE KEY UPDATE campaign_id = new.campaign_id, period_start = new.period_start, period_end = new.period_end, status = new.status',
         );
         $stmt->execute([
             $period->id,

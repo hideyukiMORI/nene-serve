@@ -35,9 +35,9 @@ final class PdoCampaignRepository implements CampaignRepositoryInterface
     public function save(Campaign $campaign): void
     {
         $stmt = $this->pdo->prepare(
-            'REPLACE INTO campaigns
-                (id, organization_id, advertiser_id, name, pricing_rule_id, budget_cents, status, funding_status, pause_on_budget_exhausted, archived_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO campaigns (id, organization_id, advertiser_id, name, pricing_rule_id, budget_cents, status, funding_status, pause_on_budget_exhausted, archived_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) AS new
+             ON DUPLICATE KEY UPDATE advertiser_id = new.advertiser_id, name = new.name, pricing_rule_id = new.pricing_rule_id, budget_cents = new.budget_cents, status = new.status, funding_status = new.funding_status, pause_on_budget_exhausted = new.pause_on_budget_exhausted, archived_at = new.archived_at',
         );
         $stmt->execute([
             $campaign->id,

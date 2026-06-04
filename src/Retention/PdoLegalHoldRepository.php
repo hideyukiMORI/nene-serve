@@ -35,7 +35,9 @@ final class PdoLegalHoldRepository implements LegalHoldRepositoryInterface
     public function save(LegalHold $hold): void
     {
         $stmt = $this->pdo->prepare(
-            'REPLACE INTO legal_holds (id, organization_id, reason, placed_at, released_at) VALUES (?, ?, ?, ?, ?)',
+            'INSERT INTO legal_holds (id, organization_id, reason, placed_at, released_at)
+             VALUES (?, ?, ?, ?, ?) AS new
+             ON DUPLICATE KEY UPDATE reason = new.reason, placed_at = new.placed_at, released_at = new.released_at',
         );
         $stmt->execute([$hold->id, $hold->organizationId, $hold->reason, $hold->placedAt, $hold->releasedAt]);
     }
