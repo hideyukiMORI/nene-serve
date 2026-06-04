@@ -1,0 +1,149 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "NeNe Serve — Public Serve API",
+    "version": "1.0.0",
+    "description": "Untrusted public surface used by serve.js and sibling beacons (ADR 0018). No authentication; origin-gated, rate-limited, opaque tokens only; no secrets/PII in requests or responses. Separate document from admin/service per ADR 0018. Errors are RFC 9457 Problem Details; JSON is snake_case."
+  },
+  "servers": [{ "url": "https://{serveHost}", "variables": { "serveHost": { "default": "serve.example" } } }],
+  "tags": [{ "name": "system" }, { "name": "public-serve" }],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "getHealth",
+        "tags": ["system"],
+        "summary": "Liveness probe (no data, no auth).",
+        "responses": {
+          "200": {
+            "description": "Service is live.",
+            "content": { "application/json": { "schema": { "type": "object", "properties": {
+              "status": { "type": "string", "const": "ok" },
+              "service": { "type": "string" },
+              "version": { "type": "string" },
+              "time": { "type": "string", "format": "date-time" }
+            }, "required": ["status", "service", "version", "time"] } } }
+          }
+        }
+      }
+    },
+    "/public/placements/{public_placement_key}/serve": {
+      "get": {
+        "operationId": "serveCreative",
+        "tags": ["public-serve"],
+        "summary": "Resolve a placement to an approved creative; issue opaque beacon/click tokens.",
+        "parameters": [{ "$ref": "#/components/parameters/PublicPlacementKey" }],
+        "responses": {
+          "200": {
+            "description": "Creative payload (opaque tokens only; no internal ids/PII). CORS reflects the placement allowlist, never *.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ServePayload" } } }
+          },
+          "204": { "description": "Empty serve — no eligible/approved creative, opted out, or frequency-capped. Not counted." },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "429": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/public/events/impression": {
+      "post": {
+        "operationId": "recordImpression",
+        "tags": ["public-serve"],
+        "summary": "Idempotent impression beacon (replay never inflates).",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": {
+          "impression_token": { "type": "string" },
+          "consent_state": { "type": "string", "enum": ["granted", "denied", "unknown"] },
+          "country_code": { "type": "string" },
+          "page_url": { "type": "string" }
+        }, "required": ["impression_token"] } } } },
+        "responses": {
+          "204": { "description": "Acknowledged (idempotent)." },
+          "422": { "$ref": "#/components/responses/Problem" },
+          "429": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/public/clicks/{click_token}": {
+      "get": {
+        "operationId": "redirectClick",
+        "tags": ["public-serve"],
+        "summary": "Single-use, short-TTL click token → 302 to the registered destination (no open redirect).",
+        "parameters": [{ "name": "click_token", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "302": { "description": "Redirect to the creative's registered destination_url.", "headers": { "Location": { "schema": { "type": "string", "format": "uri" } } } },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" },
+          "429": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/public/frames/{frame_token}": {
+      "get": {
+        "operationId": "getCreativeFrame",
+        "tags": ["public-serve"],
+        "summary": "Render an approved HTML5 bundle inside a strict-CSP sandbox.",
+        "parameters": [{ "name": "frame_token", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "description": "Sandboxed HTML with a strict Content-Security-Policy (sandbox; no eval; no top navigation).", "content": { "text/html": { "schema": { "type": "string" } } } },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "429": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/public/events/conversion": {
+      "post": {
+        "operationId": "recordConversion",
+        "tags": ["public-serve"],
+        "summary": "Concierge conversion beacon (ADR 0009) — append-only, never a Contact submission.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": {
+          "public_placement_key": { "type": "string" },
+          "creative_id": { "type": "string" },
+          "country_code": { "type": "string" }
+        }, "required": ["public_placement_key"] } } } },
+        "responses": {
+          "204": { "description": "Acknowledged (opt-out aware; no PII stored)." },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" },
+          "429": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "PublicPlacementKey": { "name": "public_placement_key", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Public (non-secret) placement identifier." }
+    },
+    "schemas": {
+      "ServePayload": {
+        "type": "object",
+        "properties": {
+          "creative": { "type": "object", "properties": {
+            "type": { "type": "string", "enum": ["image", "video", "html5_bundle"] },
+            "asset_url": { "type": "string" },
+            "width": { "type": "integer" },
+            "height": { "type": "integer" },
+            "poster_url": { "type": "string" },
+            "autoplay": { "type": "boolean" },
+            "render": { "type": "object", "properties": { "mode": { "type": "string" }, "sandbox": { "type": "string" }, "frame_url": { "type": "string" } } }
+          } },
+          "impression_token": { "type": "string" },
+          "click_url": { "type": "string" }
+        },
+        "required": ["creative", "click_url"]
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "description": "RFC 9457 Problem Details.",
+        "properties": {
+          "type": { "type": "string", "format": "uri" },
+          "title": { "type": "string" },
+          "status": { "type": "integer" },
+          "detail": { "type": "string" }
+        },
+        "required": ["type", "title", "status"]
+      }
+    },
+    "responses": {
+      "Problem": { "description": "RFC 9457 Problem Details error.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+    }
+  }
+}

@@ -1,0 +1,224 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "NeNe Serve — Admin API",
+    "version": "1.0.0",
+    "description": "Operator console surface (ADR 0018). Every route except login requires a short-lived JWT bearer token; each operation additionally gates on an RBAC Capability and is tenant-scoped. Mutations are audited and atomic (ADR 0022); governed data is append-only (archive/disable/erase are additive tombstones, never physical deletes). Errors are RFC 9457 Problem Details; JSON is snake_case.",
+    "contact": { "name": "See docs/explanation/api-security-spec.md" }
+  },
+  "servers": [{ "url": "https://{adminHost}", "variables": { "adminHost": { "default": "serve-admin.example" } } }],
+  "security": [{ "bearerAuth": [] }],
+  "tags": [
+    { "name": "auth" }, { "name": "users" }, { "name": "placements" },
+    { "name": "creatives" }, { "name": "review" }, { "name": "metrics" },
+    { "name": "privacy" }, { "name": "marketplace" }, { "name": "billing" }
+  ],
+  "paths": {
+    "/admin/login": {
+      "post": {
+        "operationId": "login", "tags": ["auth"], "security": [],
+        "summary": "Exchange credentials for a short-lived JWT.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": {
+          "email": { "type": "string", "format": "email" }, "password": { "type": "string" }
+        }, "required": ["email", "password"] } } } },
+        "responses": {
+          "200": { "description": "Authenticated.", "content": { "application/json": { "schema": { "type": "object", "properties": {
+            "token": { "type": "string" }, "user": { "$ref": "#/components/schemas/User" }
+          }, "required": ["token", "user"] } } } },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/admin/me": {
+      "get": { "operationId": "getCurrentUser", "tags": ["auth"], "summary": "Current authenticated user.",
+        "responses": { "200": { "description": "Current user.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } }, "401": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/users": {
+      "get": { "operationId": "listUsers", "tags": ["users"], "summary": "List users in the caller's tenant.",
+        "responses": { "200": { "$ref": "#/components/responses/UserList" }, "401": { "$ref": "#/components/responses/Problem" }, "403": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/metrics": {
+      "get": { "operationId": "getPlacementMetrics", "tags": ["metrics"],
+        "summary": "Placement metrics time-series (CTR, fill rate). Sensitive breakdowns require view_sensitive_metrics and are audited.",
+        "parameters": [{ "$ref": "#/components/parameters/From" }, { "$ref": "#/components/parameters/To" }, { "$ref": "#/components/parameters/PlacementId" }, { "$ref": "#/components/parameters/IncludeSensitive" }],
+        "responses": { "200": { "description": "Metrics series.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MetricsSeries" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/metrics/export": {
+      "get": { "operationId": "exportMetrics", "tags": ["metrics"], "summary": "Daily metrics as CSV.",
+        "parameters": [{ "$ref": "#/components/parameters/From" }, { "$ref": "#/components/parameters/To" }],
+        "responses": { "200": { "description": "CSV export.", "content": { "text/csv": { "schema": { "type": "string" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/data-subject-requests": {
+      "post": { "operationId": "createDataSubjectRequest", "tags": ["privacy"],
+        "summary": "Record a data-subject request (export or erasure). Erasure is an additive tombstone; counts are preserved.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": {
+          "kind": { "type": "string", "enum": ["export", "erasure"] }, "visitor_bucket": { "type": "string" }
+        }, "required": ["kind"] } } } },
+        "responses": { "200": { "description": "Request accepted.", "content": { "application/json": { "schema": { "type": "object" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/legal-holds": {
+      "post": { "operationId": "placeLegalHold", "tags": ["privacy"], "summary": "Place a legal hold (blocks retention purge).",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": {
+          "subject": { "type": "string" }, "reason": { "type": "string" }
+        }, "required": ["subject", "reason"] } } } },
+        "responses": { "201": { "description": "Hold placed.", "content": { "application/json": { "schema": { "type": "object" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/legal-holds/{id}/release": {
+      "post": { "operationId": "releaseLegalHold", "tags": ["privacy"], "summary": "Release a legal hold (audited).",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": { "200": { "description": "Hold released.", "content": { "application/json": { "schema": { "type": "object" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "404": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/records-assets/{ref}": {
+      "get": { "operationId": "getRecordsAsset", "tags": ["creatives"], "summary": "Read-only sibling Records asset metadata (failure-isolated).",
+        "parameters": [{ "name": "ref", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Asset metadata.", "content": { "application/json": { "schema": { "type": "object" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "404": { "$ref": "#/components/responses/Problem" }, "502": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/placements": {
+      "post": { "operationId": "createPlacement", "tags": ["placements"], "summary": "Create a placement (audited).",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PlacementInput" } } } },
+        "responses": { "201": { "description": "Created.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Placement" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/placements/{id}/archive": {
+      "post": { "operationId": "archivePlacement", "tags": ["placements"], "summary": "Archive a placement (additive tombstone, audited — never a physical delete).",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": { "200": { "description": "Archived.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Placement" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "404": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/creatives": {
+      "get": { "operationId": "listCreatives", "tags": ["creatives"], "summary": "List creatives in the caller's tenant.",
+        "responses": { "200": { "description": "Creatives.", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Creative" } } } } }, "403": { "$ref": "#/components/responses/Problem" } } },
+      "post": { "operationId": "createCreative", "tags": ["creatives"], "summary": "Create a creative draft (image/video/html5_bundle).",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreativeInput" } } } },
+        "responses": { "201": { "description": "Created (draft).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Creative" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/creatives/{id}/submit": {
+      "post": { "operationId": "submitCreative", "tags": ["review"], "summary": "Submit a draft for review (html5 must be malware-scan-clean).",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": { "200": { "$ref": "#/components/responses/Creative" }, "403": { "$ref": "#/components/responses/Problem" }, "404": { "$ref": "#/components/responses/Problem" }, "409": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/creatives/{id}/start-review": {
+      "post": { "operationId": "startCreativeReview", "tags": ["review"], "summary": "Move a submitted creative into review.",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": { "200": { "$ref": "#/components/responses/Creative" }, "403": { "$ref": "#/components/responses/Problem" }, "404": { "$ref": "#/components/responses/Problem" }, "409": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/creatives/{id}/approve": {
+      "post": { "operationId": "approveCreative", "tags": ["review"], "summary": "Approve a creative (four-eyes: an approver may not approve their own submission).",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": { "200": { "$ref": "#/components/responses/Creative" }, "403": { "$ref": "#/components/responses/Problem" }, "404": { "$ref": "#/components/responses/Problem" }, "409": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/creatives/{id}/reject": {
+      "post": { "operationId": "rejectCreative", "tags": ["review"], "summary": "Reject a creative under review.",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": { "200": { "$ref": "#/components/responses/Creative" }, "403": { "$ref": "#/components/responses/Problem" }, "404": { "$ref": "#/components/responses/Problem" }, "409": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/creatives/{id}/request-changes": {
+      "post": { "operationId": "requestCreativeChanges", "tags": ["review"], "summary": "Request changes on a creative under review.",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": { "200": { "$ref": "#/components/responses/Creative" }, "403": { "$ref": "#/components/responses/Problem" }, "404": { "$ref": "#/components/responses/Problem" }, "409": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/creatives/{id}/revise": {
+      "post": { "operationId": "reviseCreative", "tags": ["creatives"], "summary": "Create a new immutable version from an existing creative.",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreativeInput" } } } },
+        "responses": { "201": { "$ref": "#/components/responses/Creative" }, "403": { "$ref": "#/components/responses/Problem" }, "404": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/review-queue": {
+      "get": { "operationId": "listReviewQueue", "tags": ["review"], "summary": "Creatives awaiting review in the caller's tenant.",
+        "responses": { "200": { "description": "Review queue.", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Creative" } } } } }, "403": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/advertisers": {
+      "get": { "operationId": "listAdvertisers", "tags": ["marketplace"], "summary": "List advertisers.",
+        "responses": { "200": { "description": "Advertisers.", "content": { "application/json": { "schema": { "type": "array", "items": { "type": "object" } } } } }, "403": { "$ref": "#/components/responses/Problem" } } },
+      "post": { "operationId": "createAdvertiser", "tags": ["marketplace"], "summary": "Create an advertiser.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "name": { "type": "string" } }, "required": ["name"] } } } },
+        "responses": { "201": { "description": "Created.", "content": { "application/json": { "schema": { "type": "object" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/pricing-rules": {
+      "post": { "operationId": "createPricingRule", "tags": ["marketplace"], "summary": "Create an immutable, versioned pricing rule (JPY net, no tax/float).",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": {
+          "advertiser_id": { "type": "string" }, "model": { "type": "string", "enum": ["cpm", "cpc", "flat"] }, "rate_cents": { "type": "integer", "minimum": 0 }
+        }, "required": ["advertiser_id", "model", "rate_cents"] } } } },
+        "responses": { "201": { "description": "Created.", "content": { "application/json": { "schema": { "type": "object" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/campaigns": {
+      "post": { "operationId": "createCampaign", "tags": ["marketplace"], "summary": "Create a campaign with a budget (cents).",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": {
+          "advertiser_id": { "type": "string" }, "pricing_rule_id": { "type": "string" }, "budget_cents": { "type": "integer", "minimum": 0 }, "pause_on_budget_exhausted": { "type": "boolean" }
+        }, "required": ["advertiser_id", "pricing_rule_id", "budget_cents"] } } } },
+        "responses": { "201": { "description": "Created.", "content": { "application/json": { "schema": { "type": "object" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/campaigns/{id}": {
+      "get": { "operationId": "getCampaign", "tags": ["marketplace"], "summary": "Get a campaign with derived billable spend.",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": { "200": { "description": "Campaign.", "content": { "application/json": { "schema": { "type": "object" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "404": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/campaigns/{id}/billing-periods": {
+      "post": { "operationId": "openBillingPeriod", "tags": ["billing"], "summary": "Open a billing period for a campaign.",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "period_start": { "type": "string", "format": "date" }, "period_end": { "type": "string", "format": "date" } }, "required": ["period_start", "period_end"] } } } },
+        "responses": { "201": { "description": "Opened.", "content": { "application/json": { "schema": { "type": "object" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "404": { "$ref": "#/components/responses/Problem" }, "422": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/campaigns/{id}/deal-handoff": {
+      "post": { "operationId": "handoffCampaignToDeal", "tags": ["marketplace"], "summary": "Idempotent, net-only, failure-isolated handoff of a campaign to a sibling Deal opportunity.",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": { "200": { "description": "Handed off (idempotent on external_reference).", "content": { "application/json": { "schema": { "type": "object" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "404": { "$ref": "#/components/responses/Problem" }, "502": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/billing-periods/{id}": {
+      "get": { "operationId": "getBillingPeriod", "tags": ["billing"], "summary": "Get a billing period with its tamper-evident spend snapshot.",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": { "200": { "description": "Billing period.", "content": { "application/json": { "schema": { "type": "object" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "404": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/billing-periods/{id}/close": {
+      "post": { "operationId": "closeBillingPeriod", "tags": ["billing"], "summary": "Close a billing period (immutable; re-close is 409).",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": { "200": { "description": "Closed.", "content": { "application/json": { "schema": { "type": "object" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "404": { "$ref": "#/components/responses/Problem" }, "409": { "$ref": "#/components/responses/Problem" } } }
+    },
+    "/admin/billing-periods/{id}/handoff": {
+      "post": { "operationId": "handoffBillingPeriod", "tags": ["billing"], "summary": "Hand off a closed period's net total to NeNe Invoice (idempotent on external_reference).",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": { "200": { "description": "Handed off.", "content": { "application/json": { "schema": { "type": "object" } } } }, "403": { "$ref": "#/components/responses/Problem" }, "404": { "$ref": "#/components/responses/Problem" }, "409": { "$ref": "#/components/responses/Problem" }, "502": { "$ref": "#/components/responses/Problem" } } }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT", "description": "Short-lived JWT from POST /admin/login." }
+    },
+    "parameters": {
+      "Id": { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+      "From": { "name": "from", "in": "query", "required": false, "schema": { "type": "string", "format": "date" } },
+      "To": { "name": "to", "in": "query", "required": false, "schema": { "type": "string", "format": "date" } },
+      "PlacementId": { "name": "placement_id", "in": "query", "required": false, "schema": { "type": "string" } },
+      "IncludeSensitive": { "name": "include_sensitive", "in": "query", "required": false, "schema": { "type": "boolean" }, "description": "Requires the view_sensitive_metrics capability; access is audited (metrics.read_sensitive)." }
+    },
+    "schemas": {
+      "User": { "type": "object", "properties": {
+        "id": { "type": "string" }, "organization_id": { "type": "string" }, "email": { "type": "string", "format": "email" }, "role": { "type": "string", "enum": ["superadmin", "org_admin", "editor", "analyst"] }
+      }, "required": ["id", "organization_id", "email", "role"] },
+      "PlacementInput": { "type": "object", "properties": {
+        "public_placement_key": { "type": "string" }, "allowed_origins": { "type": "array", "items": { "type": "string" } }, "default_creative_id": { "type": "string" }, "measurement_enabled": { "type": "boolean" }, "frequency_cap_per_day": { "type": "integer", "minimum": 0 }
+      }, "required": ["public_placement_key"] },
+      "Placement": { "type": "object", "properties": {
+        "id": { "type": "string" }, "public_placement_key": { "type": "string" }, "status": { "type": "string", "enum": ["active", "archived"] }, "default_creative_id": { "type": "string" }, "archived_at": { "type": ["string", "null"], "format": "date-time" }
+      }, "required": ["id", "public_placement_key", "status"] },
+      "CreativeInput": { "type": "object", "properties": {
+        "type": { "type": "string", "enum": ["image", "video", "html5_bundle"] }, "destination_url": { "type": "string", "format": "uri" }, "asset_url": { "type": "string" }, "width": { "type": "integer" }, "height": { "type": "integer" }
+      }, "required": ["type", "destination_url"] },
+      "Creative": { "type": "object", "properties": {
+        "id": { "type": "string" }, "type": { "type": "string", "enum": ["image", "video", "html5_bundle"] }, "review_status": { "type": "string", "enum": ["draft", "submitted", "in_review", "approved", "rejected", "changes_requested"] }, "version": { "type": "integer" }
+      }, "required": ["id", "type", "review_status"] },
+      "MetricsSeries": { "type": "object", "properties": {
+        "series": { "type": "array", "items": { "type": "object", "properties": {
+          "date": { "type": "string", "format": "date" }, "impressions": { "type": "integer" }, "clicks": { "type": "integer" }, "conversions": { "type": "integer" }, "ctr": { "type": "number" }, "fill_rate": { "type": "number" }
+        } } }
+      } },
+      "ProblemDetails": { "type": "object", "description": "RFC 9457 Problem Details.", "properties": {
+        "type": { "type": "string", "format": "uri" }, "title": { "type": "string" }, "status": { "type": "integer" }, "detail": { "type": "string" }
+      }, "required": ["type", "title", "status"] }
+    },
+    "responses": {
+      "Problem": { "description": "RFC 9457 Problem Details error.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } },
+      "Creative": { "description": "Creative.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Creative" } } } },
+      "UserList": { "description": "Users.", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/User" } } } } }
+    }
+  }
+}
