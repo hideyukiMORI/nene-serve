@@ -283,7 +283,9 @@ Validation `errors[].field` uses snake_case paths; `errors[].code` is snake_case
 ## operationId stems (camelCase)
 
 Shape `{verb}{Resource}` / `{verb}{Resource}ById`. Stable after release; must
-match across OpenAPI, routes, and MCP tool catalog.
+match across OpenAPI, routes, and MCP tool catalog. The canonical OpenAPI 3.1
+documents live in `docs/api/` (`public` · `admin` · `service`); a test asserts
+documented paths == Kernel routes.
 
 | operationId | Surface |
 | --- | --- |
