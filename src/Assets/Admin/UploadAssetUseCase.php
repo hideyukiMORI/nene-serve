@@ -6,12 +6,12 @@ namespace NeneServe\Assets\Admin;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\RequestScopedHolder;
 use NeneServe\Assets\Asset;
 use NeneServe\Assets\PdoAssetRepository;
 use NeneServe\Assets\UseCase\AssetValidationException;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Storage\StorageInterface;
-use NeneServe\Tenant\AuthContext;
 
 /**
  * Validate and store an uploaded image/video. Only an allowlisted content type
@@ -32,45 +32,49 @@ final readonly class UploadAssetUseCase implements UploadAssetUseCaseInterface
         'video/webm' => 'video',
     ];
 
+    /**
+     * @param RequestScopedHolder<string> $organizationId
+     */
     public function __construct(
         private DatabaseTransactionManagerInterface $transactions,
         private StorageInterface $storage,
+        private RequestScopedHolder $organizationId,
     ) {
     }
 
-    public function execute(AuthContext $actor, string $contentType, string $bytes): Asset
+    public function execute(UploadAssetInput $input): UploadAssetOutput
     {
-        $kind = self::ALLOWED[$contentType] ?? null;
+        $kind = self::ALLOWED[$input->contentType] ?? null;
 
         if ($kind === null) {
-            throw new AssetValidationException('Unsupported content type: ' . $contentType);
+            throw new AssetValidationException('Unsupported content type: ' . $input->contentType);
         }
 
-        if ($bytes === '') {
+        if ($input->bytes === '') {
             throw new AssetValidationException('Empty upload.');
         }
 
-        if (strlen($bytes) > self::MAX_BYTES) {
+        if (strlen($input->bytes) > self::MAX_BYTES) {
             throw new AssetValidationException('Upload exceeds the maximum size.');
         }
 
         $asset = new Asset(
             'ast-' . bin2hex(random_bytes(12)),
-            $actor->organizationId,
+            $this->organizationId->get(),
             $kind,
-            $contentType,
-            strlen($bytes),
+            $input->contentType,
+            strlen($input->bytes),
         );
 
         // Bytes first (outside the txn), then commit metadata + audit atomically.
-        $this->storage->put($asset->id, $bytes);
+        $this->storage->put($asset->id, $input->bytes);
 
-        return $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($asset, $actor): Asset {
+        $stored = $this->transactions->transactional(
+            static function (DatabaseQueryExecutorInterface $tx) use ($asset, $input): Asset {
                 (new PdoAssetRepository($tx))->save($asset);
                 (new PdoAuditLog($tx))->record(
-                    $actor->organizationId,
-                    $actor->userId,
+                    $asset->organizationId,
+                    $input->actorUserId,
                     'asset.uploaded',
                     'asset',
                     $asset->id,
@@ -80,5 +84,7 @@ final readonly class UploadAssetUseCase implements UploadAssetUseCaseInterface
                 return $asset;
             },
         );
+
+        return new UploadAssetOutput($stored);
     }
 }

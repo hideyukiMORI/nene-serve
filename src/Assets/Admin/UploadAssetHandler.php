@@ -50,7 +50,7 @@ final readonly class UploadAssetHandler
             throw new ValidationException([new ValidationError('data_base64', 'data_base64 is not valid base64.', 'invalid')]);
         }
 
-        $asset = $this->upload->execute($context, $contentType, $bytes);
+        $asset = $this->upload->execute(new UploadAssetInput($context->userId, $contentType, $bytes))->asset;
 
         return $this->response->create($asset->toArray(), 201);
     }

@@ -8,11 +8,12 @@ use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Validation\ValidationException;
 use NeneServe\Assets\Admin\UploadAssetHandler;
+use NeneServe\Assets\Admin\UploadAssetInput;
+use NeneServe\Assets\Admin\UploadAssetOutput;
 use NeneServe\Assets\Admin\UploadAssetUseCaseInterface;
 use NeneServe\Assets\Asset;
 use NeneServe\Assets\UseCase\AssetValidationException;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
-use NeneServe\Tenant\AuthContext;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -60,13 +61,13 @@ final class UploadAssetHandlerTest extends TestCase
     private function useCase(): UploadAssetUseCaseInterface
     {
         return new class () implements UploadAssetUseCaseInterface {
-            public function execute(AuthContext $actor, string $contentType, string $bytes): Asset
+            public function execute(UploadAssetInput $input): UploadAssetOutput
             {
-                if ($contentType !== 'image/png') {
-                    throw new AssetValidationException('Unsupported content type: ' . $contentType);
+                if ($input->contentType !== 'image/png') {
+                    throw new AssetValidationException('Unsupported content type: ' . $input->contentType);
                 }
 
-                return new Asset('ast-1', $actor->organizationId, 'image', $contentType, strlen($bytes));
+                return new UploadAssetOutput(new Asset('ast-1', 'org-acme', 'image', $input->contentType, strlen($input->bytes)));
             }
         };
     }

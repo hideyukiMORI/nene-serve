@@ -10,6 +10,8 @@ use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
+use Nene2\Http\RequestScopedHolder;
+use NeneServe\Http\RuntimeServiceProvider;
 use NeneServe\Storage\StorageInterface;
 use NeneServe\Upstream\Records\RecordsClientInterface;
 use Psr\Container\ContainerInterface;
@@ -29,12 +31,29 @@ final readonly class AssetsServiceProvider implements ServiceProviderInterface
                 UploadAssetUseCaseInterface::class,
                 static function (ContainerInterface $c): UploadAssetUseCaseInterface {
                     $storage = $c->get(StorageInterface::class);
+                    $organizationId = $c->get(RuntimeServiceProvider::ORG_ID_HOLDER);
 
                     if (!$storage instanceof StorageInterface) {
                         throw new LogicException('Storage service is invalid.');
                     }
 
-                    return new UploadAssetUseCase(self::transactions($c), $storage);
+                    if (!$organizationId instanceof RequestScopedHolder) {
+                        throw new LogicException('Organization id holder service is invalid.');
+                    }
+
+                    return new UploadAssetUseCase(self::transactions($c), $storage, $organizationId);
+                },
+            )
+            ->set(
+                GetRecordsAssetUseCaseInterface::class,
+                static function (ContainerInterface $c): GetRecordsAssetUseCaseInterface {
+                    $records = $c->get(RecordsClientInterface::class);
+
+                    if (!$records instanceof RecordsClientInterface) {
+                        throw new LogicException('Records client service is invalid.');
+                    }
+
+                    return new GetRecordsAssetUseCase($records);
                 },
             )
             ->set(
@@ -52,13 +71,13 @@ final readonly class AssetsServiceProvider implements ServiceProviderInterface
             ->set(
                 GetRecordsAssetHandler::class,
                 static function (ContainerInterface $c): GetRecordsAssetHandler {
-                    $records = $c->get(RecordsClientInterface::class);
+                    $useCase = $c->get(GetRecordsAssetUseCaseInterface::class);
 
-                    if (!$records instanceof RecordsClientInterface) {
-                        throw new LogicException('Records client service is invalid.');
+                    if (!$useCase instanceof GetRecordsAssetUseCaseInterface) {
+                        throw new LogicException('Get records asset use case service is invalid.');
                     }
 
-                    return new GetRecordsAssetHandler($records, self::json($c), self::problem($c));
+                    return new GetRecordsAssetHandler($useCase, self::json($c), self::problem($c));
                 },
             )
             ->set(
