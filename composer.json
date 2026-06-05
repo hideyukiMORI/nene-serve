@@ -11,9 +11,11 @@
         "hideyukimori/nene2": "@dev"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.64",
-        "phpstan/phpstan": "^2.0",
-        "phpunit/phpunit": "^11.0"
+        "friendsofphp/php-cs-fixer": "^3.95",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^13.1",
+        "robmorgan/phinx": "^0.16.11",
+        "symfony/yaml": "^8.0"
     },
     "repositories": [
         {
