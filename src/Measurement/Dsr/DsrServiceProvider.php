@@ -9,9 +9,10 @@ use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
+use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\AuditLogInterface;
+use NeneServe\Http\RuntimeServiceProvider;
 use NeneServe\Measurement\EventStoreInterface;
-use NeneServe\Measurement\UseCase\DataSubjectRequestUseCase;
 use Psr\Container\ContainerInterface;
 
 final readonly class DsrServiceProvider implements ServiceProviderInterface
@@ -22,10 +23,11 @@ final readonly class DsrServiceProvider implements ServiceProviderInterface
     {
         $builder
             ->set(
-                DataSubjectRequestUseCase::class,
-                static function (ContainerInterface $container): DataSubjectRequestUseCase {
+                DataSubjectRequestUseCaseInterface::class,
+                static function (ContainerInterface $container): DataSubjectRequestUseCaseInterface {
                     $events = $container->get(EventStoreInterface::class);
                     $audit = $container->get(AuditLogInterface::class);
+                    $organizationId = $container->get(RuntimeServiceProvider::ORG_ID_HOLDER);
 
                     if (!$events instanceof EventStoreInterface) {
                         throw new LogicException('Event store service is invalid.');
@@ -35,17 +37,21 @@ final readonly class DsrServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Audit log service is invalid.');
                     }
 
-                    return new DataSubjectRequestUseCase($events, $audit);
+                    if (!$organizationId instanceof RequestScopedHolder) {
+                        throw new LogicException('Organization id holder service is invalid.');
+                    }
+
+                    return new DataSubjectRequestUseCase($events, $audit, $organizationId);
                 },
             )
             ->set(
                 DataSubjectRequestHandler::class,
                 static function (ContainerInterface $container): DataSubjectRequestHandler {
-                    $useCase = $container->get(DataSubjectRequestUseCase::class);
+                    $useCase = $container->get(DataSubjectRequestUseCaseInterface::class);
                     $response = $container->get(JsonResponseFactory::class);
                     $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
 
-                    if (!$useCase instanceof DataSubjectRequestUseCase) {
+                    if (!$useCase instanceof DataSubjectRequestUseCaseInterface) {
                         throw new LogicException('Data subject request use case service is invalid.');
                     }
 

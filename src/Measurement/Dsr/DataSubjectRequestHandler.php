@@ -9,7 +9,6 @@ use Nene2\Http\JsonRequestBodyParser;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Validation\ValidationError;
 use Nene2\Validation\ValidationException;
-use NeneServe\Measurement\UseCase\DataSubjectRequestUseCase;
 use NeneServe\Tenant\Auth\AuthContextResolver;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -22,7 +21,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final readonly class DataSubjectRequestHandler
 {
     public function __construct(
-        private DataSubjectRequestUseCase $dsr,
+        private DataSubjectRequestUseCaseInterface $dsr,
         private JsonResponseFactory $response,
         private ProblemDetailsResponseFactory $problemDetails,
     ) {
@@ -58,14 +57,14 @@ final readonly class DataSubjectRequestHandler
             return $this->response->create([
                 'kind' => 'export',
                 'visitor_bucket' => $bucket,
-                'records' => $this->dsr->export($context, $bucket),
+                'records' => $this->dsr->export(new ExportVisitorDataInput($context->userId, $bucket))->records,
             ]);
         }
 
         return $this->response->create([
             'kind' => 'erasure',
             'visitor_bucket' => $bucket,
-            'tombstoned' => $this->dsr->erase($context, $bucket),
+            'tombstoned' => $this->dsr->erase(new EraseVisitorDataInput($context->userId, $bucket))->tombstoned,
         ]);
     }
 }
