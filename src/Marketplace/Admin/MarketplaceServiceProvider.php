@@ -17,6 +17,9 @@ use NeneServe\Marketplace\PdoAdvertiserRepository;
 use NeneServe\Marketplace\PdoCampaignRepository;
 use NeneServe\Marketplace\PdoPricingRuleRepository;
 use NeneServe\Marketplace\PricingRuleRepositoryInterface;
+use NeneServe\Marketplace\UseCase\GetCampaignSpendUseCase;
+use NeneServe\Measurement\EventStoreInterface;
+use NeneServe\Serving\CreativeRepositoryInterface;
 use Psr\Container\ContainerInterface;
 
 final readonly class MarketplaceServiceProvider implements ServiceProviderInterface
@@ -125,6 +128,45 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
                 },
             )
             ->set(
+                GetCampaignSpendUseCase::class,
+                static function (ContainerInterface $c): GetCampaignSpendUseCase {
+                    $creatives = $c->get(CreativeRepositoryInterface::class);
+                    $events = $c->get(EventStoreInterface::class);
+                    $pricingRules = $c->get(PricingRuleRepositoryInterface::class);
+
+                    if (!$creatives instanceof CreativeRepositoryInterface) {
+                        throw new LogicException('Creative repository service is invalid.');
+                    }
+
+                    if (!$events instanceof EventStoreInterface) {
+                        throw new LogicException('Event store service is invalid.');
+                    }
+
+                    if (!$pricingRules instanceof PricingRuleRepositoryInterface) {
+                        throw new LogicException('Pricing rule repository service is invalid.');
+                    }
+
+                    return new GetCampaignSpendUseCase($creatives, $events, $pricingRules);
+                },
+            )
+            ->set(
+                GetCampaignHandler::class,
+                static function (ContainerInterface $c): GetCampaignHandler {
+                    $campaigns = $c->get(CampaignRepositoryInterface::class);
+                    $spend = $c->get(GetCampaignSpendUseCase::class);
+
+                    if (!$campaigns instanceof CampaignRepositoryInterface) {
+                        throw new LogicException('Campaign repository service is invalid.');
+                    }
+
+                    if (!$spend instanceof GetCampaignSpendUseCase) {
+                        throw new LogicException('Get campaign spend use case service is invalid.');
+                    }
+
+                    return new GetCampaignHandler($campaigns, $spend, self::json($c), self::problem($c));
+                },
+            )
+            ->set(
                 self::EXCEPTION_HANDLER,
                 static fn (ContainerInterface $c): MarketplaceValidationExceptionHandler => new MarketplaceValidationExceptionHandler(self::problem($c)),
             )
@@ -162,6 +204,12 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Create campaign handler service is invalid.');
                     }
 
+                    $getCampaign = $container->get(GetCampaignHandler::class);
+
+                    if (!$getCampaign instanceof GetCampaignHandler) {
+                        throw new LogicException('Get campaign handler service is invalid.');
+                    }
+
                     return new MarketplaceRouteRegistrar(
                         $advertisers,
                         $pricingRules,
@@ -169,6 +217,7 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
                         $createAdvertiser,
                         $createPricingRule,
                         $createCampaign,
+                        $getCampaign,
                     );
                 },
             );
