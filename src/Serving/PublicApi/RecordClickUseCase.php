@@ -10,6 +10,7 @@ use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Serving\PdoPlacementRepository;
 use NeneServe\Serving\Token\ClickRedirect;
 use NeneServe\Serving\Token\TokenStoreInterface;
+use NeneServe\Support\Id;
 
 /**
  * Consumes a click token and records the click before the redirect
@@ -38,7 +39,7 @@ final readonly class RecordClickUseCase implements RecordClickUseCaseInterface
 
         if ($placement !== null && $placement->measurementEnabled) {
             $this->events->recordClick(new ClickEvent(
-                bin2hex(random_bytes(16)),
+                Id::random(16),
                 $redirect->organizationId,
                 $redirect->placementId,
                 $redirect->creativeId,

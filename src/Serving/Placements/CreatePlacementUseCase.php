@@ -11,6 +11,7 @@ use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Serving\PdoPlacementRepository;
 use NeneServe\Serving\Placement;
 use NeneServe\Serving\UseCase\CreativeValidationException;
+use NeneServe\Support\Id;
 
 /**
  * Creates a placement; the mutation and its audit entry commit together
@@ -36,7 +37,7 @@ final readonly class CreatePlacementUseCase implements CreatePlacementUseCaseInt
         $organizationId = $this->organizationId->get();
 
         $placement = new Placement(
-            'plc-' . bin2hex(random_bytes(8)),
+            Id::generate('plc'),
             $organizationId,
             $input->publicPlacementKey,
             $input->allowedOrigins,

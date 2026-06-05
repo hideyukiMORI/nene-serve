@@ -15,6 +15,7 @@ use NeneServe\Marketplace\DealOpportunityRepositoryInterface;
 use NeneServe\Marketplace\PdoDealOpportunityRepository;
 use NeneServe\Marketplace\UseCase\CampaignNotFoundException;
 use NeneServe\Marketplace\UseCase\DealHandoffFailedException;
+use NeneServe\Support\Id;
 use NeneServe\Upstream\Deal\DealClientException;
 use NeneServe\Upstream\Deal\DealClientInterface;
 
@@ -61,7 +62,7 @@ final readonly class HandoffCampaignToDealUseCase implements HandoffCampaignToDe
         $advertiserName = $advertiser !== null ? $advertiser->name : $campaign->advertiserId;
 
         $pending = new DealOpportunity(
-            'do-' . bin2hex(random_bytes(8)),
+            Id::generate('do'),
             $organizationId,
             $campaign->id,
             $externalReference,

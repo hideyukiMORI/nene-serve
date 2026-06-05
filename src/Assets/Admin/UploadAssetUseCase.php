@@ -12,6 +12,7 @@ use NeneServe\Assets\PdoAssetRepository;
 use NeneServe\Assets\UseCase\AssetValidationException;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Storage\StorageInterface;
+use NeneServe\Support\Id;
 
 /**
  * Validate and store an uploaded image/video. Only an allowlisted content type
@@ -59,7 +60,7 @@ final readonly class UploadAssetUseCase implements UploadAssetUseCaseInterface
         }
 
         $asset = new Asset(
-            'ast-' . bin2hex(random_bytes(12)),
+            Id::generate('ast', 12),
             $this->organizationId->get(),
             $kind,
             $input->contentType,

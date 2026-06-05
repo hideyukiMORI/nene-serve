@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Measurement;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
+use NeneServe\Support\Id;
 
 /**
  * Production event store on the NENE2 query executor. Append-only inserts;
@@ -99,7 +100,7 @@ final readonly class PdoEventStore implements EventStoreInterface
         $this->query->execute(
             'INSERT INTO serve_requests (id, organization_id, placement_id, occurred_at, filled)
              VALUES (?, ?, ?, ?, ?)',
-            [bin2hex(random_bytes(16)), $organizationId, $placementId, gmdate('Y-m-d H:i:s'), $filled ? 1 : 0],
+            [Id::random(16), $organizationId, $placementId, gmdate('Y-m-d H:i:s'), $filled ? 1 : 0],
         );
     }
 

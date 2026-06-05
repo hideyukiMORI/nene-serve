@@ -11,6 +11,7 @@ use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Marketplace\Advertiser;
 use NeneServe\Marketplace\PdoAdvertiserRepository;
 use NeneServe\Marketplace\UseCase\MarketplaceValidationException;
+use NeneServe\Support\Id;
 
 final readonly class CreateAdvertiserUseCase implements CreateAdvertiserUseCaseInterface
 {
@@ -30,7 +31,7 @@ final readonly class CreateAdvertiserUseCase implements CreateAdvertiserUseCaseI
         }
 
         $advertiser = new Advertiser(
-            'adv-' . bin2hex(random_bytes(8)),
+            Id::generate('adv'),
             $this->organizationId->get(),
             trim($input->name),
             'active',

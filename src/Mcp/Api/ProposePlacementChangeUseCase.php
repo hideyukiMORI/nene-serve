@@ -13,6 +13,7 @@ use NeneServe\Mcp\UseCase\McpValidationException;
 use NeneServe\Service\ServiceContext;
 use NeneServe\Serving\PdoCreativeRepository;
 use NeneServe\Serving\PdoPlacementRepository;
+use NeneServe\Support\Id;
 
 /**
  * Proposes a delivery-plan change (place a different default creative) without
@@ -41,7 +42,7 @@ final readonly class ProposePlacementChangeUseCase implements ProposePlacementCh
         }
 
         $plan = new ChangePlan(
-            'plan-' . bin2hex(random_bytes(12)),
+            Id::generate('plan', 12),
             $context->organizationId,
             $placementId,
             $newCreativeId,

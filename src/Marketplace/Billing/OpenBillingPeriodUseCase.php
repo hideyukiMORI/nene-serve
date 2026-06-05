@@ -12,6 +12,7 @@ use NeneServe\Marketplace\BillingPeriod;
 use NeneServe\Marketplace\CampaignRepositoryInterface;
 use NeneServe\Marketplace\PdoBillingPeriodRepository;
 use NeneServe\Marketplace\UseCase\MarketplaceValidationException;
+use NeneServe\Support\Id;
 
 final readonly class OpenBillingPeriodUseCase implements OpenBillingPeriodUseCaseInterface
 {
@@ -38,7 +39,7 @@ final readonly class OpenBillingPeriodUseCase implements OpenBillingPeriodUseCas
         }
 
         $period = new BillingPeriod(
-            'bp-' . bin2hex(random_bytes(8)),
+            Id::generate('bp'),
             $organizationId,
             $input->campaignId,
             $input->periodStart,

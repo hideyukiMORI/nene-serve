@@ -9,6 +9,7 @@ use Nene2\Database\DatabaseTransactionManagerInterface;
 use Nene2\Http\RequestScopedHolder;
 use Nene2\Http\SecureTokenHelper;
 use NeneServe\Audit\PdoAuditLog;
+use NeneServe\Support\Id;
 use NeneServe\Tenant\Invitation;
 use NeneServe\Tenant\PdoInvitationRepository;
 use NeneServe\Tenant\PdoUserRepository;
@@ -61,7 +62,7 @@ final readonly class CreateInvitedUserUseCase implements CreateInvitedUserUseCas
         }
 
         $user = new User(
-            'usr-' . bin2hex(random_bytes(8)),
+            Id::generate('usr'),
             $organizationId,
             $email,
             $parsedRole,
@@ -70,7 +71,7 @@ final readonly class CreateInvitedUserUseCase implements CreateInvitedUserUseCas
         );
         [$rawToken, $tokenHash] = SecureTokenHelper::generateWithHash(32);
         $invitation = new Invitation(
-            'inv-' . bin2hex(random_bytes(8)),
+            Id::generate('inv'),
             $organizationId,
             $user->id,
             $tokenHash,

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace NeneServe\Audit;
 
+use NeneServe\Support\Id;
+
 final class InMemoryAuditLog implements AuditLogInterface
 {
     /** @var list<AuditEvent> */
@@ -34,7 +36,7 @@ final class InMemoryAuditLog implements AuditLogInterface
         );
 
         $this->events[] = new AuditEvent(
-            bin2hex(random_bytes(8)),
+            Id::random(8),
             $organizationId,
             $actorUserId,
             $action,

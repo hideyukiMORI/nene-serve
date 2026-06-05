@@ -14,6 +14,7 @@ use NeneServe\Marketplace\PricingRule;
 use NeneServe\Marketplace\PricingRuleRepositoryInterface;
 use NeneServe\Marketplace\UseCase\MarketplaceValidationException;
 use NeneServe\Money\Money;
+use NeneServe\Support\Id;
 
 /**
  * Pricing rules are immutable: a change is a new version row (billing-and-
@@ -50,7 +51,7 @@ final readonly class CreatePricingRuleUseCase implements CreatePricingRuleUseCas
         $version = $this->rules->currentVersion($organizationId, trim($input->name)) + 1;
 
         $rule = new PricingRule(
-            'pr-' . bin2hex(random_bytes(8)),
+            Id::generate('pr'),
             $organizationId,
             trim($input->name),
             $pricingModel,

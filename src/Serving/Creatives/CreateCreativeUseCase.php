@@ -16,6 +16,7 @@ use NeneServe\Serving\Review\ImageAcceptance;
 use NeneServe\Serving\Review\VideoAcceptance;
 use NeneServe\Serving\ReviewStatus;
 use NeneServe\Serving\Scan\BundleScannerInterface;
+use NeneServe\Support\Id;
 
 /**
  * Creates a creative in `draft` after enforcing the per-type acceptance rules
@@ -40,7 +41,7 @@ final readonly class CreateCreativeUseCase implements CreateCreativeUseCaseInter
         ImageAcceptance::assertValid($input->assetUrl, $input->destinationUrl, $input->width, $input->height);
 
         $creative = new Creative(
-            'cr-' . bin2hex(random_bytes(8)),
+            Id::generate('cr'),
             $this->organizationId->get(),
             CreativeType::Image,
             ReviewStatus::Draft,
@@ -59,7 +60,7 @@ final readonly class CreateCreativeUseCase implements CreateCreativeUseCaseInter
         VideoAcceptance::assertValid($input->assetUrl, $input->posterUrl, $input->destinationUrl, $input->durationSeconds);
 
         $creative = new Creative(
-            'cr-' . bin2hex(random_bytes(8)),
+            Id::generate('cr'),
             $this->organizationId->get(),
             CreativeType::Video,
             ReviewStatus::Draft,
@@ -85,7 +86,7 @@ final readonly class CreateCreativeUseCase implements CreateCreativeUseCaseInter
         $scanStatus = $this->scanner->scan($input->bundleId, $input->htmlEntry);
 
         $creative = new Creative(
-            'cr-' . bin2hex(random_bytes(8)),
+            Id::generate('cr'),
             $this->organizationId->get(),
             CreativeType::Html5Bundle,
             ReviewStatus::Draft,
