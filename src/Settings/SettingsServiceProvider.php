@@ -6,20 +6,21 @@ namespace NeneServe\Settings;
 
 use LogicException;
 use Nene2\Database\DatabaseQueryExecutorInterface;
-use Nene2\Database\DatabaseTransactionManagerInterface;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Http\RequestScopedHolder;
 use NeneServe\Http\RuntimeServiceProvider;
 use NeneServe\Mail\MailerFactoryInterface;
 use NeneServe\Support\Crypto;
+use NeneServe\Support\ServiceProviderHelpers;
 use NeneServe\Tenant\UserRepositoryInterface;
 use Psr\Container\ContainerInterface;
 
 final readonly class SettingsServiceProvider implements ServiceProviderInterface
 {
+    use ServiceProviderHelpers;
+
     public const string ROUTE_REGISTRAR = 'nene-serve.route_registrar.settings';
 
     public const string EXCEPTION_HANDLER_ENCRYPTION = 'nene-serve.exception_handler.encryption_unavailable';
@@ -181,48 +182,5 @@ final readonly class SettingsServiceProvider implements ServiceProviderInterface
             );
     }
 
-    private static function transactions(ContainerInterface $container): DatabaseTransactionManagerInterface
-    {
-        $transactions = $container->get(DatabaseTransactionManagerInterface::class);
-
-        if (!$transactions instanceof DatabaseTransactionManagerInterface) {
-            throw new LogicException('Database transaction manager service is invalid.');
-        }
-
-        return $transactions;
-    }
-
     /** @return RequestScopedHolder<string> */
-    private static function orgId(ContainerInterface $container): RequestScopedHolder
-    {
-        $orgId = $container->get(RuntimeServiceProvider::ORG_ID_HOLDER);
-
-        if (!$orgId instanceof RequestScopedHolder) {
-            throw new LogicException('Organization id holder service is invalid.');
-        }
-
-        return $orgId;
-    }
-
-    private static function json(ContainerInterface $container): JsonResponseFactory
-    {
-        $json = $container->get(JsonResponseFactory::class);
-
-        if (!$json instanceof JsonResponseFactory) {
-            throw new LogicException('JSON response factory service is invalid.');
-        }
-
-        return $json;
-    }
-
-    private static function problem(ContainerInterface $container): ProblemDetailsResponseFactory
-    {
-        $problem = $container->get(ProblemDetailsResponseFactory::class);
-
-        if (!$problem instanceof ProblemDetailsResponseFactory) {
-            throw new LogicException('Problem details response factory service is invalid.');
-        }
-
-        return $problem;
-    }
 }

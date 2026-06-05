@@ -9,16 +9,17 @@ use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
-use Nene2\Error\ProblemDetailsResponseFactory;
-use Nene2\Http\JsonResponseFactory;
 use Nene2\Http\RequestScopedHolder;
 use NeneServe\Http\RuntimeServiceProvider;
 use NeneServe\Retention\LegalHoldRepositoryInterface;
 use NeneServe\Retention\PdoLegalHoldRepository;
+use NeneServe\Support\ServiceProviderHelpers;
 use Psr\Container\ContainerInterface;
 
 final readonly class LegalHoldsServiceProvider implements ServiceProviderInterface
 {
+    use ServiceProviderHelpers;
+
     public const string ROUTE_REGISTRAR = 'nene-serve.route_registrar.legal_holds';
 
     public const string EXCEPTION_HANDLER = 'nene-serve.exception_handler.legal_hold';
@@ -100,27 +101,5 @@ final readonly class LegalHoldsServiceProvider implements ServiceProviderInterfa
         }
 
         return $useCase;
-    }
-
-    private static function json(ContainerInterface $container): JsonResponseFactory
-    {
-        $json = $container->get(JsonResponseFactory::class);
-
-        if (!$json instanceof JsonResponseFactory) {
-            throw new LogicException('JSON response factory service is invalid.');
-        }
-
-        return $json;
-    }
-
-    private static function problem(ContainerInterface $container): ProblemDetailsResponseFactory
-    {
-        $problem = $container->get(ProblemDetailsResponseFactory::class);
-
-        if (!$problem instanceof ProblemDetailsResponseFactory) {
-            throw new LogicException('Problem details response factory service is invalid.');
-        }
-
-        return $problem;
     }
 }
