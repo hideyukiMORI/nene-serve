@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\PublicApi;
 
-use Nene2\Database\DatabaseQueryExecutorInterface;
-use NeneServe\Marketplace\PdoCampaignRepository;
+use NeneServe\Marketplace\CampaignRepositoryInterface;
 use NeneServe\Marketplace\UseCase\GetCampaignSpendUseCase;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\VisitorBucket;
+use NeneServe\Serving\CreativeRepositoryInterface;
 use NeneServe\Serving\CreativeType;
 use NeneServe\Serving\DestinationUrl;
 use NeneServe\Serving\Frequency\FrequencyCapStoreInterface;
-use NeneServe\Serving\PdoCreativeRepository;
-use NeneServe\Serving\PdoPlacementRepository;
+use NeneServe\Serving\PlacementRepositoryInterface;
 use NeneServe\Serving\Token\TokenStoreInterface;
 use NeneServe\Serving\UseCase\FrequencyCappedException;
 use NeneServe\Serving\UseCase\NoEligibleCreativeException;
@@ -32,7 +31,9 @@ use NeneServe\Serving\UseCase\ServeResult;
 final readonly class ServeCreativeUseCase implements ServeCreativeUseCaseInterface
 {
     public function __construct(
-        private DatabaseQueryExecutorInterface $query,
+        private PlacementRepositoryInterface $placements,
+        private CreativeRepositoryInterface $creatives,
+        private CampaignRepositoryInterface $campaigns,
         private TokenStoreInterface $tokens,
         private FrequencyCapStoreInterface $frequencyCaps,
         private EventStoreInterface $events,
@@ -48,9 +49,7 @@ final readonly class ServeCreativeUseCase implements ServeCreativeUseCaseInterfa
         string $clientIp = '',
         string $userAgent = '',
     ): ServeResult {
-        $placements = new PdoPlacementRepository($this->query);
-
-        $placement = $placements->findByPublicKey($publicPlacementKey);
+        $placement = $this->placements->findByPublicKey($publicPlacementKey);
 
         if ($placement === null) {
             throw new PlacementNotFoundException();
@@ -81,7 +80,7 @@ final readonly class ServeCreativeUseCase implements ServeCreativeUseCaseInterfa
             }
         }
 
-        $creative = (new PdoCreativeRepository($this->query))->findByIdInOrganization(
+        $creative = $this->creatives->findByIdInOrganization(
             $placement->defaultCreativeId,
             $placement->organizationId,
         );
@@ -158,7 +157,7 @@ final readonly class ServeCreativeUseCase implements ServeCreativeUseCaseInterfa
      */
     private function campaignAllowsServe(string $campaignId, string $organizationId): bool
     {
-        $campaign = (new PdoCampaignRepository($this->query))->findByIdInOrganization($campaignId, $organizationId);
+        $campaign = $this->campaigns->findByIdInOrganization($campaignId, $organizationId);
 
         if ($campaign === null || !$campaign->isFundedForServe()) {
             return false;
