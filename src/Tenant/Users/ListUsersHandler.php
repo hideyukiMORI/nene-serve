@@ -6,8 +6,10 @@ namespace NeneServe\Tenant\Users;
 
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
+use Nene2\Http\PaginationQueryParser;
+use Nene2\Http\PaginationResponse;
 use NeneServe\Tenant\Auth\AuthContextResolver;
-use NeneServe\Tenant\UseCase\ListUsersUseCase;
+use NeneServe\Tenant\User;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -19,7 +21,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final readonly class ListUsersHandler
 {
     public function __construct(
-        private ListUsersUseCase $listUsers,
+        private ListUsersUseCaseInterface $listUsers,
         private JsonResponseFactory $response,
         private ProblemDetailsResponseFactory $problemDetails,
     ) {
@@ -33,6 +35,16 @@ final readonly class ListUsersHandler
             return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
         }
 
-        return $this->response->create(['users' => $this->listUsers->execute($context)]);
+        $pagination = PaginationQueryParser::parse($request);
+
+        $output = $this->listUsers->execute(new ListUsersInput($context->isCrossTenant(), $pagination->limit, $pagination->offset));
+
+        return $this->response->create(
+            (new PaginationResponse(
+                items: array_map(static fn (User $user): array => $user->toPublicArray(), $output->items),
+                limit: $output->limit,
+                offset: $output->offset,
+            ))->toArray(),
+        );
     }
 }

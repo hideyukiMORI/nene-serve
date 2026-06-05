@@ -63,7 +63,7 @@ final readonly class CreateUserHandler
             throw new ValidationException($errors);
         }
 
-        $invited = $this->createUser->execute($context, $email, $role);
+        $invited = $this->createUser->execute(new CreateInvitedUserInput($context->userId, $email, $role));
 
         $emailSent = $this->sendInvite($context->organizationId, $invited->user->email, $invited->rawToken);
 

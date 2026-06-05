@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace NeneServe\Tenant\Users;
 
 use LogicException;
-use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
+use Nene2\Http\RequestScopedHolder;
+use NeneServe\Http\RuntimeServiceProvider;
 use NeneServe\Mail\MailerFactoryInterface;
 use NeneServe\Settings\SmtpConfigResolver;
 use NeneServe\Settings\SmtpSettingsRepositoryInterface;
 use NeneServe\Support\Crypto;
-use NeneServe\Tenant\UseCase\ListUsersUseCase;
 use NeneServe\Tenant\UserRepositoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -29,25 +29,30 @@ final readonly class UsersServiceProvider implements ServiceProviderInterface
     {
         $builder
             ->set(
-                ListUsersUseCase::class,
-                static function (ContainerInterface $container): ListUsersUseCase {
+                ListUsersUseCaseInterface::class,
+                static function (ContainerInterface $container): ListUsersUseCaseInterface {
                     $users = $container->get(UserRepositoryInterface::class);
+                    $organizationId = $container->get(RuntimeServiceProvider::ORG_ID_HOLDER);
 
                     if (!$users instanceof UserRepositoryInterface) {
                         throw new LogicException('User repository service is invalid.');
                     }
 
-                    return new ListUsersUseCase($users);
+                    if (!$organizationId instanceof RequestScopedHolder) {
+                        throw new LogicException('Organization id holder service is invalid.');
+                    }
+
+                    return new ListUsersUseCase($users, $organizationId);
                 },
             )
             ->set(
                 ListUsersHandler::class,
                 static function (ContainerInterface $container): ListUsersHandler {
-                    $listUsers = $container->get(ListUsersUseCase::class);
+                    $listUsers = $container->get(ListUsersUseCaseInterface::class);
                     $response = $container->get(JsonResponseFactory::class);
                     $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
 
-                    if (!$listUsers instanceof ListUsersUseCase) {
+                    if (!$listUsers instanceof ListUsersUseCaseInterface) {
                         throw new LogicException('List users use case service is invalid.');
                     }
 
@@ -65,18 +70,23 @@ final readonly class UsersServiceProvider implements ServiceProviderInterface
             ->set(
                 CreateInvitedUserUseCaseInterface::class,
                 static function (ContainerInterface $container): CreateInvitedUserUseCaseInterface {
-                    $query = $container->get(DatabaseQueryExecutorInterface::class);
+                    $users = $container->get(UserRepositoryInterface::class);
                     $transactions = $container->get(DatabaseTransactionManagerInterface::class);
+                    $organizationId = $container->get(RuntimeServiceProvider::ORG_ID_HOLDER);
 
-                    if (!$query instanceof DatabaseQueryExecutorInterface) {
-                        throw new LogicException('Database query executor service is invalid.');
+                    if (!$users instanceof UserRepositoryInterface) {
+                        throw new LogicException('User repository service is invalid.');
                     }
 
                     if (!$transactions instanceof DatabaseTransactionManagerInterface) {
                         throw new LogicException('Database transaction manager service is invalid.');
                     }
 
-                    return new CreateInvitedUserUseCase($query, $transactions);
+                    if (!$organizationId instanceof RequestScopedHolder) {
+                        throw new LogicException('Organization id holder service is invalid.');
+                    }
+
+                    return new CreateInvitedUserUseCase($users, $transactions, $organizationId);
                 },
             )
             ->set(

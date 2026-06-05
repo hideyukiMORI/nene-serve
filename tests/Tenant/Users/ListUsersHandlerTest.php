@@ -8,26 +8,27 @@ use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
 use NeneServe\Tenant\Role;
-use NeneServe\Tenant\UseCase\ListUsersUseCase;
 use NeneServe\Tenant\User;
-use NeneServe\Tenant\UserRepositoryInterface;
 use NeneServe\Tenant\Users\ListUsersHandler;
+use NeneServe\Tenant\Users\ListUsersInput;
+use NeneServe\Tenant\Users\ListUsersOutput;
+use NeneServe\Tenant\Users\ListUsersUseCaseInterface;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 
 final class ListUsersHandlerTest extends TestCase
 {
-    public function testListsUsersInTheCallersTenant(): void
+    public function testListsUsersInPaginatedEnvelope(): void
     {
         $response = $this->handle(['org' => 'org-acme', 'role' => 'org_admin', 'sub' => 'u-1']);
 
         self::assertSame(200, $response->getStatusCode());
 
-        /** @var array{users: list<array{email: string}>} $body */
+        /** @var array{items: list<array{email: string}>, limit: int} $body */
         $body = json_decode((string) $response->getBody(), true);
-        self::assertCount(2, $body['users']);
-        self::assertSame('admin@acme.test', $body['users'][0]['email']);
+        self::assertCount(2, $body['items']);
+        self::assertSame('admin@acme.test', $body['items'][0]['email']);
     }
 
     public function testRejectsRequestWithoutClaims(): void
@@ -43,11 +44,16 @@ final class ListUsersHandlerTest extends TestCase
     private function handle(?array $claims): ResponseInterface
     {
         $psr17 = new Psr17Factory();
-        $handler = new ListUsersHandler(
-            new ListUsersUseCase($this->repository()),
-            new JsonResponseFactory($psr17, $psr17),
-            new ProblemDetailsResponseFactory($psr17, $psr17),
-        );
+        $useCase = new class () implements ListUsersUseCaseInterface {
+            public function execute(ListUsersInput $input): ListUsersOutput
+            {
+                return new ListUsersOutput([
+                    new User('u-1', 'org-acme', 'admin@acme.test', Role::OrgAdmin, 'h'),
+                    new User('u-2', 'org-acme', 'analyst@acme.test', Role::Analyst, 'h'),
+                ], $input->limit, $input->offset);
+            }
+        };
+        $handler = new ListUsersHandler($useCase, new JsonResponseFactory($psr17, $psr17), new ProblemDetailsResponseFactory($psr17, $psr17));
 
         $request = $psr17->createServerRequest('GET', '/admin/users');
 
@@ -56,42 +62,5 @@ final class ListUsersHandlerTest extends TestCase
         }
 
         return $handler->handle($request);
-    }
-
-    private function repository(): UserRepositoryInterface
-    {
-        return new class () implements UserRepositoryInterface {
-            public function findByIdInOrganization(string $userId, string $organizationId): ?User
-            {
-                return null;
-            }
-
-            public function findByEmailInOrganization(string $email, string $organizationId): ?User
-            {
-                return null;
-            }
-
-            public function save(User $user): void
-            {
-            }
-
-            public function listByOrganization(string $organizationId): array
-            {
-                return [
-                    new User('u-1', $organizationId, 'admin@acme.test', Role::OrgAdmin, 'h'),
-                    new User('u-2', $organizationId, 'analyst@acme.test', Role::Analyst, 'h'),
-                ];
-            }
-
-            public function findByIdAcrossTenants(string $userId): ?User
-            {
-                return null;
-            }
-
-            public function listAll(): array
-            {
-                return [];
-            }
-        };
     }
 }

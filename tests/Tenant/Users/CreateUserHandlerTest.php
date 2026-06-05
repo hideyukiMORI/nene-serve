@@ -15,11 +15,11 @@ use NeneServe\Settings\SmtpSettingsRecord;
 use NeneServe\Settings\SmtpSettingsRepositoryInterface;
 use NeneServe\Support\Crypto;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
-use NeneServe\Tenant\AuthContext;
 use NeneServe\Tenant\Role;
 use NeneServe\Tenant\UseCase\InvitedUser;
 use NeneServe\Tenant\UseCase\UserValidationException;
 use NeneServe\Tenant\User;
+use NeneServe\Tenant\Users\CreateInvitedUserInput;
 use NeneServe\Tenant\Users\CreateInvitedUserUseCaseInterface;
 use NeneServe\Tenant\Users\CreateUserHandler;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -53,7 +53,7 @@ final class CreateUserHandlerTest extends TestCase
     public function testPropagatesDomainValidationFailure(): void
     {
         $useCase = new class () implements CreateInvitedUserUseCaseInterface {
-            public function execute(AuthContext $actor, string $email, string $role): InvitedUser
+            public function execute(CreateInvitedUserInput $input): InvitedUser
             {
                 throw new UserValidationException('A user with that email already exists.');
             }
@@ -99,9 +99,9 @@ final class CreateUserHandlerTest extends TestCase
     private function useCaseReturningInvite(): CreateInvitedUserUseCaseInterface
     {
         return new class () implements CreateInvitedUserUseCaseInterface {
-            public function execute(AuthContext $actor, string $email, string $role): InvitedUser
+            public function execute(CreateInvitedUserInput $input): InvitedUser
             {
-                $user = new User('usr-1', $actor->organizationId, $email, Role::Editor, '', 'active');
+                $user = new User('usr-1', 'org-acme', $input->email, Role::Editor, '', 'active');
 
                 return new InvitedUser($user, 'raw-token');
             }

@@ -185,7 +185,7 @@ final class SmtpSettingsWriteTest extends TestCase
             {
             }
 
-            public function listByOrganization(string $organizationId): array
+            public function listByOrganization(string $organizationId, int $limit, int $offset): array
             {
                 return [];
             }
@@ -195,7 +195,7 @@ final class SmtpSettingsWriteTest extends TestCase
                 return null;
             }
 
-            public function listAll(): array
+            public function listAll(int $limit, int $offset): array
             {
                 return [];
             }

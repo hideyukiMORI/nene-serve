@@ -62,11 +62,11 @@ final readonly class PdoUserRepository implements UserRepositoryInterface
         );
     }
 
-    public function listByOrganization(string $organizationId): array
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array
     {
         $rows = $this->query->fetchAll(
-            'SELECT ' . self::COLUMNS . ' FROM users WHERE organization_id = ? ORDER BY email',
-            [$organizationId],
+            'SELECT ' . self::COLUMNS . ' FROM users WHERE organization_id = ? ORDER BY email LIMIT ? OFFSET ?',
+            [$organizationId, $limit, $offset],
         );
 
         return $this->hydrateMany($rows);
@@ -79,9 +79,9 @@ final readonly class PdoUserRepository implements UserRepositoryInterface
         return $row === null ? null : $this->hydrate($row);
     }
 
-    public function listAll(): array
+    public function listAll(int $limit, int $offset): array
     {
-        $rows = $this->query->fetchAll('SELECT ' . self::COLUMNS . ' FROM users ORDER BY organization_id, email');
+        $rows = $this->query->fetchAll('SELECT ' . self::COLUMNS . ' FROM users ORDER BY organization_id, email LIMIT ? OFFSET ?', [$limit, $offset]);
 
         return $this->hydrateMany($rows);
     }
