@@ -109,7 +109,7 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
                         throw new LogicException('Bundle scanner service is invalid.');
                     }
 
-                    return new CreateCreativeUseCase($transactions, $scanner);
+                    return new CreateCreativeUseCase($transactions, $scanner, self::orgId($container));
                 },
             )
             ->set(
@@ -126,7 +126,7 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
                         throw new LogicException('Database transaction manager service is invalid.');
                     }
 
-                    return new ReviseCreativeUseCase($query, $transactions);
+                    return new ReviseCreativeUseCase($query, $transactions, self::orgId($container));
                 },
             )
             ->set(
@@ -199,7 +199,7 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
                         throw new LogicException('Database transaction manager service is invalid.');
                     }
 
-                    return new TransitionCreativeUseCase($query, $transactions);
+                    return new TransitionCreativeUseCase($query, $transactions, self::orgId($container));
                 },
             )
             ->set(

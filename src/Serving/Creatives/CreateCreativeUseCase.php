@@ -6,6 +6,7 @@ namespace NeneServe\Serving\Creatives;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Serving\Creative;
 use NeneServe\Serving\CreativeType;
@@ -15,7 +16,6 @@ use NeneServe\Serving\Review\ImageAcceptance;
 use NeneServe\Serving\Review\VideoAcceptance;
 use NeneServe\Serving\ReviewStatus;
 use NeneServe\Serving\Scan\BundleScannerInterface;
-use NeneServe\Tenant\AuthContext;
 
 /**
  * Creates a creative in `draft` after enforcing the per-type acceptance rules
@@ -25,84 +25,88 @@ use NeneServe\Tenant\AuthContext;
  */
 final readonly class CreateCreativeUseCase implements CreateCreativeUseCaseInterface
 {
+    /**
+     * @param RequestScopedHolder<string> $organizationId
+     */
     public function __construct(
         private DatabaseTransactionManagerInterface $transactions,
         private BundleScannerInterface $scanner,
+        private RequestScopedHolder $organizationId,
     ) {
     }
 
-    public function createImage(AuthContext $actor, string $destinationUrl, string $assetUrl, int $width, int $height, ?string $campaignId = null): Creative
+    public function createImage(CreateImageCreativeInput $input): CreateCreativeOutput
     {
-        ImageAcceptance::assertValid($assetUrl, $destinationUrl, $width, $height);
+        ImageAcceptance::assertValid($input->assetUrl, $input->destinationUrl, $input->width, $input->height);
 
         $creative = new Creative(
             'cr-' . bin2hex(random_bytes(8)),
-            $actor->organizationId,
+            $this->organizationId->get(),
             CreativeType::Image,
             ReviewStatus::Draft,
-            $destinationUrl,
-            $assetUrl,
-            $width,
-            $height,
-            campaignId: $campaignId,
+            $input->destinationUrl,
+            $input->assetUrl,
+            $input->width,
+            $input->height,
+            campaignId: $input->campaignId,
         );
 
-        return $this->persist($creative, $actor, ['type' => 'image', 'review_status' => 'draft'], 'creative.created');
+        return $this->persist($creative, $input->actorUserId, ['type' => 'image', 'review_status' => 'draft'], 'creative.created');
     }
 
-    public function createVideo(AuthContext $actor, string $destinationUrl, string $assetUrl, string $posterUrl, int $width, int $height, int $durationSeconds, ?string $campaignId = null): Creative
+    public function createVideo(CreateVideoCreativeInput $input): CreateCreativeOutput
     {
-        VideoAcceptance::assertValid($assetUrl, $posterUrl, $destinationUrl, $durationSeconds);
+        VideoAcceptance::assertValid($input->assetUrl, $input->posterUrl, $input->destinationUrl, $input->durationSeconds);
 
         $creative = new Creative(
             'cr-' . bin2hex(random_bytes(8)),
-            $actor->organizationId,
+            $this->organizationId->get(),
             CreativeType::Video,
             ReviewStatus::Draft,
-            $destinationUrl,
-            $assetUrl,
-            $width,
-            $height,
+            $input->destinationUrl,
+            $input->assetUrl,
+            $input->width,
+            $input->height,
             1,
             null,
             null,
-            $posterUrl,
-            $durationSeconds,
-            campaignId: $campaignId,
+            $input->posterUrl,
+            $input->durationSeconds,
+            campaignId: $input->campaignId,
         );
 
-        return $this->persist($creative, $actor, ['type' => 'video', 'review_status' => 'draft'], 'creative.created');
+        return $this->persist($creative, $input->actorUserId, ['type' => 'video', 'review_status' => 'draft'], 'creative.created');
     }
 
-    public function createHtml5(AuthContext $actor, string $destinationUrl, string $bundleId, int $bundleSizeBytes, int $assetCount, string $htmlEntry, ?int $width = null, ?int $height = null, ?string $campaignId = null): Creative
+    public function createHtml5(CreateHtml5CreativeInput $input): CreateCreativeOutput
     {
-        Html5Acceptance::assertValid($bundleSizeBytes, $assetCount, $destinationUrl, $htmlEntry);
+        Html5Acceptance::assertValid($input->bundleSizeBytes, $input->assetCount, $input->destinationUrl, $input->htmlEntry);
 
-        $scanStatus = $this->scanner->scan($bundleId, $htmlEntry);
+        $scanStatus = $this->scanner->scan($input->bundleId, $input->htmlEntry);
 
         $creative = new Creative(
             'cr-' . bin2hex(random_bytes(8)),
-            $actor->organizationId,
+            $this->organizationId->get(),
             CreativeType::Html5Bundle,
             ReviewStatus::Draft,
-            $destinationUrl,
+            $input->destinationUrl,
             null,
-            $width,
-            $height,
+            $input->width,
+            $input->height,
             1,
             null,
             null,
             null,
             null,
-            $bundleId,
-            $bundleSizeBytes,
+            $input->bundleId,
+            $input->bundleSizeBytes,
             $scanStatus,
-            $campaignId,
+            $input->campaignId,
         );
 
         return $this->persist(
             $creative,
-            $actor,
+            $input->actorUserId,
             ['type' => 'html5_bundle', 'review_status' => 'draft', 'scan_status' => $scanStatus->value],
             'creative.scanned',
         );
@@ -111,14 +115,14 @@ final readonly class CreateCreativeUseCase implements CreateCreativeUseCaseInter
     /**
      * @param array<string, mixed> $after
      */
-    private function persist(Creative $creative, AuthContext $actor, array $after, string $action): Creative
+    private function persist(Creative $creative, string $actorUserId, array $after, string $action): CreateCreativeOutput
     {
-        return $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($creative, $actor, $after, $action): Creative {
+        $stored = $this->transactions->transactional(
+            static function (DatabaseQueryExecutorInterface $tx) use ($creative, $actorUserId, $after, $action): Creative {
                 (new PdoCreativeRepository($tx))->save($creative);
                 (new PdoAuditLog($tx))->record(
-                    $actor->organizationId,
-                    $actor->userId,
+                    $creative->organizationId,
+                    $actorUserId,
                     $action,
                     'creative',
                     $creative->id,
@@ -128,5 +132,7 @@ final readonly class CreateCreativeUseCase implements CreateCreativeUseCaseInter
                 return $creative;
             },
         );
+
+        return new CreateCreativeOutput($stored);
     }
 }

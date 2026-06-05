@@ -44,7 +44,9 @@ final readonly class TransitionCreativeHandler
         $reason = isset($body['review_reason']) && is_string($body['review_reason']) ? $body['review_reason'] : null;
         $override = ($body['self_approval_override'] ?? false) === true;
 
-        $creative = $this->transition->execute($context, $id, $this->action, $reason, $override);
+        $creative = $this->transition->execute(
+            new TransitionCreativeInput($context->userId, $id, $this->action, $reason, $override),
+        )->creative;
 
         return $this->response->create($creative->toAdminArray());
     }

@@ -40,14 +40,14 @@ final readonly class ReviseCreativeHandler
 
         $body = JsonRequestBodyParser::parse($request);
 
-        $creative = $this->revise->execute(
-            $context,
+        $creative = $this->revise->execute(new ReviseCreativeInput(
+            $context->userId,
             $id,
             $this->str($body, 'destination_url'),
             $this->str($body, 'asset_url'),
             $this->int($body, 'width'),
             $this->int($body, 'height'),
-        );
+        ))->creative;
 
         return $this->response->create($creative->toAdminArray());
     }

@@ -6,6 +6,7 @@ namespace NeneServe\Serving\Creatives;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Serving\Creative;
 use NeneServe\Serving\CreativeType;
@@ -16,7 +17,6 @@ use NeneServe\Serving\UseCase\CreativeScanFailedException;
 use NeneServe\Serving\UseCase\CreativeValidationException;
 use NeneServe\Serving\UseCase\InvalidReviewTransitionException;
 use NeneServe\Serving\UseCase\SelfApprovalForbiddenException;
-use NeneServe\Tenant\AuthContext;
 
 /**
  * Drives the review state machine (creative-review §1): legal transitions,
@@ -26,25 +26,28 @@ use NeneServe\Tenant\AuthContext;
  */
 final readonly class TransitionCreativeUseCase implements TransitionCreativeUseCaseInterface
 {
+    /**
+     * @param RequestScopedHolder<string> $organizationId
+     */
     public function __construct(
         private DatabaseQueryExecutorInterface $query,
         private DatabaseTransactionManagerInterface $transactions,
+        private RequestScopedHolder $organizationId,
     ) {
     }
 
-    public function execute(
-        AuthContext $actor,
-        string $creativeId,
-        ReviewAction $action,
-        ?string $reason = null,
-        bool $selfApprovalOverride = false,
-    ): Creative {
-        $creative = (new PdoCreativeRepository($this->query))->findByIdInOrganization($creativeId, $actor->organizationId);
+    public function execute(TransitionCreativeInput $input): TransitionCreativeOutput
+    {
+        $actorUserId = $input->actorUserId;
+        $organizationId = $this->organizationId->get();
+
+        $creative = (new PdoCreativeRepository($this->query))->findByIdInOrganization($input->creativeId, $organizationId);
 
         if ($creative === null) {
             throw new CreativeNotFoundException();
         }
 
+        $action = $input->action;
         $target = $action->target();
 
         if (!$creative->reviewStatus->canTransitionTo($target)) {
@@ -55,7 +58,7 @@ final readonly class TransitionCreativeUseCase implements TransitionCreativeUseC
             ));
         }
 
-        $reason = $reason !== null && trim($reason) !== '' ? trim($reason) : null;
+        $reason = $input->reason !== null && trim($input->reason) !== '' ? trim($input->reason) : null;
 
         if ($action->requiresReason() && $reason === null) {
             throw new CreativeValidationException(sprintf('%s requires a review_reason.', $action->value));
@@ -69,21 +72,22 @@ final readonly class TransitionCreativeUseCase implements TransitionCreativeUseC
         }
 
         if ($action === ReviewAction::Approve
-            && $creative->submittedBy === $actor->userId
-            && !$selfApprovalOverride) {
+            && $creative->submittedBy === $actorUserId
+            && !$input->selfApprovalOverride) {
             throw new SelfApprovalForbiddenException();
         }
 
-        $submittedBy = $action === ReviewAction::Submit ? $actor->userId : null;
+        $submittedBy = $action === ReviewAction::Submit ? $actorUserId : null;
         $updated = $creative->withReview($target, $submittedBy, $reason);
         $fromStatus = $creative->reviewStatus->value;
+        $selfApprovalOverride = $input->selfApprovalOverride;
 
-        return $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($updated, $actor, $action, $fromStatus, $target, $reason, $selfApprovalOverride): Creative {
+        $stored = $this->transactions->transactional(
+            static function (DatabaseQueryExecutorInterface $tx) use ($updated, $organizationId, $actorUserId, $action, $fromStatus, $target, $reason, $selfApprovalOverride): Creative {
                 (new PdoCreativeRepository($tx))->save($updated);
                 (new PdoAuditLog($tx))->record(
-                    $actor->organizationId,
-                    $actor->userId,
+                    $organizationId,
+                    $actorUserId,
                     'creative.' . $action->value,
                     'creative',
                     $updated->id,
@@ -98,5 +102,7 @@ final readonly class TransitionCreativeUseCase implements TransitionCreativeUseC
                 return $updated;
             },
         );
+
+        return new TransitionCreativeOutput($stored);
     }
 }

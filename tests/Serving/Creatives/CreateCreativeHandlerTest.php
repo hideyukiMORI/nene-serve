@@ -9,11 +9,14 @@ use Nene2\Http\JsonResponseFactory;
 use Nene2\Validation\ValidationException;
 use NeneServe\Serving\Creative;
 use NeneServe\Serving\Creatives\CreateCreativeHandler;
+use NeneServe\Serving\Creatives\CreateCreativeOutput;
 use NeneServe\Serving\Creatives\CreateCreativeUseCaseInterface;
+use NeneServe\Serving\Creatives\CreateHtml5CreativeInput;
+use NeneServe\Serving\Creatives\CreateImageCreativeInput;
+use NeneServe\Serving\Creatives\CreateVideoCreativeInput;
 use NeneServe\Serving\CreativeType;
 use NeneServe\Serving\ReviewStatus;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
-use NeneServe\Tenant\AuthContext;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -65,17 +68,17 @@ final class CreateCreativeHandlerTest extends TestCase
     private function useCase(): CreateCreativeUseCaseInterface
     {
         return new class () implements CreateCreativeUseCaseInterface {
-            public function createImage(AuthContext $actor, string $destinationUrl, string $assetUrl, int $width, int $height, ?string $campaignId = null): Creative
+            public function createImage(CreateImageCreativeInput $input): CreateCreativeOutput
             {
-                return new Creative('cr-1', $actor->organizationId, CreativeType::Image, ReviewStatus::Draft, $destinationUrl, $assetUrl, $width, $height);
+                return new CreateCreativeOutput(new Creative('cr-1', 'org-acme', CreativeType::Image, ReviewStatus::Draft, $input->destinationUrl, $input->assetUrl, $input->width, $input->height));
             }
 
-            public function createVideo(AuthContext $actor, string $destinationUrl, string $assetUrl, string $posterUrl, int $width, int $height, int $durationSeconds, ?string $campaignId = null): Creative
+            public function createVideo(CreateVideoCreativeInput $input): CreateCreativeOutput
             {
                 throw new \LogicException('not used');
             }
 
-            public function createHtml5(AuthContext $actor, string $destinationUrl, string $bundleId, int $bundleSizeBytes, int $assetCount, string $htmlEntry, ?int $width = null, ?int $height = null, ?string $campaignId = null): Creative
+            public function createHtml5(CreateHtml5CreativeInput $input): CreateCreativeOutput
             {
                 throw new \LogicException('not used');
             }

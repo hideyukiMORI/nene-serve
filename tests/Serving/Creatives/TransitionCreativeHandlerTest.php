@@ -9,13 +9,14 @@ use Nene2\Http\JsonResponseFactory;
 use Nene2\Routing\Router;
 use NeneServe\Serving\Creative;
 use NeneServe\Serving\Creatives\TransitionCreativeHandler;
+use NeneServe\Serving\Creatives\TransitionCreativeInput;
+use NeneServe\Serving\Creatives\TransitionCreativeOutput;
 use NeneServe\Serving\Creatives\TransitionCreativeUseCaseInterface;
 use NeneServe\Serving\CreativeType;
 use NeneServe\Serving\Review\ReviewAction;
 use NeneServe\Serving\ReviewStatus;
 use NeneServe\Serving\UseCase\InvalidReviewTransitionException;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
-use NeneServe\Tenant\AuthContext;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -27,9 +28,9 @@ final class TransitionCreativeHandlerTest extends TestCase
     public function testApproveReturnsUpdatedCreative(): void
     {
         $useCase = new class () implements TransitionCreativeUseCaseInterface {
-            public function execute(AuthContext $actor, string $creativeId, ReviewAction $action, ?string $reason = null, bool $selfApprovalOverride = false): Creative
+            public function execute(TransitionCreativeInput $input): TransitionCreativeOutput
             {
-                return new Creative($creativeId, $actor->organizationId, CreativeType::Image, ReviewStatus::Approved, 'https://acme.test/a');
+                return new TransitionCreativeOutput(new Creative($input->creativeId, 'org-acme', CreativeType::Image, ReviewStatus::Approved, 'https://acme.test/a'));
             }
         };
 
@@ -44,7 +45,7 @@ final class TransitionCreativeHandlerTest extends TestCase
     public function testInvalidTransitionPropagatesToHandler(): void
     {
         $useCase = new class () implements TransitionCreativeUseCaseInterface {
-            public function execute(AuthContext $actor, string $creativeId, ReviewAction $action, ?string $reason = null, bool $selfApprovalOverride = false): Creative
+            public function execute(TransitionCreativeInput $input): TransitionCreativeOutput
             {
                 throw new InvalidReviewTransitionException('Cannot approve a creative in draft.');
             }
@@ -57,7 +58,7 @@ final class TransitionCreativeHandlerTest extends TestCase
     public function testRejectsRequestWithoutClaims(): void
     {
         $useCase = new class () implements TransitionCreativeUseCaseInterface {
-            public function execute(AuthContext $actor, string $creativeId, ReviewAction $action, ?string $reason = null, bool $selfApprovalOverride = false): Creative
+            public function execute(TransitionCreativeInput $input): TransitionCreativeOutput
             {
                 throw new \LogicException('Use case must not be reached.');
             }

@@ -9,7 +9,6 @@ use Nene2\Http\JsonRequestBodyParser;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Validation\ValidationError;
 use Nene2\Validation\ValidationException;
-use NeneServe\Serving\Creative;
 use NeneServe\Tenant\Auth\AuthContextResolver;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -40,17 +39,17 @@ final readonly class CreateCreativeHandler
         $type = isset($body['type']) && is_string($body['type']) ? $body['type'] : 'image';
         $campaignId = isset($body['campaign_id']) && is_string($body['campaign_id']) ? $body['campaign_id'] : null;
 
-        $creative = match ($type) {
-            'image' => $this->createCreative->createImage(
-                $context,
+        $output = match ($type) {
+            'image' => $this->createCreative->createImage(new CreateImageCreativeInput(
+                $context->userId,
                 $this->str($body, 'destination_url'),
                 $this->str($body, 'asset_url'),
                 $this->int($body, 'width'),
                 $this->int($body, 'height'),
                 $campaignId,
-            ),
-            'video' => $this->createCreative->createVideo(
-                $context,
+            )),
+            'video' => $this->createCreative->createVideo(new CreateVideoCreativeInput(
+                $context->userId,
                 $this->str($body, 'destination_url'),
                 $this->str($body, 'asset_url'),
                 $this->str($body, 'poster_url'),
@@ -58,9 +57,9 @@ final readonly class CreateCreativeHandler
                 $this->int($body, 'height'),
                 $this->int($body, 'duration_seconds'),
                 $campaignId,
-            ),
-            'html5_bundle' => $this->createCreative->createHtml5(
-                $context,
+            )),
+            'html5_bundle' => $this->createCreative->createHtml5(new CreateHtml5CreativeInput(
+                $context->userId,
                 $this->str($body, 'destination_url'),
                 $this->str($body, 'bundle_id'),
                 $this->int($body, 'bundle_size_bytes'),
@@ -69,18 +68,13 @@ final readonly class CreateCreativeHandler
                 isset($body['width']) && is_int($body['width']) ? $body['width'] : null,
                 isset($body['height']) && is_int($body['height']) ? $body['height'] : null,
                 $campaignId,
-            ),
+            )),
             default => throw new ValidationException([
                 new ValidationError('type', 'Unsupported creative type; third_party_tag is forbidden.', 'invalid'),
             ]),
         };
 
-        return $this->respond($creative);
-    }
-
-    private function respond(Creative $creative): ResponseInterface
-    {
-        return $this->response->create($creative->toAdminArray(), 201);
+        return $this->response->create($output->creative->toAdminArray(), 201);
     }
 
     /** @param array<string, mixed> $body */

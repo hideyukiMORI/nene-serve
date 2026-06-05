@@ -6,6 +6,7 @@ namespace NeneServe\Serving\Creatives;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Serving\Creative;
 use NeneServe\Serving\CreativeType;
@@ -14,7 +15,6 @@ use NeneServe\Serving\Review\ImageAcceptance;
 use NeneServe\Serving\ReviewStatus;
 use NeneServe\Serving\UseCase\CreativeNotFoundException;
 use NeneServe\Serving\UseCase\InvalidReviewTransitionException;
-use NeneServe\Tenant\AuthContext;
 
 /**
  * Revises an approved creative. An approved version is immutable, so this never
@@ -24,21 +24,19 @@ use NeneServe\Tenant\AuthContext;
  */
 final readonly class ReviseCreativeUseCase implements ReviseCreativeUseCaseInterface
 {
+    /**
+     * @param RequestScopedHolder<string> $organizationId
+     */
     public function __construct(
         private DatabaseQueryExecutorInterface $query,
         private DatabaseTransactionManagerInterface $transactions,
+        private RequestScopedHolder $organizationId,
     ) {
     }
 
-    public function execute(
-        AuthContext $actor,
-        string $creativeId,
-        string $destinationUrl,
-        string $assetUrl,
-        int $width,
-        int $height,
-    ): Creative {
-        $current = (new PdoCreativeRepository($this->query))->findByIdInOrganization($creativeId, $actor->organizationId);
+    public function execute(ReviseCreativeInput $input): ReviseCreativeOutput
+    {
+        $current = (new PdoCreativeRepository($this->query))->findByIdInOrganization($input->creativeId, $this->organizationId->get());
 
         if ($current === null) {
             throw new CreativeNotFoundException();
@@ -49,7 +47,7 @@ final readonly class ReviseCreativeUseCase implements ReviseCreativeUseCaseInter
         }
 
         if ($current->type === CreativeType::Image) {
-            ImageAcceptance::assertValid($assetUrl, $destinationUrl, $width, $height);
+            ImageAcceptance::assertValid($input->assetUrl, $input->destinationUrl, $input->width, $input->height);
         }
 
         $newVersion = $current->version + 1;
@@ -58,19 +56,19 @@ final readonly class ReviseCreativeUseCase implements ReviseCreativeUseCaseInter
             $current->organizationId,
             $current->type,
             ReviewStatus::Draft,
-            $destinationUrl,
-            $assetUrl,
-            $width,
-            $height,
+            $input->destinationUrl,
+            $input->assetUrl,
+            $input->width,
+            $input->height,
             $newVersion,
         );
 
-        return $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($revision, $current, $actor): Creative {
+        $stored = $this->transactions->transactional(
+            static function (DatabaseQueryExecutorInterface $tx) use ($revision, $current, $input): Creative {
                 (new PdoCreativeRepository($tx))->save($revision); // prior version row is left untouched
                 (new PdoAuditLog($tx))->record(
-                    $actor->organizationId,
-                    $actor->userId,
+                    $revision->organizationId,
+                    $input->actorUserId,
                     'creative.version_superseded',
                     'creative',
                     $current->id,
@@ -83,5 +81,7 @@ final readonly class ReviseCreativeUseCase implements ReviseCreativeUseCaseInter
                 return $revision;
             },
         );
+
+        return new ReviseCreativeOutput($stored);
     }
 }
