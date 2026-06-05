@@ -9,6 +9,8 @@ use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
+use Nene2\Http\RequestScopedHolder;
+use NeneServe\Http\RuntimeServiceProvider;
 use NeneServe\Tenant\UserRepositoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -24,14 +26,31 @@ final readonly class AccountServiceProvider implements ServiceProviderInterface
     {
         $builder
             ->set(
-                CurrentUserHandler::class,
-                static function (ContainerInterface $container): CurrentUserHandler {
+                GetCurrentUserUseCaseInterface::class,
+                static function (ContainerInterface $container): GetCurrentUserUseCaseInterface {
                     $users = $container->get(UserRepositoryInterface::class);
-                    $response = $container->get(JsonResponseFactory::class);
-                    $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
+                    $organizationId = $container->get(RuntimeServiceProvider::ORG_ID_HOLDER);
 
                     if (!$users instanceof UserRepositoryInterface) {
                         throw new LogicException('User repository service is invalid.');
+                    }
+
+                    if (!$organizationId instanceof RequestScopedHolder) {
+                        throw new LogicException('Organization id holder service is invalid.');
+                    }
+
+                    return new GetCurrentUserUseCase($users, $organizationId);
+                },
+            )
+            ->set(
+                CurrentUserHandler::class,
+                static function (ContainerInterface $container): CurrentUserHandler {
+                    $useCase = $container->get(GetCurrentUserUseCaseInterface::class);
+                    $response = $container->get(JsonResponseFactory::class);
+                    $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
+
+                    if (!$useCase instanceof GetCurrentUserUseCaseInterface) {
+                        throw new LogicException('Get current user use case service is invalid.');
                     }
 
                     if (!$response instanceof JsonResponseFactory) {
@@ -42,7 +61,7 @@ final readonly class AccountServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Problem details response factory service is invalid.');
                     }
 
-                    return new CurrentUserHandler($users, $response, $problemDetails);
+                    return new CurrentUserHandler($useCase, $response, $problemDetails);
                 },
             )
             ->set(

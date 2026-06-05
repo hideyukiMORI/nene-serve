@@ -8,7 +8,6 @@ use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use NeneServe\Tenant\Auth\AuthContextResolver;
 use NeneServe\Tenant\Capability;
-use NeneServe\Tenant\UserRepositoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -21,7 +20,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final readonly class CurrentUserHandler
 {
     public function __construct(
-        private UserRepositoryInterface $users,
+        private GetCurrentUserUseCaseInterface $useCase,
         private JsonResponseFactory $response,
         private ProblemDetailsResponseFactory $problemDetails,
     ) {
@@ -35,7 +34,7 @@ final readonly class CurrentUserHandler
             return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
         }
 
-        $user = $this->users->findByIdInOrganization($context->userId, $context->organizationId);
+        $user = $this->useCase->execute(new GetCurrentUserInput($context->userId))->user;
 
         if ($user === null) {
             return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication failed.');
