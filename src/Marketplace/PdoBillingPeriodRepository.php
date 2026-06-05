@@ -4,49 +4,52 @@ declare(strict_types=1);
 
 namespace NeneServe\Marketplace;
 
-use PDO;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 
-final class PdoBillingPeriodRepository implements BillingPeriodRepositoryInterface
+final readonly class PdoBillingPeriodRepository implements BillingPeriodRepositoryInterface
 {
     private const COLUMNS = 'id, organization_id, campaign_id, period_start, period_end, status';
 
     public function __construct(
-        private readonly PDO $pdo,
+        private DatabaseQueryExecutorInterface $query,
     ) {
     }
 
     public function findByIdInOrganization(string $id, string $organizationId): ?BillingPeriod
     {
-        $stmt = $this->pdo->prepare('SELECT ' . self::COLUMNS . ' FROM billing_periods WHERE id = ? AND organization_id = ? LIMIT 1');
-        $stmt->execute([$id, $organizationId]);
-        $row = $stmt->fetch();
+        $row = $this->query->fetchOne(
+            'SELECT ' . self::COLUMNS . ' FROM billing_periods WHERE id = ? AND organization_id = ? LIMIT 1',
+            [$id, $organizationId],
+        );
 
-        return $row === false ? null : $this->hydrate($row);
+        return $row === null ? null : $this->hydrate($row);
     }
 
     public function listByCampaign(string $organizationId, string $campaignId): array
     {
-        $stmt = $this->pdo->prepare('SELECT ' . self::COLUMNS . ' FROM billing_periods WHERE organization_id = ? AND campaign_id = ? ORDER BY period_start');
-        $stmt->execute([$organizationId, $campaignId]);
+        $rows = $this->query->fetchAll(
+            'SELECT ' . self::COLUMNS . ' FROM billing_periods WHERE organization_id = ? AND campaign_id = ? ORDER BY period_start',
+            [$organizationId, $campaignId],
+        );
 
-        return array_map($this->hydrate(...), array_values($stmt->fetchAll()));
+        return array_map($this->hydrate(...), $rows);
     }
 
     public function save(BillingPeriod $period): void
     {
-        $stmt = $this->pdo->prepare(
+        $this->query->execute(
             'INSERT INTO billing_periods (id, organization_id, campaign_id, period_start, period_end, status)
              VALUES (?, ?, ?, ?, ?, ?) AS new
              ON DUPLICATE KEY UPDATE campaign_id = new.campaign_id, period_start = new.period_start, period_end = new.period_end, status = new.status',
+            [
+                $period->id,
+                $period->organizationId,
+                $period->campaignId,
+                $period->periodStart,
+                $period->periodEnd,
+                $period->status,
+            ],
         );
-        $stmt->execute([
-            $period->id,
-            $period->organizationId,
-            $period->campaignId,
-            $period->periodStart,
-            $period->periodEnd,
-            $period->status,
-        ]);
     }
 
     /** @param array<string, mixed> $row */

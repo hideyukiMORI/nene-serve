@@ -16,6 +16,10 @@ use NeneServe\Health\HealthServiceProvider;
 use NeneServe\Marketplace\Admin\MarketplaceRouteRegistrar;
 use NeneServe\Marketplace\Admin\MarketplaceServiceProvider;
 use NeneServe\Marketplace\Admin\MarketplaceValidationExceptionHandler;
+use NeneServe\Marketplace\Billing\BillingPeriodNotFoundExceptionHandler;
+use NeneServe\Marketplace\Billing\BillingRouteRegistrar;
+use NeneServe\Marketplace\Billing\BillingServiceProvider;
+use NeneServe\Marketplace\Billing\InvalidPeriodTransitionExceptionHandler;
 use NeneServe\Measurement\Dsr\DsrRouteRegistrar;
 use NeneServe\Measurement\Dsr\DsrServiceProvider;
 use NeneServe\Measurement\Metrics\MetricsRouteRegistrar;
@@ -75,7 +79,8 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
             ->addProvider(new MarketplaceServiceProvider())
             ->addProvider(new InvitationsServiceProvider())
             ->addProvider(new LegalHoldsServiceProvider())
-            ->addProvider(new DsrServiceProvider());
+            ->addProvider(new DsrServiceProvider())
+            ->addProvider(new BillingServiceProvider());
 
         $builder
             ->set(
@@ -94,6 +99,7 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                     $invitations = $container->get(InvitationsServiceProvider::ROUTE_REGISTRAR);
                     $legalHolds = $container->get(LegalHoldsServiceProvider::ROUTE_REGISTRAR);
                     $dsr = $container->get(DsrServiceProvider::ROUTE_REGISTRAR);
+                    $billing = $container->get(BillingServiceProvider::ROUTE_REGISTRAR);
 
                     if (!$health instanceof HealthRouteRegistrar) {
                         throw new LogicException('Health route registrar service is invalid.');
@@ -147,8 +153,12 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('DSR route registrar service is invalid.');
                     }
 
+                    if (!$billing instanceof BillingRouteRegistrar) {
+                        throw new LogicException('Billing route registrar service is invalid.');
+                    }
+
                     /** @var list<callable(\Nene2\Routing\Router): void> $registrars */
-                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements, $creatives, $creativeReview, $marketplace, $invitations, $legalHolds, $dsr];
+                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements, $creatives, $creativeReview, $marketplace, $invitations, $legalHolds, $dsr, $billing];
 
                     return $registrars;
                 },
@@ -214,6 +224,17 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Legal hold exception handler service is invalid.');
                     }
 
+                    $billingNotFound = $container->get(BillingServiceProvider::EXCEPTION_HANDLER_NOT_FOUND);
+                    $periodTransition = $container->get(BillingServiceProvider::EXCEPTION_HANDLER_TRANSITION);
+
+                    if (!$billingNotFound instanceof BillingPeriodNotFoundExceptionHandler) {
+                        throw new LogicException('Billing period not found exception handler service is invalid.');
+                    }
+
+                    if (!$periodTransition instanceof InvalidPeriodTransitionExceptionHandler) {
+                        throw new LogicException('Invalid period transition exception handler service is invalid.');
+                    }
+
                     /** @var list<DomainExceptionHandlerInterface> $handlers */
                     $handlers = [
                         $authenticationFailed,
@@ -227,6 +248,8 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         $marketplaceValidation,
                         $invitationInvalid,
                         $legalHold,
+                        $billingNotFound,
+                        $periodTransition,
                     ];
 
                     return $handlers;
