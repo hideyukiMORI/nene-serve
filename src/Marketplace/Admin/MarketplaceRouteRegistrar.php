@@ -13,6 +13,9 @@ final readonly class MarketplaceRouteRegistrar
         private ListAdvertisersHandler $listAdvertisers,
         private ListPricingRulesHandler $listPricingRules,
         private ListCampaignsHandler $listCampaigns,
+        private CreateAdvertiserHandler $createAdvertiser,
+        private CreatePricingRuleHandler $createPricingRule,
+        private CreateCampaignHandler $createCampaign,
     ) {
     }
 
@@ -21,9 +24,15 @@ final readonly class MarketplaceRouteRegistrar
         $listAdvertisers = $this->listAdvertisers;
         $listPricingRules = $this->listPricingRules;
         $listCampaigns = $this->listCampaigns;
+        $createAdvertiser = $this->createAdvertiser;
+        $createPricingRule = $this->createPricingRule;
+        $createCampaign = $this->createCampaign;
 
         $router->get('/admin/advertisers', static fn (ServerRequestInterface $request) => $listAdvertisers->handle($request));
         $router->get('/admin/pricing-rules', static fn (ServerRequestInterface $request) => $listPricingRules->handle($request));
         $router->get('/admin/campaigns', static fn (ServerRequestInterface $request) => $listCampaigns->handle($request));
+        $router->post('/admin/advertisers', static fn (ServerRequestInterface $request) => $createAdvertiser->handle($request));
+        $router->post('/admin/pricing-rules', static fn (ServerRequestInterface $request) => $createPricingRule->handle($request));
+        $router->post('/admin/campaigns', static fn (ServerRequestInterface $request) => $createCampaign->handle($request));
     }
 }

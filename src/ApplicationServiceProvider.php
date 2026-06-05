@@ -15,6 +15,7 @@ use NeneServe\Health\HealthRouteRegistrar;
 use NeneServe\Health\HealthServiceProvider;
 use NeneServe\Marketplace\Admin\MarketplaceRouteRegistrar;
 use NeneServe\Marketplace\Admin\MarketplaceServiceProvider;
+use NeneServe\Marketplace\Admin\MarketplaceValidationExceptionHandler;
 use NeneServe\Measurement\Metrics\MetricsRouteRegistrar;
 use NeneServe\Measurement\Metrics\MetricsServiceProvider;
 use NeneServe\Serving\Creatives\CreativeNotFoundExceptionHandler;
@@ -171,6 +172,12 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Creative scan failed exception handler service is invalid.');
                     }
 
+                    $marketplaceValidation = $container->get(MarketplaceServiceProvider::EXCEPTION_HANDLER);
+
+                    if (!$marketplaceValidation instanceof MarketplaceValidationExceptionHandler) {
+                        throw new LogicException('Marketplace validation exception handler service is invalid.');
+                    }
+
                     /** @var list<DomainExceptionHandlerInterface> $handlers */
                     $handlers = [
                         $authenticationFailed,
@@ -181,6 +188,7 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         $invalidTransition,
                         $selfApproval,
                         $scanFailed,
+                        $marketplaceValidation,
                     ];
 
                     return $handlers;

@@ -6,6 +6,7 @@ namespace NeneServe\Marketplace\Admin;
 
 use LogicException;
 use Nene2\Database\DatabaseQueryExecutorInterface;
+use Nene2\Database\DatabaseTransactionManagerInterface;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
@@ -21,6 +22,8 @@ use Psr\Container\ContainerInterface;
 final readonly class MarketplaceServiceProvider implements ServiceProviderInterface
 {
     public const string ROUTE_REGISTRAR = 'nene-serve.route_registrar.marketplace';
+
+    public const string EXCEPTION_HANDLER = 'nene-serve.exception_handler.marketplace_validation';
 
     public function register(ContainerBuilder $builder): void
     {
@@ -74,11 +77,66 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
                 },
             )
             ->set(
+                CreateAdvertiserUseCaseInterface::class,
+                static fn (ContainerInterface $c): CreateAdvertiserUseCaseInterface => new CreateAdvertiserUseCase(self::transactions($c)),
+            )
+            ->set(
+                CreatePricingRuleUseCaseInterface::class,
+                static fn (ContainerInterface $c): CreatePricingRuleUseCaseInterface => new CreatePricingRuleUseCase(self::query($c), self::transactions($c)),
+            )
+            ->set(
+                CreateCampaignUseCaseInterface::class,
+                static fn (ContainerInterface $c): CreateCampaignUseCaseInterface => new CreateCampaignUseCase(self::query($c), self::transactions($c)),
+            )
+            ->set(
+                CreateAdvertiserHandler::class,
+                static function (ContainerInterface $c): CreateAdvertiserHandler {
+                    $useCase = $c->get(CreateAdvertiserUseCaseInterface::class);
+
+                    if (!$useCase instanceof CreateAdvertiserUseCaseInterface) {
+                        throw new LogicException('Create advertiser use case service is invalid.');
+                    }
+
+                    return new CreateAdvertiserHandler($useCase, self::json($c), self::problem($c));
+                },
+            )
+            ->set(
+                CreatePricingRuleHandler::class,
+                static function (ContainerInterface $c): CreatePricingRuleHandler {
+                    $useCase = $c->get(CreatePricingRuleUseCaseInterface::class);
+
+                    if (!$useCase instanceof CreatePricingRuleUseCaseInterface) {
+                        throw new LogicException('Create pricing rule use case service is invalid.');
+                    }
+
+                    return new CreatePricingRuleHandler($useCase, self::json($c), self::problem($c));
+                },
+            )
+            ->set(
+                CreateCampaignHandler::class,
+                static function (ContainerInterface $c): CreateCampaignHandler {
+                    $useCase = $c->get(CreateCampaignUseCaseInterface::class);
+
+                    if (!$useCase instanceof CreateCampaignUseCaseInterface) {
+                        throw new LogicException('Create campaign use case service is invalid.');
+                    }
+
+                    return new CreateCampaignHandler($useCase, self::json($c), self::problem($c));
+                },
+            )
+            ->set(
+                self::EXCEPTION_HANDLER,
+                static fn (ContainerInterface $c): MarketplaceValidationExceptionHandler => new MarketplaceValidationExceptionHandler(self::problem($c)),
+            )
+            ->set(
                 self::ROUTE_REGISTRAR,
                 static function (ContainerInterface $container): MarketplaceRouteRegistrar {
                     $advertisers = $container->get(ListAdvertisersHandler::class);
                     $pricingRules = $container->get(ListPricingRulesHandler::class);
                     $campaigns = $container->get(ListCampaignsHandler::class);
+                    $createAdvertiser = $container->get(CreateAdvertiserHandler::class);
+                    $createPricingRule = $container->get(CreatePricingRuleHandler::class);
+                    $createCampaign = $container->get(CreateCampaignHandler::class);
 
                     if (!$advertisers instanceof ListAdvertisersHandler) {
                         throw new LogicException('List advertisers handler service is invalid.');
@@ -92,9 +150,39 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
                         throw new LogicException('List campaigns handler service is invalid.');
                     }
 
-                    return new MarketplaceRouteRegistrar($advertisers, $pricingRules, $campaigns);
+                    if (!$createAdvertiser instanceof CreateAdvertiserHandler) {
+                        throw new LogicException('Create advertiser handler service is invalid.');
+                    }
+
+                    if (!$createPricingRule instanceof CreatePricingRuleHandler) {
+                        throw new LogicException('Create pricing rule handler service is invalid.');
+                    }
+
+                    if (!$createCampaign instanceof CreateCampaignHandler) {
+                        throw new LogicException('Create campaign handler service is invalid.');
+                    }
+
+                    return new MarketplaceRouteRegistrar(
+                        $advertisers,
+                        $pricingRules,
+                        $campaigns,
+                        $createAdvertiser,
+                        $createPricingRule,
+                        $createCampaign,
+                    );
                 },
             );
+    }
+
+    private static function transactions(ContainerInterface $container): DatabaseTransactionManagerInterface
+    {
+        $transactions = $container->get(DatabaseTransactionManagerInterface::class);
+
+        if (!$transactions instanceof DatabaseTransactionManagerInterface) {
+            throw new LogicException('Database transaction manager service is invalid.');
+        }
+
+        return $transactions;
     }
 
     private static function query(ContainerInterface $container): DatabaseQueryExecutorInterface
