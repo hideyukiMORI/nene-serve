@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace NeneServe\Marketplace\Billing;
 
-use LogicException;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
-use Nene2\Http\RequestScopedHolder;
 use NeneServe\Marketplace\BillingPeriodRepositoryInterface;
 use NeneServe\Marketplace\CampaignRepositoryInterface;
 use NeneServe\Marketplace\Invoice\InvoiceClientInterface;
@@ -45,104 +43,53 @@ final readonly class BillingServiceProvider implements ServiceProviderInterface
             )
             ->set(
                 OpenBillingPeriodUseCaseInterface::class,
-                static function (ContainerInterface $c): OpenBillingPeriodUseCaseInterface {
-                    $campaigns = $c->get(CampaignRepositoryInterface::class);
-
-                    if (!$campaigns instanceof CampaignRepositoryInterface) {
-                        throw new LogicException('Campaign repository service is invalid.');
-                    }
-
-                    return new OpenBillingPeriodUseCase($campaigns, self::transactions($c), self::orgId($c));
-                },
+                static fn (ContainerInterface $c): OpenBillingPeriodUseCaseInterface => new OpenBillingPeriodUseCase(
+                    self::service($c, CampaignRepositoryInterface::class),
+                    self::transactions($c),
+                    self::orgId($c),
+                ),
             )
             ->set(
                 CloseBillingPeriodUseCaseInterface::class,
-                static function (ContainerInterface $c): CloseBillingPeriodUseCaseInterface {
-                    $spend = $c->get(GetCampaignSpendUseCase::class);
-
-                    if (!$spend instanceof GetCampaignSpendUseCase) {
-                        throw new LogicException('Get campaign spend use case service is invalid.');
-                    }
-
-                    return new CloseBillingPeriodUseCase(self::query($c), self::transactions($c), $spend, self::orgId($c));
-                },
+                static fn (ContainerInterface $c): CloseBillingPeriodUseCaseInterface => new CloseBillingPeriodUseCase(
+                    self::query($c),
+                    self::transactions($c),
+                    self::service($c, GetCampaignSpendUseCase::class),
+                    self::orgId($c),
+                ),
             )
             ->set(
                 HandoffBillingPeriodUseCaseInterface::class,
-                static function (ContainerInterface $c): HandoffBillingPeriodUseCaseInterface {
-                    $invoice = $c->get(InvoiceClientInterface::class);
-
-                    if (!$invoice instanceof InvoiceClientInterface) {
-                        throw new LogicException('Invoice client service is invalid.');
-                    }
-
-                    return new HandoffBillingPeriodUseCase(self::query($c), self::transactions($c), $invoice, self::orgId($c));
-                },
+                static fn (ContainerInterface $c): HandoffBillingPeriodUseCaseInterface => new HandoffBillingPeriodUseCase(
+                    self::query($c),
+                    self::transactions($c),
+                    self::service($c, InvoiceClientInterface::class),
+                    self::orgId($c),
+                ),
             )
             ->set(
                 OpenBillingPeriodHandler::class,
-                static function (ContainerInterface $c): OpenBillingPeriodHandler {
-                    $useCase = $c->get(OpenBillingPeriodUseCaseInterface::class);
-
-                    if (!$useCase instanceof OpenBillingPeriodUseCaseInterface) {
-                        throw new LogicException('Open billing period use case service is invalid.');
-                    }
-
-                    return new OpenBillingPeriodHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): OpenBillingPeriodHandler => new OpenBillingPeriodHandler(self::service($c, OpenBillingPeriodUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 CloseBillingPeriodHandler::class,
-                static function (ContainerInterface $c): CloseBillingPeriodHandler {
-                    $useCase = $c->get(CloseBillingPeriodUseCaseInterface::class);
-
-                    if (!$useCase instanceof CloseBillingPeriodUseCaseInterface) {
-                        throw new LogicException('Close billing period use case service is invalid.');
-                    }
-
-                    return new CloseBillingPeriodHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): CloseBillingPeriodHandler => new CloseBillingPeriodHandler(self::service($c, CloseBillingPeriodUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 GetBillingPeriodUseCaseInterface::class,
-                static function (ContainerInterface $c): GetBillingPeriodUseCaseInterface {
-                    $periods = $c->get(BillingPeriodRepositoryInterface::class);
-                    $snapshots = $c->get(SpendSnapshotRepositoryInterface::class);
-
-                    if (!$periods instanceof BillingPeriodRepositoryInterface) {
-                        throw new LogicException('Billing period repository service is invalid.');
-                    }
-
-                    if (!$snapshots instanceof SpendSnapshotRepositoryInterface) {
-                        throw new LogicException('Spend snapshot repository service is invalid.');
-                    }
-
-                    return new GetBillingPeriodUseCase($periods, $snapshots, self::orgId($c));
-                },
+                static fn (ContainerInterface $c): GetBillingPeriodUseCaseInterface => new GetBillingPeriodUseCase(
+                    self::service($c, BillingPeriodRepositoryInterface::class),
+                    self::service($c, SpendSnapshotRepositoryInterface::class),
+                    self::orgId($c),
+                ),
             )
             ->set(
                 GetBillingPeriodHandler::class,
-                static function (ContainerInterface $c): GetBillingPeriodHandler {
-                    $useCase = $c->get(GetBillingPeriodUseCaseInterface::class);
-
-                    if (!$useCase instanceof GetBillingPeriodUseCaseInterface) {
-                        throw new LogicException('Get billing period use case service is invalid.');
-                    }
-
-                    return new GetBillingPeriodHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): GetBillingPeriodHandler => new GetBillingPeriodHandler(self::service($c, GetBillingPeriodUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 HandoffBillingPeriodHandler::class,
-                static function (ContainerInterface $c): HandoffBillingPeriodHandler {
-                    $useCase = $c->get(HandoffBillingPeriodUseCaseInterface::class);
-
-                    if (!$useCase instanceof HandoffBillingPeriodUseCaseInterface) {
-                        throw new LogicException('Handoff billing period use case service is invalid.');
-                    }
-
-                    return new HandoffBillingPeriodHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): HandoffBillingPeriodHandler => new HandoffBillingPeriodHandler(self::service($c, HandoffBillingPeriodUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 self::EXCEPTION_HANDLER_NOT_FOUND,
@@ -162,32 +109,12 @@ final readonly class BillingServiceProvider implements ServiceProviderInterface
             )
             ->set(
                 self::ROUTE_REGISTRAR,
-                static function (ContainerInterface $container): BillingRouteRegistrar {
-                    $open = $container->get(OpenBillingPeriodHandler::class);
-                    $close = $container->get(CloseBillingPeriodHandler::class);
-                    $get = $container->get(GetBillingPeriodHandler::class);
-                    $handoff = $container->get(HandoffBillingPeriodHandler::class);
-
-                    if (!$open instanceof OpenBillingPeriodHandler) {
-                        throw new LogicException('Open billing period handler service is invalid.');
-                    }
-
-                    if (!$close instanceof CloseBillingPeriodHandler) {
-                        throw new LogicException('Close billing period handler service is invalid.');
-                    }
-
-                    if (!$get instanceof GetBillingPeriodHandler) {
-                        throw new LogicException('Get billing period handler service is invalid.');
-                    }
-
-                    if (!$handoff instanceof HandoffBillingPeriodHandler) {
-                        throw new LogicException('Handoff billing period handler service is invalid.');
-                    }
-
-                    return new BillingRouteRegistrar($open, $close, $get, $handoff);
-                },
+                static fn (ContainerInterface $c): BillingRouteRegistrar => new BillingRouteRegistrar(
+                    self::service($c, OpenBillingPeriodHandler::class),
+                    self::service($c, CloseBillingPeriodHandler::class),
+                    self::service($c, GetBillingPeriodHandler::class),
+                    self::service($c, HandoffBillingPeriodHandler::class),
+                ),
             );
     }
-
-    /** @return RequestScopedHolder<string> */
 }

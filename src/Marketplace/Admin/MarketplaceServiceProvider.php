@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace NeneServe\Marketplace\Admin;
 
-use LogicException;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
-use Nene2\Http\RequestScopedHolder;
 use NeneServe\Marketplace\AdvertiserRepositoryInterface;
 use NeneServe\Marketplace\CampaignRepositoryInterface;
 use NeneServe\Marketplace\PdoAdvertiserRepository;
@@ -45,75 +43,27 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
             )
             ->set(
                 ListAdvertisersUseCaseInterface::class,
-                static function (ContainerInterface $c): ListAdvertisersUseCaseInterface {
-                    $repo = $c->get(AdvertiserRepositoryInterface::class);
-
-                    if (!$repo instanceof AdvertiserRepositoryInterface) {
-                        throw new LogicException('Advertiser repository service is invalid.');
-                    }
-
-                    return new ListAdvertisersUseCase($repo, self::orgId($c));
-                },
+                static fn (ContainerInterface $c): ListAdvertisersUseCaseInterface => new ListAdvertisersUseCase(self::service($c, AdvertiserRepositoryInterface::class), self::orgId($c)),
             )
             ->set(
                 ListPricingRulesUseCaseInterface::class,
-                static function (ContainerInterface $c): ListPricingRulesUseCaseInterface {
-                    $repo = $c->get(PricingRuleRepositoryInterface::class);
-
-                    if (!$repo instanceof PricingRuleRepositoryInterface) {
-                        throw new LogicException('Pricing rule repository service is invalid.');
-                    }
-
-                    return new ListPricingRulesUseCase($repo, self::orgId($c));
-                },
+                static fn (ContainerInterface $c): ListPricingRulesUseCaseInterface => new ListPricingRulesUseCase(self::service($c, PricingRuleRepositoryInterface::class), self::orgId($c)),
             )
             ->set(
                 ListCampaignsUseCaseInterface::class,
-                static function (ContainerInterface $c): ListCampaignsUseCaseInterface {
-                    $repo = $c->get(CampaignRepositoryInterface::class);
-
-                    if (!$repo instanceof CampaignRepositoryInterface) {
-                        throw new LogicException('Campaign repository service is invalid.');
-                    }
-
-                    return new ListCampaignsUseCase($repo, self::orgId($c));
-                },
+                static fn (ContainerInterface $c): ListCampaignsUseCaseInterface => new ListCampaignsUseCase(self::service($c, CampaignRepositoryInterface::class), self::orgId($c)),
             )
             ->set(
                 ListAdvertisersHandler::class,
-                static function (ContainerInterface $c): ListAdvertisersHandler {
-                    $useCase = $c->get(ListAdvertisersUseCaseInterface::class);
-
-                    if (!$useCase instanceof ListAdvertisersUseCaseInterface) {
-                        throw new LogicException('List advertisers use case service is invalid.');
-                    }
-
-                    return new ListAdvertisersHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): ListAdvertisersHandler => new ListAdvertisersHandler(self::service($c, ListAdvertisersUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 ListPricingRulesHandler::class,
-                static function (ContainerInterface $c): ListPricingRulesHandler {
-                    $useCase = $c->get(ListPricingRulesUseCaseInterface::class);
-
-                    if (!$useCase instanceof ListPricingRulesUseCaseInterface) {
-                        throw new LogicException('List pricing rules use case service is invalid.');
-                    }
-
-                    return new ListPricingRulesHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): ListPricingRulesHandler => new ListPricingRulesHandler(self::service($c, ListPricingRulesUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 ListCampaignsHandler::class,
-                static function (ContainerInterface $c): ListCampaignsHandler {
-                    $useCase = $c->get(ListCampaignsUseCaseInterface::class);
-
-                    if (!$useCase instanceof ListCampaignsUseCaseInterface) {
-                        throw new LogicException('List campaigns use case service is invalid.');
-                    }
-
-                    return new ListCampaignsHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): ListCampaignsHandler => new ListCampaignsHandler(self::service($c, ListCampaignsUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 CreateAdvertiserUseCaseInterface::class,
@@ -121,119 +71,52 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
             )
             ->set(
                 CreatePricingRuleUseCaseInterface::class,
-                static function (ContainerInterface $c): CreatePricingRuleUseCaseInterface {
-                    $rules = $c->get(PricingRuleRepositoryInterface::class);
-
-                    if (!$rules instanceof PricingRuleRepositoryInterface) {
-                        throw new LogicException('Pricing rule repository service is invalid.');
-                    }
-
-                    return new CreatePricingRuleUseCase($rules, self::transactions($c), self::orgId($c));
-                },
+                static fn (ContainerInterface $c): CreatePricingRuleUseCaseInterface => new CreatePricingRuleUseCase(
+                    self::service($c, PricingRuleRepositoryInterface::class),
+                    self::transactions($c),
+                    self::orgId($c),
+                ),
             )
             ->set(
                 CreateCampaignUseCaseInterface::class,
-                static function (ContainerInterface $c): CreateCampaignUseCaseInterface {
-                    $advertisers = $c->get(AdvertiserRepositoryInterface::class);
-                    $rules = $c->get(PricingRuleRepositoryInterface::class);
-
-                    if (!$advertisers instanceof AdvertiserRepositoryInterface) {
-                        throw new LogicException('Advertiser repository service is invalid.');
-                    }
-
-                    if (!$rules instanceof PricingRuleRepositoryInterface) {
-                        throw new LogicException('Pricing rule repository service is invalid.');
-                    }
-
-                    return new CreateCampaignUseCase($advertisers, $rules, self::transactions($c), self::orgId($c));
-                },
+                static fn (ContainerInterface $c): CreateCampaignUseCaseInterface => new CreateCampaignUseCase(
+                    self::service($c, AdvertiserRepositoryInterface::class),
+                    self::service($c, PricingRuleRepositoryInterface::class),
+                    self::transactions($c),
+                    self::orgId($c),
+                ),
             )
             ->set(
                 CreateAdvertiserHandler::class,
-                static function (ContainerInterface $c): CreateAdvertiserHandler {
-                    $useCase = $c->get(CreateAdvertiserUseCaseInterface::class);
-
-                    if (!$useCase instanceof CreateAdvertiserUseCaseInterface) {
-                        throw new LogicException('Create advertiser use case service is invalid.');
-                    }
-
-                    return new CreateAdvertiserHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): CreateAdvertiserHandler => new CreateAdvertiserHandler(self::service($c, CreateAdvertiserUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 CreatePricingRuleHandler::class,
-                static function (ContainerInterface $c): CreatePricingRuleHandler {
-                    $useCase = $c->get(CreatePricingRuleUseCaseInterface::class);
-
-                    if (!$useCase instanceof CreatePricingRuleUseCaseInterface) {
-                        throw new LogicException('Create pricing rule use case service is invalid.');
-                    }
-
-                    return new CreatePricingRuleHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): CreatePricingRuleHandler => new CreatePricingRuleHandler(self::service($c, CreatePricingRuleUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 CreateCampaignHandler::class,
-                static function (ContainerInterface $c): CreateCampaignHandler {
-                    $useCase = $c->get(CreateCampaignUseCaseInterface::class);
-
-                    if (!$useCase instanceof CreateCampaignUseCaseInterface) {
-                        throw new LogicException('Create campaign use case service is invalid.');
-                    }
-
-                    return new CreateCampaignHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): CreateCampaignHandler => new CreateCampaignHandler(self::service($c, CreateCampaignUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 GetCampaignSpendUseCase::class,
-                static function (ContainerInterface $c): GetCampaignSpendUseCase {
-                    $creatives = $c->get(CreativeRepositoryInterface::class);
-                    $events = $c->get(EventStoreInterface::class);
-                    $pricingRules = $c->get(PricingRuleRepositoryInterface::class);
-
-                    if (!$creatives instanceof CreativeRepositoryInterface) {
-                        throw new LogicException('Creative repository service is invalid.');
-                    }
-
-                    if (!$events instanceof EventStoreInterface) {
-                        throw new LogicException('Event store service is invalid.');
-                    }
-
-                    if (!$pricingRules instanceof PricingRuleRepositoryInterface) {
-                        throw new LogicException('Pricing rule repository service is invalid.');
-                    }
-
-                    return new GetCampaignSpendUseCase($creatives, $events, $pricingRules);
-                },
+                static fn (ContainerInterface $c): GetCampaignSpendUseCase => new GetCampaignSpendUseCase(
+                    self::service($c, CreativeRepositoryInterface::class),
+                    self::service($c, EventStoreInterface::class),
+                    self::service($c, PricingRuleRepositoryInterface::class),
+                ),
             )
             ->set(
                 GetCampaignUseCaseInterface::class,
-                static function (ContainerInterface $c): GetCampaignUseCaseInterface {
-                    $campaigns = $c->get(CampaignRepositoryInterface::class);
-                    $spend = $c->get(GetCampaignSpendUseCase::class);
-
-                    if (!$campaigns instanceof CampaignRepositoryInterface) {
-                        throw new LogicException('Campaign repository service is invalid.');
-                    }
-
-                    if (!$spend instanceof GetCampaignSpendUseCase) {
-                        throw new LogicException('Get campaign spend use case service is invalid.');
-                    }
-
-                    return new GetCampaignUseCase($campaigns, $spend, self::orgId($c));
-                },
+                static fn (ContainerInterface $c): GetCampaignUseCaseInterface => new GetCampaignUseCase(
+                    self::service($c, CampaignRepositoryInterface::class),
+                    self::service($c, GetCampaignSpendUseCase::class),
+                    self::orgId($c),
+                ),
             )
             ->set(
                 GetCampaignHandler::class,
-                static function (ContainerInterface $c): GetCampaignHandler {
-                    $useCase = $c->get(GetCampaignUseCaseInterface::class);
-
-                    if (!$useCase instanceof GetCampaignUseCaseInterface) {
-                        throw new LogicException('Get campaign use case service is invalid.');
-                    }
-
-                    return new GetCampaignHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): GetCampaignHandler => new GetCampaignHandler(self::service($c, GetCampaignUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 self::EXCEPTION_HANDLER,
@@ -241,56 +124,15 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
             )
             ->set(
                 self::ROUTE_REGISTRAR,
-                static function (ContainerInterface $container): MarketplaceRouteRegistrar {
-                    $advertisers = $container->get(ListAdvertisersHandler::class);
-                    $pricingRules = $container->get(ListPricingRulesHandler::class);
-                    $campaigns = $container->get(ListCampaignsHandler::class);
-                    $createAdvertiser = $container->get(CreateAdvertiserHandler::class);
-                    $createPricingRule = $container->get(CreatePricingRuleHandler::class);
-                    $createCampaign = $container->get(CreateCampaignHandler::class);
-
-                    if (!$advertisers instanceof ListAdvertisersHandler) {
-                        throw new LogicException('List advertisers handler service is invalid.');
-                    }
-
-                    if (!$pricingRules instanceof ListPricingRulesHandler) {
-                        throw new LogicException('List pricing rules handler service is invalid.');
-                    }
-
-                    if (!$campaigns instanceof ListCampaignsHandler) {
-                        throw new LogicException('List campaigns handler service is invalid.');
-                    }
-
-                    if (!$createAdvertiser instanceof CreateAdvertiserHandler) {
-                        throw new LogicException('Create advertiser handler service is invalid.');
-                    }
-
-                    if (!$createPricingRule instanceof CreatePricingRuleHandler) {
-                        throw new LogicException('Create pricing rule handler service is invalid.');
-                    }
-
-                    if (!$createCampaign instanceof CreateCampaignHandler) {
-                        throw new LogicException('Create campaign handler service is invalid.');
-                    }
-
-                    $getCampaign = $container->get(GetCampaignHandler::class);
-
-                    if (!$getCampaign instanceof GetCampaignHandler) {
-                        throw new LogicException('Get campaign handler service is invalid.');
-                    }
-
-                    return new MarketplaceRouteRegistrar(
-                        $advertisers,
-                        $pricingRules,
-                        $campaigns,
-                        $createAdvertiser,
-                        $createPricingRule,
-                        $createCampaign,
-                        $getCampaign,
-                    );
-                },
+                static fn (ContainerInterface $c): MarketplaceRouteRegistrar => new MarketplaceRouteRegistrar(
+                    self::service($c, ListAdvertisersHandler::class),
+                    self::service($c, ListPricingRulesHandler::class),
+                    self::service($c, ListCampaignsHandler::class),
+                    self::service($c, CreateAdvertiserHandler::class),
+                    self::service($c, CreatePricingRuleHandler::class),
+                    self::service($c, CreateCampaignHandler::class),
+                    self::service($c, GetCampaignHandler::class),
+                ),
             );
     }
-
-    /** @return RequestScopedHolder<string> */
 }

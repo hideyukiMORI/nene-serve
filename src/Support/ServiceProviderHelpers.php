@@ -20,6 +20,27 @@ use Psr\Container\ContainerInterface;
  */
 trait ServiceProviderHelpers
 {
+    /**
+     * Fetches a container service and asserts its type, so domain factories can
+     * resolve a dependency in one expression instead of a get + instanceof guard.
+     *
+     * @template T of object
+     *
+     * @param class-string<T> $id
+     *
+     * @return T
+     */
+    protected static function service(ContainerInterface $container, string $id): object
+    {
+        $service = $container->get($id);
+
+        if (!$service instanceof $id) {
+            throw new LogicException(sprintf('Service "%s" is invalid.', $id));
+        }
+
+        return $service;
+    }
+
     protected static function query(ContainerInterface $container): DatabaseQueryExecutorInterface
     {
         $query = $container->get(DatabaseQueryExecutorInterface::class);

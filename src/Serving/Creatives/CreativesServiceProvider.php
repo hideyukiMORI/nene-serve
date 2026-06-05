@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\Creatives;
 
-use LogicException;
-use Nene2\Database\DatabaseQueryExecutorInterface;
-use Nene2\Database\DatabaseTransactionManagerInterface;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use NeneServe\Serving\CreativeRepositoryInterface;
@@ -36,182 +33,69 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
         $builder
             ->set(
                 CreativeRepositoryInterface::class,
-                static function (ContainerInterface $container): CreativeRepositoryInterface {
-                    $query = $container->get(DatabaseQueryExecutorInterface::class);
-
-                    if (!$query instanceof DatabaseQueryExecutorInterface) {
-                        throw new LogicException('Database query executor service is invalid.');
-                    }
-
-                    return new PdoCreativeRepository($query);
-                },
+                static fn (ContainerInterface $c): CreativeRepositoryInterface => new PdoCreativeRepository(self::query($c)),
             )
             ->set(
                 ListCreativesUseCaseInterface::class,
-                static fn (ContainerInterface $c): ListCreativesUseCaseInterface => new ListCreativesUseCase(self::creatives($c), self::orgId($c)),
+                static fn (ContainerInterface $c): ListCreativesUseCaseInterface => new ListCreativesUseCase(self::service($c, CreativeRepositoryInterface::class), self::orgId($c)),
             )
             ->set(
                 GetCreativeByIdUseCaseInterface::class,
-                static fn (ContainerInterface $c): GetCreativeByIdUseCaseInterface => new GetCreativeByIdUseCase(self::creatives($c), self::orgId($c)),
+                static fn (ContainerInterface $c): GetCreativeByIdUseCaseInterface => new GetCreativeByIdUseCase(self::service($c, CreativeRepositoryInterface::class), self::orgId($c)),
             )
             ->set(
                 ReviewQueueUseCaseInterface::class,
-                static fn (ContainerInterface $c): ReviewQueueUseCaseInterface => new ReviewQueueUseCase(self::creatives($c), self::orgId($c)),
+                static fn (ContainerInterface $c): ReviewQueueUseCaseInterface => new ReviewQueueUseCase(self::service($c, CreativeRepositoryInterface::class), self::orgId($c)),
             )
             ->set(
                 ListCreativesHandler::class,
-                static function (ContainerInterface $c): ListCreativesHandler {
-                    $useCase = $c->get(ListCreativesUseCaseInterface::class);
-
-                    if (!$useCase instanceof ListCreativesUseCaseInterface) {
-                        throw new LogicException('List creatives use case service is invalid.');
-                    }
-
-                    return new ListCreativesHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): ListCreativesHandler => new ListCreativesHandler(self::service($c, ListCreativesUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 GetCreativeHandler::class,
-                static function (ContainerInterface $c): GetCreativeHandler {
-                    $useCase = $c->get(GetCreativeByIdUseCaseInterface::class);
-
-                    if (!$useCase instanceof GetCreativeByIdUseCaseInterface) {
-                        throw new LogicException('Get creative use case service is invalid.');
-                    }
-
-                    return new GetCreativeHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): GetCreativeHandler => new GetCreativeHandler(self::service($c, GetCreativeByIdUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 ReviewQueueHandler::class,
-                static function (ContainerInterface $c): ReviewQueueHandler {
-                    $useCase = $c->get(ReviewQueueUseCaseInterface::class);
-
-                    if (!$useCase instanceof ReviewQueueUseCaseInterface) {
-                        throw new LogicException('Review queue use case service is invalid.');
-                    }
-
-                    return new ReviewQueueHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): ReviewQueueHandler => new ReviewQueueHandler(self::service($c, ReviewQueueUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 CreateCreativeUseCaseInterface::class,
-                static function (ContainerInterface $container): CreateCreativeUseCaseInterface {
-                    $transactions = $container->get(DatabaseTransactionManagerInterface::class);
-                    $scanner = $container->get(BundleScannerInterface::class);
-
-                    if (!$transactions instanceof DatabaseTransactionManagerInterface) {
-                        throw new LogicException('Database transaction manager service is invalid.');
-                    }
-
-                    if (!$scanner instanceof BundleScannerInterface) {
-                        throw new LogicException('Bundle scanner service is invalid.');
-                    }
-
-                    return new CreateCreativeUseCase($transactions, $scanner, self::orgId($container));
-                },
+                static fn (ContainerInterface $c): CreateCreativeUseCaseInterface => new CreateCreativeUseCase(
+                    self::transactions($c),
+                    self::service($c, BundleScannerInterface::class),
+                    self::orgId($c),
+                ),
             )
             ->set(
                 ReviseCreativeUseCaseInterface::class,
-                static function (ContainerInterface $container): ReviseCreativeUseCaseInterface {
-                    $query = $container->get(DatabaseQueryExecutorInterface::class);
-                    $transactions = $container->get(DatabaseTransactionManagerInterface::class);
-
-                    if (!$query instanceof DatabaseQueryExecutorInterface) {
-                        throw new LogicException('Database query executor service is invalid.');
-                    }
-
-                    if (!$transactions instanceof DatabaseTransactionManagerInterface) {
-                        throw new LogicException('Database transaction manager service is invalid.');
-                    }
-
-                    return new ReviseCreativeUseCase($query, $transactions, self::orgId($container));
-                },
+                static fn (ContainerInterface $c): ReviseCreativeUseCaseInterface => new ReviseCreativeUseCase(self::query($c), self::transactions($c), self::orgId($c)),
             )
             ->set(
                 CreateCreativeHandler::class,
-                static function (ContainerInterface $container): CreateCreativeHandler {
-                    $useCase = $container->get(CreateCreativeUseCaseInterface::class);
-
-                    if (!$useCase instanceof CreateCreativeUseCaseInterface) {
-                        throw new LogicException('Create creative use case service is invalid.');
-                    }
-
-                    return new CreateCreativeHandler($useCase, self::json($container));
-                },
+                static fn (ContainerInterface $c): CreateCreativeHandler => new CreateCreativeHandler(self::service($c, CreateCreativeUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 ReviseCreativeHandler::class,
-                static function (ContainerInterface $container): ReviseCreativeHandler {
-                    $useCase = $container->get(ReviseCreativeUseCaseInterface::class);
-
-                    if (!$useCase instanceof ReviseCreativeUseCaseInterface) {
-                        throw new LogicException('Revise creative use case service is invalid.');
-                    }
-
-                    return new ReviseCreativeHandler($useCase, self::json($container));
-                },
+                static fn (ContainerInterface $c): ReviseCreativeHandler => new ReviseCreativeHandler(self::service($c, ReviseCreativeUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 self::ROUTE_REGISTRAR,
-                static function (ContainerInterface $container): CreativesRouteRegistrar {
-                    $list = $container->get(ListCreativesHandler::class);
-                    $get = $container->get(GetCreativeHandler::class);
-                    $queue = $container->get(ReviewQueueHandler::class);
-                    $create = $container->get(CreateCreativeHandler::class);
-                    $revise = $container->get(ReviseCreativeHandler::class);
-
-                    if (!$list instanceof ListCreativesHandler) {
-                        throw new LogicException('List creatives handler service is invalid.');
-                    }
-
-                    if (!$get instanceof GetCreativeHandler) {
-                        throw new LogicException('Get creative handler service is invalid.');
-                    }
-
-                    if (!$queue instanceof ReviewQueueHandler) {
-                        throw new LogicException('Review queue handler service is invalid.');
-                    }
-
-                    if (!$create instanceof CreateCreativeHandler) {
-                        throw new LogicException('Create creative handler service is invalid.');
-                    }
-
-                    if (!$revise instanceof ReviseCreativeHandler) {
-                        throw new LogicException('Revise creative handler service is invalid.');
-                    }
-
-                    return new CreativesRouteRegistrar($list, $get, $queue, $create, $revise);
-                },
+                static fn (ContainerInterface $c): CreativesRouteRegistrar => new CreativesRouteRegistrar(
+                    self::service($c, ListCreativesHandler::class),
+                    self::service($c, GetCreativeHandler::class),
+                    self::service($c, ReviewQueueHandler::class),
+                    self::service($c, CreateCreativeHandler::class),
+                    self::service($c, ReviseCreativeHandler::class),
+                ),
             )
             ->set(
                 TransitionCreativeUseCaseInterface::class,
-                static function (ContainerInterface $container): TransitionCreativeUseCaseInterface {
-                    $query = $container->get(DatabaseQueryExecutorInterface::class);
-                    $transactions = $container->get(DatabaseTransactionManagerInterface::class);
-
-                    if (!$query instanceof DatabaseQueryExecutorInterface) {
-                        throw new LogicException('Database query executor service is invalid.');
-                    }
-
-                    if (!$transactions instanceof DatabaseTransactionManagerInterface) {
-                        throw new LogicException('Database transaction manager service is invalid.');
-                    }
-
-                    return new TransitionCreativeUseCase($query, $transactions, self::orgId($container));
-                },
+                static fn (ContainerInterface $c): TransitionCreativeUseCaseInterface => new TransitionCreativeUseCase(self::query($c), self::transactions($c), self::orgId($c)),
             )
             ->set(
                 self::REVIEW_ROUTE_REGISTRAR,
-                static function (ContainerInterface $container): CreativeReviewRouteRegistrar {
-                    $useCase = $container->get(TransitionCreativeUseCaseInterface::class);
-
-                    if (!$useCase instanceof TransitionCreativeUseCaseInterface) {
-                        throw new LogicException('Transition creative use case service is invalid.');
-                    }
-
-                    return new CreativeReviewRouteRegistrar($useCase, self::json($container));
-                },
+                static fn (ContainerInterface $c): CreativeReviewRouteRegistrar => new CreativeReviewRouteRegistrar(self::service($c, TransitionCreativeUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 self::EXCEPTION_HANDLER_NOT_FOUND,
@@ -229,16 +113,5 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
                 self::EXCEPTION_HANDLER_SCAN,
                 static fn (ContainerInterface $c): CreativeScanFailedExceptionHandler => new CreativeScanFailedExceptionHandler(self::problem($c)),
             );
-    }
-
-    private static function creatives(ContainerInterface $container): CreativeRepositoryInterface
-    {
-        $creatives = $container->get(CreativeRepositoryInterface::class);
-
-        if (!$creatives instanceof CreativeRepositoryInterface) {
-            throw new LogicException('Creative repository service is invalid.');
-        }
-
-        return $creatives;
     }
 }

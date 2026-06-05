@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\Placements;
 
-use LogicException;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use NeneServe\Serving\PdoPlacementRepository;
@@ -31,11 +30,11 @@ final readonly class PlacementsServiceProvider implements ServiceProviderInterfa
             )
             ->set(
                 ListPlacementsUseCaseInterface::class,
-                static fn (ContainerInterface $c): ListPlacementsUseCaseInterface => new ListPlacementsUseCase(self::placements($c), self::orgId($c)),
+                static fn (ContainerInterface $c): ListPlacementsUseCaseInterface => new ListPlacementsUseCase(self::service($c, PlacementRepositoryInterface::class), self::orgId($c)),
             )
             ->set(
                 GetPlacementByIdUseCaseInterface::class,
-                static fn (ContainerInterface $c): GetPlacementByIdUseCaseInterface => new GetPlacementByIdUseCase(self::placements($c), self::orgId($c)),
+                static fn (ContainerInterface $c): GetPlacementByIdUseCaseInterface => new GetPlacementByIdUseCase(self::service($c, PlacementRepositoryInterface::class), self::orgId($c)),
             )
             ->set(
                 CreatePlacementUseCaseInterface::class,
@@ -43,55 +42,23 @@ final readonly class PlacementsServiceProvider implements ServiceProviderInterfa
             )
             ->set(
                 ArchivePlacementUseCaseInterface::class,
-                static fn (ContainerInterface $c): ArchivePlacementUseCaseInterface => new ArchivePlacementUseCase(self::placements($c), self::transactions($c), self::orgId($c)),
+                static fn (ContainerInterface $c): ArchivePlacementUseCaseInterface => new ArchivePlacementUseCase(self::service($c, PlacementRepositoryInterface::class), self::transactions($c), self::orgId($c)),
             )
             ->set(
                 ListPlacementsHandler::class,
-                static function (ContainerInterface $c): ListPlacementsHandler {
-                    $useCase = $c->get(ListPlacementsUseCaseInterface::class);
-
-                    if (!$useCase instanceof ListPlacementsUseCaseInterface) {
-                        throw new LogicException('List placements use case service is invalid.');
-                    }
-
-                    return new ListPlacementsHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): ListPlacementsHandler => new ListPlacementsHandler(self::service($c, ListPlacementsUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 GetPlacementHandler::class,
-                static function (ContainerInterface $c): GetPlacementHandler {
-                    $useCase = $c->get(GetPlacementByIdUseCaseInterface::class);
-
-                    if (!$useCase instanceof GetPlacementByIdUseCaseInterface) {
-                        throw new LogicException('Get placement use case service is invalid.');
-                    }
-
-                    return new GetPlacementHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): GetPlacementHandler => new GetPlacementHandler(self::service($c, GetPlacementByIdUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 CreatePlacementHandler::class,
-                static function (ContainerInterface $c): CreatePlacementHandler {
-                    $useCase = $c->get(CreatePlacementUseCaseInterface::class);
-
-                    if (!$useCase instanceof CreatePlacementUseCaseInterface) {
-                        throw new LogicException('Create placement use case service is invalid.');
-                    }
-
-                    return new CreatePlacementHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): CreatePlacementHandler => new CreatePlacementHandler(self::service($c, CreatePlacementUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 ArchivePlacementHandler::class,
-                static function (ContainerInterface $c): ArchivePlacementHandler {
-                    $useCase = $c->get(ArchivePlacementUseCaseInterface::class);
-
-                    if (!$useCase instanceof ArchivePlacementUseCaseInterface) {
-                        throw new LogicException('Archive placement use case service is invalid.');
-                    }
-
-                    return new ArchivePlacementHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): ArchivePlacementHandler => new ArchivePlacementHandler(self::service($c, ArchivePlacementUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 self::EXCEPTION_HANDLER_NOT_FOUND,
@@ -103,41 +70,12 @@ final readonly class PlacementsServiceProvider implements ServiceProviderInterfa
             )
             ->set(
                 self::ROUTE_REGISTRAR,
-                static function (ContainerInterface $container): PlacementsRouteRegistrar {
-                    $list = $container->get(ListPlacementsHandler::class);
-                    $get = $container->get(GetPlacementHandler::class);
-                    $create = $container->get(CreatePlacementHandler::class);
-                    $archive = $container->get(ArchivePlacementHandler::class);
-
-                    if (!$list instanceof ListPlacementsHandler) {
-                        throw new LogicException('List placements handler service is invalid.');
-                    }
-
-                    if (!$get instanceof GetPlacementHandler) {
-                        throw new LogicException('Get placement handler service is invalid.');
-                    }
-
-                    if (!$create instanceof CreatePlacementHandler) {
-                        throw new LogicException('Create placement handler service is invalid.');
-                    }
-
-                    if (!$archive instanceof ArchivePlacementHandler) {
-                        throw new LogicException('Archive placement handler service is invalid.');
-                    }
-
-                    return new PlacementsRouteRegistrar($list, $get, $create, $archive);
-                },
+                static fn (ContainerInterface $c): PlacementsRouteRegistrar => new PlacementsRouteRegistrar(
+                    self::service($c, ListPlacementsHandler::class),
+                    self::service($c, GetPlacementHandler::class),
+                    self::service($c, CreatePlacementHandler::class),
+                    self::service($c, ArchivePlacementHandler::class),
+                ),
             );
-    }
-
-    private static function placements(ContainerInterface $container): PlacementRepositoryInterface
-    {
-        $placements = $container->get(PlacementRepositoryInterface::class);
-
-        if (!$placements instanceof PlacementRepositoryInterface) {
-            throw new LogicException('Placement repository service is invalid.');
-        }
-
-        return $placements;
     }
 }

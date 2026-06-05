@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Tenant\Invitations;
 
-use LogicException;
-use Nene2\Database\DatabaseQueryExecutorInterface;
-use Nene2\Database\DatabaseTransactionManagerInterface;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use NeneServe\Support\ServiceProviderHelpers;
@@ -28,49 +25,23 @@ final readonly class InvitationsServiceProvider implements ServiceProviderInterf
         $builder
             ->set(
                 InvitationRepositoryInterface::class,
-                static function (ContainerInterface $container): InvitationRepositoryInterface {
-                    $query = $container->get(DatabaseQueryExecutorInterface::class);
-
-                    if (!$query instanceof DatabaseQueryExecutorInterface) {
-                        throw new LogicException('Database query executor service is invalid.');
-                    }
-
-                    return new PdoInvitationRepository($query);
-                },
+                static fn (ContainerInterface $c): InvitationRepositoryInterface => new PdoInvitationRepository(self::query($c)),
             )
             ->set(
                 AcceptInvitationUseCaseInterface::class,
-                static function (ContainerInterface $container): AcceptInvitationUseCaseInterface {
-                    $invitations = $container->get(InvitationRepositoryInterface::class);
-                    $users = $container->get(UserRepositoryInterface::class);
-                    $transactions = $container->get(DatabaseTransactionManagerInterface::class);
-
-                    if (!$invitations instanceof InvitationRepositoryInterface) {
-                        throw new LogicException('Invitation repository service is invalid.');
-                    }
-
-                    if (!$users instanceof UserRepositoryInterface) {
-                        throw new LogicException('User repository service is invalid.');
-                    }
-
-                    if (!$transactions instanceof DatabaseTransactionManagerInterface) {
-                        throw new LogicException('Database transaction manager service is invalid.');
-                    }
-
-                    return new AcceptInvitationUseCase($invitations, $users, $transactions);
-                },
+                static fn (ContainerInterface $c): AcceptInvitationUseCaseInterface => new AcceptInvitationUseCase(
+                    self::service($c, InvitationRepositoryInterface::class),
+                    self::service($c, UserRepositoryInterface::class),
+                    self::transactions($c),
+                ),
             )
             ->set(
                 PreviewInvitationHandler::class,
-                static function (ContainerInterface $c): PreviewInvitationHandler {
-                    return new PreviewInvitationHandler(self::useCase($c), self::json($c), self::problem($c));
-                },
+                static fn (ContainerInterface $c): PreviewInvitationHandler => new PreviewInvitationHandler(self::service($c, AcceptInvitationUseCaseInterface::class), self::json($c), self::problem($c)),
             )
             ->set(
                 AcceptInvitationHandler::class,
-                static function (ContainerInterface $c): AcceptInvitationHandler {
-                    return new AcceptInvitationHandler(self::useCase($c), self::json($c));
-                },
+                static fn (ContainerInterface $c): AcceptInvitationHandler => new AcceptInvitationHandler(self::service($c, AcceptInvitationUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 self::EXCEPTION_HANDLER,
@@ -78,31 +49,10 @@ final readonly class InvitationsServiceProvider implements ServiceProviderInterf
             )
             ->set(
                 self::ROUTE_REGISTRAR,
-                static function (ContainerInterface $container): InvitationsRouteRegistrar {
-                    $preview = $container->get(PreviewInvitationHandler::class);
-                    $accept = $container->get(AcceptInvitationHandler::class);
-
-                    if (!$preview instanceof PreviewInvitationHandler) {
-                        throw new LogicException('Preview invitation handler service is invalid.');
-                    }
-
-                    if (!$accept instanceof AcceptInvitationHandler) {
-                        throw new LogicException('Accept invitation handler service is invalid.');
-                    }
-
-                    return new InvitationsRouteRegistrar($preview, $accept);
-                },
+                static fn (ContainerInterface $c): InvitationsRouteRegistrar => new InvitationsRouteRegistrar(
+                    self::service($c, PreviewInvitationHandler::class),
+                    self::service($c, AcceptInvitationHandler::class),
+                ),
             );
-    }
-
-    private static function useCase(ContainerInterface $container): AcceptInvitationUseCaseInterface
-    {
-        $useCase = $container->get(AcceptInvitationUseCaseInterface::class);
-
-        if (!$useCase instanceof AcceptInvitationUseCaseInterface) {
-            throw new LogicException('Accept invitation use case service is invalid.');
-        }
-
-        return $useCase;
     }
 }
