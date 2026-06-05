@@ -32,8 +32,7 @@ final readonly class AssetHandler
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
-        $id = is_array($parameters) && is_string($parameters['id'] ?? null) ? $parameters['id'] : '';
+        $id = Router::param($request, 'id') ?? '';
 
         $asset = (new PdoAssetRepository($this->query))->findById($id);
         $bytes = $asset !== null ? $this->storage->get($asset->id) : null;

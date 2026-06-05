@@ -32,8 +32,7 @@ final readonly class ReleaseLegalHoldHandler
             return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
         }
 
-        $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
-        $id = is_array($parameters) && is_string($parameters['id'] ?? null) ? $parameters['id'] : '';
+        $id = Router::param($request, 'id') ?? '';
 
         $hold = $this->legalHolds->release(new ReleaseLegalHoldInput($context->userId, $id))->hold;
 

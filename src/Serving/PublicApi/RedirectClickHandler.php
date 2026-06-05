@@ -29,8 +29,7 @@ final readonly class RedirectClickHandler
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
-        $token = is_array($parameters) && is_string($parameters['click_token'] ?? null) ? $parameters['click_token'] : '';
+        $token = Router::param($request, 'click_token') ?? '';
 
         $countryCode = is_string($request->getQueryParams()['country_code'] ?? null) ? $request->getQueryParams()['country_code'] : null;
 

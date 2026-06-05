@@ -33,8 +33,7 @@ final readonly class HandoffCampaignToDealHandler
             return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
         }
 
-        $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
-        $id = is_array($parameters) && is_string($parameters['id'] ?? null) ? $parameters['id'] : '';
+        $id = Router::param($request, 'id') ?? '';
 
         $opportunity = $this->handoff->execute(new HandoffCampaignToDealInput($context->userId, $id))->opportunity;
 

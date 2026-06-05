@@ -27,8 +27,7 @@ final readonly class GetRecordsAssetHandler
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
-        $ref = is_array($parameters) && is_string($parameters['ref'] ?? null) ? $parameters['ref'] : '';
+        $ref = Router::param($request, 'ref') ?? '';
 
         $asset = $this->useCase->execute(new GetRecordsAssetInput($ref))->asset;
 

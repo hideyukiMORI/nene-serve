@@ -32,8 +32,7 @@ final readonly class ArchivePlacementHandler
             return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
         }
 
-        $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
-        $id = is_array($parameters) && is_string($parameters['id'] ?? null) ? $parameters['id'] : '';
+        $id = Router::param($request, 'id') ?? '';
 
         $output = $this->archive->execute(new ArchivePlacementInput($context->userId, $id));
 

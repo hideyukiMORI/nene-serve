@@ -34,8 +34,7 @@ final readonly class HandoffBillingPeriodHandler
             return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
         }
 
-        $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
-        $id = is_array($parameters) && is_string($parameters['id'] ?? null) ? $parameters['id'] : '';
+        $id = Router::param($request, 'id') ?? '';
 
         $record = $this->handoff->execute(new HandoffBillingPeriodInput($context->userId, $id))->handoff;
 

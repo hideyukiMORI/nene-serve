@@ -37,8 +37,7 @@ final readonly class TransitionCreativeHandler
             return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
         }
 
-        $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
-        $id = is_array($parameters) && is_string($parameters['id'] ?? null) ? $parameters['id'] : '';
+        $id = Router::param($request, 'id') ?? '';
 
         $body = $request->getBody()->getSize() > 0 ? JsonRequestBodyParser::parse($request) : [];
         $reason = isset($body['review_reason']) && is_string($body['review_reason']) ? $body['review_reason'] : null;

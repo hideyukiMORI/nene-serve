@@ -26,8 +26,7 @@ final readonly class PreviewInvitationHandler
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
-        $token = is_array($parameters) && is_string($parameters['token'] ?? null) ? $parameters['token'] : '';
+        $token = Router::param($request, 'token') ?? '';
 
         $user = $this->accept->preview(new PreviewInvitationInput($token))->user;
 
