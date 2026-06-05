@@ -11,6 +11,8 @@ use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
+use Nene2\Http\RequestScopedHolder;
+use NeneServe\Http\RuntimeServiceProvider;
 use NeneServe\Marketplace\BillingPeriodRepositoryInterface;
 use NeneServe\Marketplace\Invoice\InvoiceClientInterface;
 use NeneServe\Marketplace\PdoBillingPeriodRepository;
@@ -95,8 +97,8 @@ final readonly class BillingServiceProvider implements ServiceProviderInterface
                 },
             )
             ->set(
-                GetBillingPeriodHandler::class,
-                static function (ContainerInterface $c): GetBillingPeriodHandler {
+                GetBillingPeriodUseCaseInterface::class,
+                static function (ContainerInterface $c): GetBillingPeriodUseCaseInterface {
                     $periods = $c->get(BillingPeriodRepositoryInterface::class);
                     $snapshots = $c->get(SpendSnapshotRepositoryInterface::class);
 
@@ -108,7 +110,19 @@ final readonly class BillingServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Spend snapshot repository service is invalid.');
                     }
 
-                    return new GetBillingPeriodHandler($periods, $snapshots, self::json($c), self::problem($c));
+                    return new GetBillingPeriodUseCase($periods, $snapshots, self::orgId($c));
+                },
+            )
+            ->set(
+                GetBillingPeriodHandler::class,
+                static function (ContainerInterface $c): GetBillingPeriodHandler {
+                    $useCase = $c->get(GetBillingPeriodUseCaseInterface::class);
+
+                    if (!$useCase instanceof GetBillingPeriodUseCaseInterface) {
+                        throw new LogicException('Get billing period use case service is invalid.');
+                    }
+
+                    return new GetBillingPeriodHandler($useCase, self::json($c));
                 },
             )
             ->set(
@@ -177,6 +191,18 @@ final readonly class BillingServiceProvider implements ServiceProviderInterface
         }
 
         return $query;
+    }
+
+    /** @return RequestScopedHolder<string> */
+    private static function orgId(ContainerInterface $container): RequestScopedHolder
+    {
+        $orgId = $container->get(RuntimeServiceProvider::ORG_ID_HOLDER);
+
+        if (!$orgId instanceof RequestScopedHolder) {
+            throw new LogicException('Organization id holder service is invalid.');
+        }
+
+        return $orgId;
     }
 
     private static function transactions(ContainerInterface $container): DatabaseTransactionManagerInterface
