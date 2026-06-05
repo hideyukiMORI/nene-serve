@@ -8,67 +8,23 @@ use LogicException;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\DomainExceptionHandlerInterface;
-use NeneServe\Assets\Admin\AssetsRouteRegistrar;
 use NeneServe\Assets\Admin\AssetsServiceProvider;
-use NeneServe\Assets\Admin\AssetValidationExceptionHandler;
-use NeneServe\Assets\Admin\RecordsUnavailableExceptionHandler;
-use NeneServe\Auth\AuthContextRequiredExceptionHandler;
-use NeneServe\Auth\AuthenticationFailedExceptionHandler;
-use NeneServe\Auth\AuthRouteRegistrar;
 use NeneServe\Auth\AuthServiceProvider;
-use NeneServe\Health\HealthRouteRegistrar;
 use NeneServe\Health\HealthServiceProvider;
-use NeneServe\Marketplace\Admin\MarketplaceRouteRegistrar;
 use NeneServe\Marketplace\Admin\MarketplaceServiceProvider;
-use NeneServe\Marketplace\Admin\MarketplaceValidationExceptionHandler;
-use NeneServe\Marketplace\Billing\BillingPeriodNotFoundExceptionHandler;
-use NeneServe\Marketplace\Billing\BillingRouteRegistrar;
 use NeneServe\Marketplace\Billing\BillingServiceProvider;
-use NeneServe\Marketplace\Billing\InvalidPeriodTransitionExceptionHandler;
-use NeneServe\Marketplace\Billing\InvoiceHandoffFailedExceptionHandler;
-use NeneServe\Marketplace\Billing\ReconciliationFailedExceptionHandler;
-use NeneServe\Marketplace\Deal\CampaignNotFoundExceptionHandler;
-use NeneServe\Marketplace\Deal\DealHandoffFailedExceptionHandler;
-use NeneServe\Marketplace\Deal\DealRouteRegistrar;
 use NeneServe\Marketplace\Deal\DealServiceProvider;
-use NeneServe\Measurement\Dsr\DsrRouteRegistrar;
 use NeneServe\Measurement\Dsr\DsrServiceProvider;
-use NeneServe\Measurement\Metrics\MetricsRouteRegistrar;
 use NeneServe\Measurement\Metrics\MetricsServiceProvider;
-use NeneServe\Retention\LegalHolds\LegalHoldExceptionHandler;
-use NeneServe\Retention\LegalHolds\LegalHoldsRouteRegistrar;
 use NeneServe\Retention\LegalHolds\LegalHoldsServiceProvider;
-use NeneServe\Service\Api\ChangePlanNotFoundExceptionHandler;
-use NeneServe\Service\Api\InvalidPlanStateExceptionHandler;
-use NeneServe\Service\Api\McpValidationExceptionHandler;
 use NeneServe\Service\Api\ServiceApiServiceProvider;
-use NeneServe\Service\Api\ServiceRouteRegistrar;
-use NeneServe\Serving\Creatives\CreativeNotFoundExceptionHandler;
-use NeneServe\Serving\Creatives\CreativeReviewRouteRegistrar;
-use NeneServe\Serving\Creatives\CreativeScanFailedExceptionHandler;
-use NeneServe\Serving\Creatives\CreativesRouteRegistrar;
 use NeneServe\Serving\Creatives\CreativesServiceProvider;
-use NeneServe\Serving\Creatives\InvalidReviewTransitionExceptionHandler;
-use NeneServe\Serving\Creatives\SelfApprovalForbiddenExceptionHandler;
-use NeneServe\Serving\Placements\CreativeValidationExceptionHandler;
-use NeneServe\Serving\Placements\PlacementNotFoundExceptionHandler;
-use NeneServe\Serving\Placements\PlacementsRouteRegistrar;
 use NeneServe\Serving\Placements\PlacementsServiceProvider;
-use NeneServe\Serving\PublicApi\PublicRouteRegistrar;
 use NeneServe\Serving\PublicApi\PublicServiceProvider;
-use NeneServe\Settings\EncryptionUnavailableExceptionHandler;
-use NeneServe\Settings\SettingsRouteRegistrar;
 use NeneServe\Settings\SettingsServiceProvider;
-use NeneServe\Settings\SmtpNotConfiguredExceptionHandler;
-use NeneServe\Settings\SmtpTestFailedExceptionHandler;
-use NeneServe\Tenant\Account\AccountRouteRegistrar;
 use NeneServe\Tenant\Account\AccountServiceProvider;
-use NeneServe\Tenant\Invitations\InvitationInvalidExceptionHandler;
-use NeneServe\Tenant\Invitations\InvitationsRouteRegistrar;
 use NeneServe\Tenant\Invitations\InvitationsServiceProvider;
-use NeneServe\Tenant\Users\UsersRouteRegistrar;
 use NeneServe\Tenant\Users\UsersServiceProvider;
-use NeneServe\Tenant\Users\UserValidationExceptionHandler;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -111,99 +67,32 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
             ->set(
                 self::ROUTE_REGISTRARS,
                 static function (ContainerInterface $container): array {
-                    $health = $container->get(HealthServiceProvider::ROUTE_REGISTRAR);
-                    $auth = $container->get(AuthServiceProvider::ROUTE_REGISTRAR);
-                    $account = $container->get(AccountServiceProvider::ROUTE_REGISTRAR);
-                    $settings = $container->get(SettingsServiceProvider::ROUTE_REGISTRAR);
-                    $users = $container->get(UsersServiceProvider::ROUTE_REGISTRAR);
-                    $metrics = $container->get(MetricsServiceProvider::ROUTE_REGISTRAR);
-                    $placements = $container->get(PlacementsServiceProvider::ROUTE_REGISTRAR);
-                    $creatives = $container->get(CreativesServiceProvider::ROUTE_REGISTRAR);
-                    $creativeReview = $container->get(CreativesServiceProvider::REVIEW_ROUTE_REGISTRAR);
-                    $marketplace = $container->get(MarketplaceServiceProvider::ROUTE_REGISTRAR);
-                    $invitations = $container->get(InvitationsServiceProvider::ROUTE_REGISTRAR);
-                    $legalHolds = $container->get(LegalHoldsServiceProvider::ROUTE_REGISTRAR);
-                    $dsr = $container->get(DsrServiceProvider::ROUTE_REGISTRAR);
-                    $billing = $container->get(BillingServiceProvider::ROUTE_REGISTRAR);
-                    $deal = $container->get(DealServiceProvider::ROUTE_REGISTRAR);
-                    $assets = $container->get(AssetsServiceProvider::ROUTE_REGISTRAR);
-                    $public = $container->get(PublicServiceProvider::ROUTE_REGISTRAR);
-                    $service = $container->get(ServiceApiServiceProvider::ROUTE_REGISTRAR);
+                    $registrars = [
+                        $container->get(HealthServiceProvider::ROUTE_REGISTRAR),
+                        $container->get(AuthServiceProvider::ROUTE_REGISTRAR),
+                        $container->get(AccountServiceProvider::ROUTE_REGISTRAR),
+                        $container->get(SettingsServiceProvider::ROUTE_REGISTRAR),
+                        $container->get(UsersServiceProvider::ROUTE_REGISTRAR),
+                        $container->get(MetricsServiceProvider::ROUTE_REGISTRAR),
+                        $container->get(PlacementsServiceProvider::ROUTE_REGISTRAR),
+                        $container->get(CreativesServiceProvider::ROUTE_REGISTRAR),
+                        $container->get(CreativesServiceProvider::REVIEW_ROUTE_REGISTRAR),
+                        $container->get(MarketplaceServiceProvider::ROUTE_REGISTRAR),
+                        $container->get(InvitationsServiceProvider::ROUTE_REGISTRAR),
+                        $container->get(LegalHoldsServiceProvider::ROUTE_REGISTRAR),
+                        $container->get(DsrServiceProvider::ROUTE_REGISTRAR),
+                        $container->get(BillingServiceProvider::ROUTE_REGISTRAR),
+                        $container->get(DealServiceProvider::ROUTE_REGISTRAR),
+                        $container->get(AssetsServiceProvider::ROUTE_REGISTRAR),
+                        $container->get(PublicServiceProvider::ROUTE_REGISTRAR),
+                        $container->get(ServiceApiServiceProvider::ROUTE_REGISTRAR),
+                    ];
 
-                    if (!$health instanceof HealthRouteRegistrar) {
-                        throw new LogicException('Health route registrar service is invalid.');
+                    foreach ($registrars as $registrar) {
+                        if (!is_callable($registrar)) {
+                            throw new LogicException('Route registrar service is invalid.');
+                        }
                     }
-
-                    if (!$auth instanceof AuthRouteRegistrar) {
-                        throw new LogicException('Auth route registrar service is invalid.');
-                    }
-
-                    if (!$account instanceof AccountRouteRegistrar) {
-                        throw new LogicException('Account route registrar service is invalid.');
-                    }
-
-                    if (!$settings instanceof SettingsRouteRegistrar) {
-                        throw new LogicException('Settings route registrar service is invalid.');
-                    }
-
-                    if (!$users instanceof UsersRouteRegistrar) {
-                        throw new LogicException('Users route registrar service is invalid.');
-                    }
-
-                    if (!$metrics instanceof MetricsRouteRegistrar) {
-                        throw new LogicException('Metrics route registrar service is invalid.');
-                    }
-
-                    if (!$placements instanceof PlacementsRouteRegistrar) {
-                        throw new LogicException('Placements route registrar service is invalid.');
-                    }
-
-                    if (!$creatives instanceof CreativesRouteRegistrar) {
-                        throw new LogicException('Creatives route registrar service is invalid.');
-                    }
-
-                    if (!$creativeReview instanceof CreativeReviewRouteRegistrar) {
-                        throw new LogicException('Creative review route registrar service is invalid.');
-                    }
-
-                    if (!$marketplace instanceof MarketplaceRouteRegistrar) {
-                        throw new LogicException('Marketplace route registrar service is invalid.');
-                    }
-
-                    if (!$invitations instanceof InvitationsRouteRegistrar) {
-                        throw new LogicException('Invitations route registrar service is invalid.');
-                    }
-
-                    if (!$legalHolds instanceof LegalHoldsRouteRegistrar) {
-                        throw new LogicException('Legal holds route registrar service is invalid.');
-                    }
-
-                    if (!$dsr instanceof DsrRouteRegistrar) {
-                        throw new LogicException('DSR route registrar service is invalid.');
-                    }
-
-                    if (!$billing instanceof BillingRouteRegistrar) {
-                        throw new LogicException('Billing route registrar service is invalid.');
-                    }
-
-                    if (!$deal instanceof DealRouteRegistrar) {
-                        throw new LogicException('Deal route registrar service is invalid.');
-                    }
-
-                    if (!$assets instanceof AssetsRouteRegistrar) {
-                        throw new LogicException('Assets route registrar service is invalid.');
-                    }
-
-                    if (!$public instanceof PublicRouteRegistrar) {
-                        throw new LogicException('Public route registrar service is invalid.');
-                    }
-
-                    if (!$service instanceof ServiceRouteRegistrar) {
-                        throw new LogicException('Service route registrar service is invalid.');
-                    }
-
-                    /** @var list<callable(\Nene2\Routing\Router): void> $registrars */
-                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements, $creatives, $creativeReview, $marketplace, $invitations, $legalHolds, $dsr, $billing, $deal, $assets, $public, $service];
 
                     return $registrars;
                 },
@@ -211,174 +100,40 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
             ->set(
                 self::EXCEPTION_HANDLERS,
                 static function (ContainerInterface $container): array {
-                    $authenticationFailed = $container->get(AuthServiceProvider::EXCEPTION_HANDLER);
-                    $authContextRequired = $container->get(AuthServiceProvider::EXCEPTION_HANDLER_CONTEXT_REQUIRED);
-                    $userValidation = $container->get(UsersServiceProvider::EXCEPTION_HANDLER);
-                    $placementNotFound = $container->get(PlacementsServiceProvider::EXCEPTION_HANDLER_NOT_FOUND);
-                    $placementValidation = $container->get(PlacementsServiceProvider::EXCEPTION_HANDLER_VALIDATION);
-
-                    if (!$authenticationFailed instanceof AuthenticationFailedExceptionHandler) {
-                        throw new LogicException('Authentication failed exception handler service is invalid.');
-                    }
-
-                    if (!$authContextRequired instanceof AuthContextRequiredExceptionHandler) {
-                        throw new LogicException('Auth context required exception handler service is invalid.');
-                    }
-
-                    if (!$userValidation instanceof UserValidationExceptionHandler) {
-                        throw new LogicException('User validation exception handler service is invalid.');
-                    }
-
-                    if (!$placementNotFound instanceof PlacementNotFoundExceptionHandler) {
-                        throw new LogicException('Placement not found exception handler service is invalid.');
-                    }
-
-                    if (!$placementValidation instanceof CreativeValidationExceptionHandler) {
-                        throw new LogicException('Placement validation exception handler service is invalid.');
-                    }
-
-                    $creativeNotFound = $container->get(CreativesServiceProvider::EXCEPTION_HANDLER_NOT_FOUND);
-                    $invalidTransition = $container->get(CreativesServiceProvider::EXCEPTION_HANDLER_TRANSITION);
-                    $selfApproval = $container->get(CreativesServiceProvider::EXCEPTION_HANDLER_SELF_APPROVAL);
-                    $scanFailed = $container->get(CreativesServiceProvider::EXCEPTION_HANDLER_SCAN);
-
-                    if (!$creativeNotFound instanceof CreativeNotFoundExceptionHandler) {
-                        throw new LogicException('Creative not found exception handler service is invalid.');
-                    }
-
-                    if (!$invalidTransition instanceof InvalidReviewTransitionExceptionHandler) {
-                        throw new LogicException('Invalid review transition exception handler service is invalid.');
-                    }
-
-                    if (!$selfApproval instanceof SelfApprovalForbiddenExceptionHandler) {
-                        throw new LogicException('Self-approval exception handler service is invalid.');
-                    }
-
-                    if (!$scanFailed instanceof CreativeScanFailedExceptionHandler) {
-                        throw new LogicException('Creative scan failed exception handler service is invalid.');
-                    }
-
-                    $marketplaceValidation = $container->get(MarketplaceServiceProvider::EXCEPTION_HANDLER);
-                    $invitationInvalid = $container->get(InvitationsServiceProvider::EXCEPTION_HANDLER);
-                    $legalHold = $container->get(LegalHoldsServiceProvider::EXCEPTION_HANDLER);
-
-                    if (!$marketplaceValidation instanceof MarketplaceValidationExceptionHandler) {
-                        throw new LogicException('Marketplace validation exception handler service is invalid.');
-                    }
-
-                    if (!$invitationInvalid instanceof InvitationInvalidExceptionHandler) {
-                        throw new LogicException('Invitation invalid exception handler service is invalid.');
-                    }
-
-                    if (!$legalHold instanceof LegalHoldExceptionHandler) {
-                        throw new LogicException('Legal hold exception handler service is invalid.');
-                    }
-
-                    $billingNotFound = $container->get(BillingServiceProvider::EXCEPTION_HANDLER_NOT_FOUND);
-                    $periodTransition = $container->get(BillingServiceProvider::EXCEPTION_HANDLER_TRANSITION);
-
-                    if (!$billingNotFound instanceof BillingPeriodNotFoundExceptionHandler) {
-                        throw new LogicException('Billing period not found exception handler service is invalid.');
-                    }
-
-                    if (!$periodTransition instanceof InvalidPeriodTransitionExceptionHandler) {
-                        throw new LogicException('Invalid period transition exception handler service is invalid.');
-                    }
-
-                    $reconciliationFailed = $container->get(BillingServiceProvider::EXCEPTION_HANDLER_RECONCILIATION);
-                    $invoiceHandoffFailed = $container->get(BillingServiceProvider::EXCEPTION_HANDLER_INVOICE_HANDOFF);
-
-                    if (!$reconciliationFailed instanceof ReconciliationFailedExceptionHandler) {
-                        throw new LogicException('Reconciliation failed exception handler service is invalid.');
-                    }
-
-                    if (!$invoiceHandoffFailed instanceof InvoiceHandoffFailedExceptionHandler) {
-                        throw new LogicException('Invoice handoff failed exception handler service is invalid.');
-                    }
-
-                    $dealCampaignNotFound = $container->get(DealServiceProvider::EXCEPTION_HANDLER_NOT_FOUND);
-                    $dealHandoffFailed = $container->get(DealServiceProvider::EXCEPTION_HANDLER_FAILED);
-
-                    if (!$dealCampaignNotFound instanceof CampaignNotFoundExceptionHandler) {
-                        throw new LogicException('Deal campaign not found exception handler service is invalid.');
-                    }
-
-                    if (!$dealHandoffFailed instanceof DealHandoffFailedExceptionHandler) {
-                        throw new LogicException('Deal handoff failed exception handler service is invalid.');
-                    }
-
-                    $assetValidation = $container->get(AssetsServiceProvider::EXCEPTION_HANDLER_VALIDATION);
-                    $recordsUnavailable = $container->get(AssetsServiceProvider::EXCEPTION_HANDLER_RECORDS);
-
-                    if (!$assetValidation instanceof AssetValidationExceptionHandler) {
-                        throw new LogicException('Asset validation exception handler service is invalid.');
-                    }
-
-                    if (!$recordsUnavailable instanceof RecordsUnavailableExceptionHandler) {
-                        throw new LogicException('Records unavailable exception handler service is invalid.');
-                    }
-
-                    $mcpValidation = $container->get(ServiceApiServiceProvider::EXCEPTION_HANDLER_MCP_VALIDATION);
-                    $changePlanNotFound = $container->get(ServiceApiServiceProvider::EXCEPTION_HANDLER_PLAN_NOT_FOUND);
-                    $invalidPlanState = $container->get(ServiceApiServiceProvider::EXCEPTION_HANDLER_PLAN_STATE);
-
-                    if (!$mcpValidation instanceof McpValidationExceptionHandler) {
-                        throw new LogicException('MCP validation exception handler service is invalid.');
-                    }
-
-                    if (!$changePlanNotFound instanceof ChangePlanNotFoundExceptionHandler) {
-                        throw new LogicException('Change plan not found exception handler service is invalid.');
-                    }
-
-                    if (!$invalidPlanState instanceof InvalidPlanStateExceptionHandler) {
-                        throw new LogicException('Invalid plan state exception handler service is invalid.');
-                    }
-
-                    $encryptionUnavailable = $container->get(SettingsServiceProvider::EXCEPTION_HANDLER_ENCRYPTION);
-                    $smtpNotConfigured = $container->get(SettingsServiceProvider::EXCEPTION_HANDLER_SMTP_NOT_CONFIGURED);
-                    $smtpTestFailed = $container->get(SettingsServiceProvider::EXCEPTION_HANDLER_SMTP_TEST_FAILED);
-
-                    if (!$encryptionUnavailable instanceof EncryptionUnavailableExceptionHandler) {
-                        throw new LogicException('Encryption unavailable exception handler service is invalid.');
-                    }
-
-                    if (!$smtpNotConfigured instanceof SmtpNotConfiguredExceptionHandler) {
-                        throw new LogicException('SMTP not configured exception handler service is invalid.');
-                    }
-
-                    if (!$smtpTestFailed instanceof SmtpTestFailedExceptionHandler) {
-                        throw new LogicException('SMTP test failed exception handler service is invalid.');
-                    }
-
-                    /** @var list<DomainExceptionHandlerInterface> $handlers */
                     $handlers = [
-                        $authenticationFailed,
-                        $authContextRequired,
-                        $userValidation,
-                        $placementNotFound,
-                        $placementValidation,
-                        $creativeNotFound,
-                        $invalidTransition,
-                        $selfApproval,
-                        $scanFailed,
-                        $marketplaceValidation,
-                        $invitationInvalid,
-                        $legalHold,
-                        $billingNotFound,
-                        $periodTransition,
-                        $reconciliationFailed,
-                        $invoiceHandoffFailed,
-                        $dealCampaignNotFound,
-                        $dealHandoffFailed,
-                        $assetValidation,
-                        $recordsUnavailable,
-                        $mcpValidation,
-                        $changePlanNotFound,
-                        $invalidPlanState,
-                        $encryptionUnavailable,
-                        $smtpNotConfigured,
-                        $smtpTestFailed,
+                        $container->get(AuthServiceProvider::EXCEPTION_HANDLER),
+                        $container->get(AuthServiceProvider::EXCEPTION_HANDLER_CONTEXT_REQUIRED),
+                        $container->get(UsersServiceProvider::EXCEPTION_HANDLER),
+                        $container->get(PlacementsServiceProvider::EXCEPTION_HANDLER_NOT_FOUND),
+                        $container->get(PlacementsServiceProvider::EXCEPTION_HANDLER_VALIDATION),
+                        $container->get(CreativesServiceProvider::EXCEPTION_HANDLER_NOT_FOUND),
+                        $container->get(CreativesServiceProvider::EXCEPTION_HANDLER_TRANSITION),
+                        $container->get(CreativesServiceProvider::EXCEPTION_HANDLER_SELF_APPROVAL),
+                        $container->get(CreativesServiceProvider::EXCEPTION_HANDLER_SCAN),
+                        $container->get(MarketplaceServiceProvider::EXCEPTION_HANDLER),
+                        $container->get(InvitationsServiceProvider::EXCEPTION_HANDLER),
+                        $container->get(LegalHoldsServiceProvider::EXCEPTION_HANDLER),
+                        $container->get(BillingServiceProvider::EXCEPTION_HANDLER_NOT_FOUND),
+                        $container->get(BillingServiceProvider::EXCEPTION_HANDLER_TRANSITION),
+                        $container->get(BillingServiceProvider::EXCEPTION_HANDLER_RECONCILIATION),
+                        $container->get(BillingServiceProvider::EXCEPTION_HANDLER_INVOICE_HANDOFF),
+                        $container->get(DealServiceProvider::EXCEPTION_HANDLER_NOT_FOUND),
+                        $container->get(DealServiceProvider::EXCEPTION_HANDLER_FAILED),
+                        $container->get(AssetsServiceProvider::EXCEPTION_HANDLER_VALIDATION),
+                        $container->get(AssetsServiceProvider::EXCEPTION_HANDLER_RECORDS),
+                        $container->get(ServiceApiServiceProvider::EXCEPTION_HANDLER_MCP_VALIDATION),
+                        $container->get(ServiceApiServiceProvider::EXCEPTION_HANDLER_PLAN_NOT_FOUND),
+                        $container->get(ServiceApiServiceProvider::EXCEPTION_HANDLER_PLAN_STATE),
+                        $container->get(SettingsServiceProvider::EXCEPTION_HANDLER_ENCRYPTION),
+                        $container->get(SettingsServiceProvider::EXCEPTION_HANDLER_SMTP_NOT_CONFIGURED),
+                        $container->get(SettingsServiceProvider::EXCEPTION_HANDLER_SMTP_TEST_FAILED),
                     ];
+
+                    foreach ($handlers as $handler) {
+                        if (!$handler instanceof DomainExceptionHandlerInterface) {
+                            throw new LogicException('Exception handler service is invalid.');
+                        }
+                    }
 
                     return $handlers;
                 },

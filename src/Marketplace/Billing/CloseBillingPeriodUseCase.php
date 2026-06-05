@@ -17,6 +17,7 @@ use NeneServe\Marketplace\UseCase\BillingPeriodNotFoundException;
 use NeneServe\Marketplace\UseCase\GetCampaignSpendUseCase;
 use NeneServe\Marketplace\UseCase\InvalidPeriodTransitionException;
 use NeneServe\Marketplace\UseCase\MarketplaceValidationException;
+use NeneServe\Support\Id;
 
 /**
  * Closes an open billing period: derives the reproducible spend, persists an
@@ -69,7 +70,7 @@ final readonly class CloseBillingPeriodUseCase implements CloseBillingPeriodUseC
             $spend->spentCents,
         );
         $snapshot = new SpendSnapshot(
-            'ss-' . bin2hex(random_bytes(8)),
+            Id::generate('ss'),
             $organizationId,
             $period->id,
             $version,

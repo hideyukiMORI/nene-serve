@@ -15,6 +15,7 @@ use NeneServe\Marketplace\PdoCampaignRepository;
 use NeneServe\Marketplace\PricingRuleRepositoryInterface;
 use NeneServe\Marketplace\UseCase\MarketplaceValidationException;
 use NeneServe\Money\Money;
+use NeneServe\Support\Id;
 
 final readonly class CreateCampaignUseCase implements CreateCampaignUseCaseInterface
 {
@@ -59,7 +60,7 @@ final readonly class CreateCampaignUseCase implements CreateCampaignUseCaseInter
         }
 
         $campaign = new Campaign(
-            'cmp-' . bin2hex(random_bytes(8)),
+            Id::generate('cmp'),
             $organizationId,
             $input->advertiserId,
             trim($input->name),

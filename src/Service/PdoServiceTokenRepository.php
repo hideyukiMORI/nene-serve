@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Service;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
+use Nene2\Http\SecureTokenHelper;
 
 final readonly class PdoServiceTokenRepository implements ServiceTokenRepositoryInterface
 {
@@ -22,7 +23,7 @@ final readonly class PdoServiceTokenRepository implements ServiceTokenRepository
         $row = $this->query->fetchOne(
             'SELECT ' . self::COLUMNS . " FROM service_tokens
              WHERE token_hash = ? AND status = 'active' LIMIT 1",
-            [hash('sha256', $presented)],
+            [SecureTokenHelper::hash($presented)],
         );
 
         return $row === null ? null : $this->hydrate($row);

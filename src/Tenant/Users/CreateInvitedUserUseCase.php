@@ -7,7 +7,9 @@ namespace NeneServe\Tenant\Users;
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
 use Nene2\Http\RequestScopedHolder;
+use Nene2\Http\SecureTokenHelper;
 use NeneServe\Audit\PdoAuditLog;
+use NeneServe\Support\Id;
 use NeneServe\Tenant\Invitation;
 use NeneServe\Tenant\PdoInvitationRepository;
 use NeneServe\Tenant\PdoUserRepository;
@@ -60,19 +62,19 @@ final readonly class CreateInvitedUserUseCase implements CreateInvitedUserUseCas
         }
 
         $user = new User(
-            'usr-' . bin2hex(random_bytes(8)),
+            Id::generate('usr'),
             $organizationId,
             $email,
             $parsedRole,
             '', // no usable password until the invitation is accepted
             'active',
         );
-        $rawToken = bin2hex(random_bytes(32));
+        [$rawToken, $tokenHash] = SecureTokenHelper::generateWithHash(32);
         $invitation = new Invitation(
-            'inv-' . bin2hex(random_bytes(8)),
+            Id::generate('inv'),
             $organizationId,
             $user->id,
-            Invitation::hash($rawToken),
+            $tokenHash,
             'pending',
             gmdate('Y-m-d H:i:s', time() + self::TOKEN_TTL_HOURS * 3600),
         );

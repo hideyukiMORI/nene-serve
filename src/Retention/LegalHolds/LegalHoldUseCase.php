@@ -12,6 +12,7 @@ use NeneServe\Retention\LegalHold;
 use NeneServe\Retention\LegalHoldRepositoryInterface;
 use NeneServe\Retention\PdoLegalHoldRepository;
 use NeneServe\Retention\UseCase\LegalHoldException;
+use NeneServe\Support\Id;
 
 /**
  * Places / releases legal holds. While any hold is active, retention purges are
@@ -37,7 +38,7 @@ final readonly class LegalHoldUseCase implements LegalHoldUseCaseInterface
         }
 
         $hold = new LegalHold(
-            'lh-' . bin2hex(random_bytes(8)),
+            Id::generate('lh'),
             $this->organizationId->get(),
             trim($input->reason),
             gmdate('c'),

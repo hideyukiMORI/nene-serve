@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\Frequency;
 
+use NeneServe\Support\LockedJsonFile;
+
 /**
  * File-backed frequency counter so caps hold across the separate serve/beacon
  * HTTP requests on a single-server dev boot. Production counts from the
@@ -11,6 +13,8 @@ namespace NeneServe\Serving\Frequency;
  */
 final class FileFrequencyCapStore implements FrequencyCapStoreInterface
 {
+    use LockedJsonFile;
+
     public function __construct(
         private readonly string $path,
     ) {
@@ -25,32 +29,14 @@ final class FileFrequencyCapStore implements FrequencyCapStoreInterface
 
     public function increment(string $placementId, string $visitorBucket): void
     {
-        $dir = dirname($this->path);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0o775, true);
-        }
-
-        $handle = fopen($this->path, 'c+');
-        if ($handle === false) {
-            return;
-        }
-
-        try {
-            flock($handle, LOCK_EX);
-            $raw = stream_get_contents($handle);
+        $this->withLockedFile($this->path, static function (string $raw) use ($placementId, $visitorBucket): string {
             /** @var array<string, int> $state */
-            $state = $raw === false || $raw === '' ? [] : (json_decode($raw, true) ?: []);
+            $state = $raw === '' ? [] : (json_decode($raw, true) ?: []);
             $key = $placementId . '|' . $visitorBucket;
             $state[$key] = (int) ($state[$key] ?? 0) + 1;
 
-            rewind($handle);
-            ftruncate($handle, 0);
-            fwrite($handle, (string) json_encode($state));
-            fflush($handle);
-        } finally {
-            flock($handle, LOCK_UN);
-            fclose($handle);
-        }
+            return (string) json_encode($state);
+        });
     }
 
     /** @return array<string, int> */

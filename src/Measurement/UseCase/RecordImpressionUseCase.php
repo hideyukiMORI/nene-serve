@@ -11,6 +11,7 @@ use NeneServe\Measurement\VisitorBucket;
 use NeneServe\Serving\Frequency\FrequencyCapStoreInterface;
 use NeneServe\Serving\PlacementRepositoryInterface;
 use NeneServe\Serving\Token\TokenStoreInterface;
+use NeneServe\Support\Id;
 
 /**
  * Records an impression from a beacon token (measurement-spec). Idempotent
@@ -52,7 +53,7 @@ final class RecordImpressionUseCase
             : null;
 
         $this->events->recordImpression(new ImpressionEvent(
-            bin2hex(random_bytes(16)),
+            Id::random(16),
             $record->organizationId,
             $record->placementId,
             $record->creativeId,

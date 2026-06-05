@@ -25,16 +25,6 @@ final readonly class PdoBillingPeriodRepository implements BillingPeriodReposito
         return $row === null ? null : $this->hydrate($row);
     }
 
-    public function listByCampaign(string $organizationId, string $campaignId): array
-    {
-        $rows = $this->query->fetchAll(
-            'SELECT ' . self::COLUMNS . ' FROM billing_periods WHERE organization_id = ? AND campaign_id = ? ORDER BY period_start',
-            [$organizationId, $campaignId],
-        );
-
-        return array_map($this->hydrate(...), $rows);
-    }
-
     public function save(BillingPeriod $period): void
     {
         $this->query->execute(

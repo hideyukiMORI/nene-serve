@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Audit;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
+use NeneServe\Support\Id;
 
 final readonly class PdoAuditLog implements AuditLogInterface
 {
@@ -41,7 +42,7 @@ final readonly class PdoAuditLog implements AuditLogInterface
                 (id, organization_id, actor_user_id, action, subject_type, subject_id, metadata, occurred_at, previous_hash, hash)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
-                bin2hex(random_bytes(8)),
+                Id::random(8),
                 $organizationId,
                 $actorUserId,
                 $action,

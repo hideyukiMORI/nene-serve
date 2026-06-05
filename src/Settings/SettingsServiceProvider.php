@@ -4,13 +4,8 @@ declare(strict_types=1);
 
 namespace NeneServe\Settings;
 
-use LogicException;
-use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
-use Nene2\Http\JsonResponseFactory;
-use Nene2\Http\RequestScopedHolder;
-use NeneServe\Http\RuntimeServiceProvider;
 use NeneServe\Mail\MailerFactoryInterface;
 use NeneServe\Support\Crypto;
 use NeneServe\Support\ServiceProviderHelpers;
@@ -34,117 +29,43 @@ final readonly class SettingsServiceProvider implements ServiceProviderInterface
         $builder
             ->set(
                 SmtpSettingsRepositoryInterface::class,
-                static function (ContainerInterface $container): SmtpSettingsRepositoryInterface {
-                    $query = $container->get(DatabaseQueryExecutorInterface::class);
-
-                    if (!$query instanceof DatabaseQueryExecutorInterface) {
-                        throw new LogicException('Database query executor service is invalid.');
-                    }
-
-                    return new PdoSmtpSettingsRepository($query);
-                },
+                static fn (ContainerInterface $c): SmtpSettingsRepositoryInterface => new PdoSmtpSettingsRepository(self::query($c)),
             )
             ->set(
                 GetSmtpSettingsUseCaseInterface::class,
-                static function (ContainerInterface $container): GetSmtpSettingsUseCaseInterface {
-                    $settings = $container->get(SmtpSettingsRepositoryInterface::class);
-                    $organizationId = $container->get(RuntimeServiceProvider::ORG_ID_HOLDER);
-
-                    if (!$settings instanceof SmtpSettingsRepositoryInterface) {
-                        throw new LogicException('SMTP settings repository service is invalid.');
-                    }
-
-                    if (!$organizationId instanceof RequestScopedHolder) {
-                        throw new LogicException('Organization id holder service is invalid.');
-                    }
-
-                    return new GetSmtpSettingsUseCase($settings, $organizationId);
-                },
+                static fn (ContainerInterface $c): GetSmtpSettingsUseCaseInterface => new GetSmtpSettingsUseCase(self::service($c, SmtpSettingsRepositoryInterface::class), self::orgId($c)),
             )
             ->set(
                 GetSmtpSettingsHandler::class,
-                static function (ContainerInterface $container): GetSmtpSettingsHandler {
-                    $useCase = $container->get(GetSmtpSettingsUseCaseInterface::class);
-                    $response = $container->get(JsonResponseFactory::class);
-
-                    if (!$useCase instanceof GetSmtpSettingsUseCaseInterface) {
-                        throw new LogicException('Get SMTP settings use case service is invalid.');
-                    }
-
-                    if (!$response instanceof JsonResponseFactory) {
-                        throw new LogicException('JSON response factory service is invalid.');
-                    }
-
-                    return new GetSmtpSettingsHandler($useCase, $response);
-                },
+                static fn (ContainerInterface $c): GetSmtpSettingsHandler => new GetSmtpSettingsHandler(self::service($c, GetSmtpSettingsUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 UpdateSmtpSettingsUseCaseInterface::class,
-                static function (ContainerInterface $container): UpdateSmtpSettingsUseCaseInterface {
-                    $settings = $container->get(SmtpSettingsRepositoryInterface::class);
-                    $crypto = $container->get(Crypto::class);
-
-                    if (!$settings instanceof SmtpSettingsRepositoryInterface) {
-                        throw new LogicException('SMTP settings repository service is invalid.');
-                    }
-
-                    if (!$crypto instanceof Crypto) {
-                        throw new LogicException('Crypto service is invalid.');
-                    }
-
-                    return new UpdateSmtpSettingsUseCase($settings, $crypto, self::transactions($container), self::orgId($container));
-                },
+                static fn (ContainerInterface $c): UpdateSmtpSettingsUseCaseInterface => new UpdateSmtpSettingsUseCase(
+                    self::service($c, SmtpSettingsRepositoryInterface::class),
+                    self::service($c, Crypto::class),
+                    self::transactions($c),
+                    self::orgId($c),
+                ),
             )
             ->set(
                 UpdateSmtpSettingsHandler::class,
-                static function (ContainerInterface $container): UpdateSmtpSettingsHandler {
-                    $useCase = $container->get(UpdateSmtpSettingsUseCaseInterface::class);
-
-                    if (!$useCase instanceof UpdateSmtpSettingsUseCaseInterface) {
-                        throw new LogicException('Update SMTP settings use case service is invalid.');
-                    }
-
-                    return new UpdateSmtpSettingsHandler($useCase, self::json($container));
-                },
+                static fn (ContainerInterface $c): UpdateSmtpSettingsHandler => new UpdateSmtpSettingsHandler(self::service($c, UpdateSmtpSettingsUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 TestSmtpSettingsUseCaseInterface::class,
-                static function (ContainerInterface $container): TestSmtpSettingsUseCaseInterface {
-                    $settings = $container->get(SmtpSettingsRepositoryInterface::class);
-                    $crypto = $container->get(Crypto::class);
-                    $mailerFactory = $container->get(MailerFactoryInterface::class);
-                    $users = $container->get(UserRepositoryInterface::class);
-
-                    if (!$settings instanceof SmtpSettingsRepositoryInterface) {
-                        throw new LogicException('SMTP settings repository service is invalid.');
-                    }
-
-                    if (!$crypto instanceof Crypto) {
-                        throw new LogicException('Crypto service is invalid.');
-                    }
-
-                    if (!$mailerFactory instanceof MailerFactoryInterface) {
-                        throw new LogicException('Mailer factory service is invalid.');
-                    }
-
-                    if (!$users instanceof UserRepositoryInterface) {
-                        throw new LogicException('User repository service is invalid.');
-                    }
-
-                    return new TestSmtpSettingsUseCase($settings, $crypto, $mailerFactory, $users, self::transactions($container), self::orgId($container));
-                },
+                static fn (ContainerInterface $c): TestSmtpSettingsUseCaseInterface => new TestSmtpSettingsUseCase(
+                    self::service($c, SmtpSettingsRepositoryInterface::class),
+                    self::service($c, Crypto::class),
+                    self::service($c, MailerFactoryInterface::class),
+                    self::service($c, UserRepositoryInterface::class),
+                    self::transactions($c),
+                    self::orgId($c),
+                ),
             )
             ->set(
                 TestSmtpSettingsHandler::class,
-                static function (ContainerInterface $container): TestSmtpSettingsHandler {
-                    $useCase = $container->get(TestSmtpSettingsUseCaseInterface::class);
-
-                    if (!$useCase instanceof TestSmtpSettingsUseCaseInterface) {
-                        throw new LogicException('Test SMTP settings use case service is invalid.');
-                    }
-
-                    return new TestSmtpSettingsHandler($useCase, self::json($container));
-                },
+                static fn (ContainerInterface $c): TestSmtpSettingsHandler => new TestSmtpSettingsHandler(self::service($c, TestSmtpSettingsUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 self::EXCEPTION_HANDLER_ENCRYPTION,
@@ -160,27 +81,11 @@ final readonly class SettingsServiceProvider implements ServiceProviderInterface
             )
             ->set(
                 self::ROUTE_REGISTRAR,
-                static function (ContainerInterface $container): SettingsRouteRegistrar {
-                    $getSmtpHandler = $container->get(GetSmtpSettingsHandler::class);
-                    $updateSmtpHandler = $container->get(UpdateSmtpSettingsHandler::class);
-                    $testSmtpHandler = $container->get(TestSmtpSettingsHandler::class);
-
-                    if (!$getSmtpHandler instanceof GetSmtpSettingsHandler) {
-                        throw new LogicException('Get SMTP settings handler service is invalid.');
-                    }
-
-                    if (!$updateSmtpHandler instanceof UpdateSmtpSettingsHandler) {
-                        throw new LogicException('Update SMTP settings handler service is invalid.');
-                    }
-
-                    if (!$testSmtpHandler instanceof TestSmtpSettingsHandler) {
-                        throw new LogicException('Test SMTP settings handler service is invalid.');
-                    }
-
-                    return new SettingsRouteRegistrar($getSmtpHandler, $updateSmtpHandler, $testSmtpHandler);
-                },
+                static fn (ContainerInterface $c): SettingsRouteRegistrar => new SettingsRouteRegistrar(
+                    self::service($c, GetSmtpSettingsHandler::class),
+                    self::service($c, UpdateSmtpSettingsHandler::class),
+                    self::service($c, TestSmtpSettingsHandler::class),
+                ),
             );
     }
-
-    /** @return RequestScopedHolder<string> */
 }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace NeneServe\Upstream\Records;
 
+use NeneServe\Support\HttpStatusLine;
+
 /**
  * Production Records client: a **read-only** GET to the Records `/api/*` surface
  * with a scoped service token (sibling-products map, ADR 0002). 404 → null;
@@ -34,7 +36,7 @@ final class HttpRecordsClient implements RecordsClientInterface
         }
 
         /** @var list<string> $http_response_header populated by the http wrapper */
-        $status = self::statusCode($http_response_header);
+        $status = HttpStatusLine::statusCode($http_response_header);
         if ($status === 404) {
             return null;
         }
@@ -56,14 +58,4 @@ final class HttpRecordsClient implements RecordsClientInterface
     }
 
     /** @param list<string> $headers */
-    private static function statusCode(array $headers): int
-    {
-        foreach ($headers as $header) {
-            if (preg_match('#^HTTP/\S+\s+(\d{3})#', $header, $m) === 1) {
-                return (int) $m[1];
-            }
-        }
-
-        return 0;
-    }
 }

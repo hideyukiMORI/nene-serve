@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace NeneServe\Assets\Admin;
 
-use LogicException;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
-use Nene2\Http\RequestScopedHolder;
-use NeneServe\Http\RuntimeServiceProvider;
 use NeneServe\Storage\StorageInterface;
 use NeneServe\Support\ServiceProviderHelpers;
 use NeneServe\Upstream\Records\RecordsClientInterface;
@@ -29,56 +26,23 @@ final readonly class AssetsServiceProvider implements ServiceProviderInterface
         $builder
             ->set(
                 UploadAssetUseCaseInterface::class,
-                static function (ContainerInterface $c): UploadAssetUseCaseInterface {
-                    $storage = $c->get(StorageInterface::class);
-                    $organizationId = $c->get(RuntimeServiceProvider::ORG_ID_HOLDER);
-
-                    if (!$storage instanceof StorageInterface) {
-                        throw new LogicException('Storage service is invalid.');
-                    }
-
-                    if (!$organizationId instanceof RequestScopedHolder) {
-                        throw new LogicException('Organization id holder service is invalid.');
-                    }
-
-                    return new UploadAssetUseCase(self::transactions($c), $storage, $organizationId);
-                },
+                static fn (ContainerInterface $c): UploadAssetUseCaseInterface => new UploadAssetUseCase(
+                    self::transactions($c),
+                    self::service($c, StorageInterface::class),
+                    self::orgId($c),
+                ),
             )
             ->set(
                 GetRecordsAssetUseCaseInterface::class,
-                static function (ContainerInterface $c): GetRecordsAssetUseCaseInterface {
-                    $records = $c->get(RecordsClientInterface::class);
-
-                    if (!$records instanceof RecordsClientInterface) {
-                        throw new LogicException('Records client service is invalid.');
-                    }
-
-                    return new GetRecordsAssetUseCase($records);
-                },
+                static fn (ContainerInterface $c): GetRecordsAssetUseCaseInterface => new GetRecordsAssetUseCase(self::service($c, RecordsClientInterface::class)),
             )
             ->set(
                 UploadAssetHandler::class,
-                static function (ContainerInterface $c): UploadAssetHandler {
-                    $useCase = $c->get(UploadAssetUseCaseInterface::class);
-
-                    if (!$useCase instanceof UploadAssetUseCaseInterface) {
-                        throw new LogicException('Upload asset use case service is invalid.');
-                    }
-
-                    return new UploadAssetHandler($useCase, self::json($c));
-                },
+                static fn (ContainerInterface $c): UploadAssetHandler => new UploadAssetHandler(self::service($c, UploadAssetUseCaseInterface::class), self::json($c)),
             )
             ->set(
                 GetRecordsAssetHandler::class,
-                static function (ContainerInterface $c): GetRecordsAssetHandler {
-                    $useCase = $c->get(GetRecordsAssetUseCaseInterface::class);
-
-                    if (!$useCase instanceof GetRecordsAssetUseCaseInterface) {
-                        throw new LogicException('Get records asset use case service is invalid.');
-                    }
-
-                    return new GetRecordsAssetHandler($useCase, self::json($c), self::problem($c));
-                },
+                static fn (ContainerInterface $c): GetRecordsAssetHandler => new GetRecordsAssetHandler(self::service($c, GetRecordsAssetUseCaseInterface::class), self::json($c), self::problem($c)),
             )
             ->set(
                 self::EXCEPTION_HANDLER_VALIDATION,
@@ -90,20 +54,10 @@ final readonly class AssetsServiceProvider implements ServiceProviderInterface
             )
             ->set(
                 self::ROUTE_REGISTRAR,
-                static function (ContainerInterface $container): AssetsRouteRegistrar {
-                    $upload = $container->get(UploadAssetHandler::class);
-                    $records = $container->get(GetRecordsAssetHandler::class);
-
-                    if (!$upload instanceof UploadAssetHandler) {
-                        throw new LogicException('Upload asset handler service is invalid.');
-                    }
-
-                    if (!$records instanceof GetRecordsAssetHandler) {
-                        throw new LogicException('Get records asset handler service is invalid.');
-                    }
-
-                    return new AssetsRouteRegistrar($upload, $records);
-                },
+                static fn (ContainerInterface $c): AssetsRouteRegistrar => new AssetsRouteRegistrar(
+                    self::service($c, UploadAssetHandler::class),
+                    self::service($c, GetRecordsAssetHandler::class),
+                ),
             );
     }
 }

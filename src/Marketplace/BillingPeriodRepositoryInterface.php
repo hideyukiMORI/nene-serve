@@ -8,10 +8,5 @@ interface BillingPeriodRepositoryInterface
 {
     public function findByIdInOrganization(string $id, string $organizationId): ?BillingPeriod;
 
-    /**
-     * @return list<BillingPeriod>
-     */
-    public function listByCampaign(string $organizationId, string $campaignId): array;
-
     public function save(BillingPeriod $period): void;
 }

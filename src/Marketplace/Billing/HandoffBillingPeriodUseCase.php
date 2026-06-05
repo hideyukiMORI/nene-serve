@@ -24,6 +24,7 @@ use NeneServe\Marketplace\UseCase\BillingPeriodNotFoundException;
 use NeneServe\Marketplace\UseCase\HandoffFailedException;
 use NeneServe\Marketplace\UseCase\InvalidPeriodTransitionException;
 use NeneServe\Marketplace\UseCase\ReconciliationFailedException;
+use NeneServe\Support\Id;
 
 /**
  * Reconciles a closed billing period's snapshot and hands the **net** amount to
@@ -85,7 +86,7 @@ final readonly class HandoffBillingPeriodUseCase implements HandoffBillingPeriod
         $invoiceClientId = $this->resolveInvoiceClientId($organizationId, $period->campaignId);
 
         $pending = new InvoiceHandoff(
-            'ho-' . bin2hex(random_bytes(8)),
+            Id::generate('ho'),
             $organizationId,
             $period->id,
             $externalReference,
@@ -179,7 +180,7 @@ final readonly class HandoffBillingPeriodUseCase implements HandoffBillingPeriod
         }
 
         $discrepancy = new InvoiceHandoff(
-            'ho-' . bin2hex(random_bytes(8)),
+            Id::generate('ho'),
             $organizationId,
             $periodId,
             $externalReference,

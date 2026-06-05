@@ -8,6 +8,7 @@ use NeneServe\Measurement\ConversionEvent;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Serving\PlacementRepositoryInterface;
 use NeneServe\Serving\UseCase\PlacementNotFoundException;
+use NeneServe\Support\Id;
 
 /**
  * Records a conversion attributed to a placement's delivery (ADR 0009). Append-
@@ -33,7 +34,7 @@ final class RecordConversionUseCase
         }
 
         $this->events->recordConversion(new ConversionEvent(
-            bin2hex(random_bytes(16)),
+            Id::random(16),
             $placement->organizationId,
             $placement->id,
             gmdate('c'),

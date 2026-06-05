@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace NeneServe\Measurement;
 
+use NeneServe\Support\LockedJsonFile;
+
 /**
  * File-backed append-only event store so impressions/clicks recorded in one
  * request are visible to the CSV export / DSR tooling in another, on a
@@ -12,6 +14,8 @@ namespace NeneServe\Measurement;
  */
 final class FileEventStore implements EventStoreInterface
 {
+    use LockedJsonFile;
+
     public function __construct(
         private readonly string $path,
     ) {
@@ -215,33 +219,15 @@ final class FileEventStore implements EventStoreInterface
      */
     private function mutate(callable $apply): void
     {
-        $dir = dirname($this->path);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0o775, true);
-        }
-
-        $handle = fopen($this->path, 'c+');
-        if ($handle === false) {
-            return;
-        }
-
-        try {
-            flock($handle, LOCK_EX);
-            $raw = stream_get_contents($handle);
+        $this->withLockedFile($this->path, static function (string $raw) use ($apply): string {
             /** @var array{impressions?: list<array<string, mixed>>, clicks?: list<array<string, mixed>>, serves?: list<array<string, mixed>>, conversions?: list<array<string, mixed>>} $state */
-            $state = $raw === false || $raw === '' ? [] : (json_decode($raw, true) ?: []);
+            $state = $raw === '' ? [] : (json_decode($raw, true) ?: []);
             $state += ['impressions' => [], 'clicks' => [], 'serves' => [], 'conversions' => []];
 
             $apply($state);
 
-            rewind($handle);
-            ftruncate($handle, 0);
-            fwrite($handle, (string) json_encode($state));
-            fflush($handle);
-        } finally {
-            flock($handle, LOCK_UN);
-            fclose($handle);
-        }
+            return (string) json_encode($state);
+        });
     }
 
     /** @return array{impressions: list<array<string, mixed>>, clicks: list<array{org: string, date: string, placement: string, creative: string}>, serves: list<array<string, mixed>>, conversions: list<array<string, mixed>>} */
