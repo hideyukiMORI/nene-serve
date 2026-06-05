@@ -6,8 +6,7 @@ namespace NeneServe\Settings;
 
 use Nene2\Http\JsonRequestBodyParser;
 use Nene2\Http\JsonResponseFactory;
-use Nene2\Validation\ValidationError;
-use Nene2\Validation\ValidationException;
+use NeneServe\Http\BodyFieldCollector;
 use NeneServe\Tenant\Auth\AuthContextResolver;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -33,34 +32,13 @@ final readonly class UpdateSmtpSettingsHandler
 
         $body = JsonRequestBodyParser::parse($request);
 
-        $host = isset($body['host']) && is_string($body['host']) ? trim($body['host']) : '';
-        $port = $body['port'] ?? null;
-        $fromAddress = isset($body['from_address']) && is_string($body['from_address']) ? trim($body['from_address']) : '';
-        $encryption = isset($body['encryption']) && is_string($body['encryption']) ? $body['encryption'] : 'starttls';
+        $fields = new BodyFieldCollector($body);
+        $host = $fields->requiredString('host', 'Host is required.', trim: true);
+        $port = $fields->requiredInt('port', 'Port must be an integer.');
+        $fromAddress = $fields->requiredString('from_address', 'From address is required.', trim: true);
+        $encryption = $fields->oneOf('encryption', self::ENCRYPTIONS, 'Encryption must be none, starttls or tls.', 'starttls');
+        $fields->throwIfInvalid();
 
-        $errors = [];
-
-        if ($host === '') {
-            $errors[] = new ValidationError('host', 'Host is required.', 'required');
-        }
-
-        if (!is_int($port)) {
-            $errors[] = new ValidationError('port', 'Port must be an integer.', 'invalid');
-        }
-
-        if ($fromAddress === '') {
-            $errors[] = new ValidationError('from_address', 'From address is required.', 'required');
-        }
-
-        if (!in_array($encryption, self::ENCRYPTIONS, true)) {
-            $errors[] = new ValidationError('encryption', 'Encryption must be none, starttls or tls.', 'invalid');
-        }
-
-        if ($errors !== []) {
-            throw new ValidationException($errors);
-        }
-
-        /** @var int $port */
         /** @var 'none'|'starttls'|'tls' $encryption */
         $username = isset($body['username']) && is_string($body['username']) ? $body['username'] : '';
         $fromName = isset($body['from_name']) && is_string($body['from_name']) ? $body['from_name'] : '';

@@ -6,8 +6,7 @@ namespace NeneServe\Measurement\Dsr;
 
 use Nene2\Http\JsonRequestBodyParser;
 use Nene2\Http\JsonResponseFactory;
-use Nene2\Validation\ValidationError;
-use Nene2\Validation\ValidationException;
+use NeneServe\Http\BodyFieldCollector;
 use NeneServe\Tenant\Auth\AuthContextResolver;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -30,22 +29,10 @@ final readonly class DataSubjectRequestHandler
         $context = AuthContextResolver::require($request);
 
         $body = JsonRequestBodyParser::parse($request);
-        $kind = $body['kind'] ?? null;
-        $bucket = isset($body['visitor_bucket']) && is_string($body['visitor_bucket']) ? $body['visitor_bucket'] : '';
-
-        $errors = [];
-
-        if (!in_array($kind, ['export', 'erasure'], true)) {
-            $errors[] = new ValidationError('kind', 'Kind must be export or erasure.', 'invalid');
-        }
-
-        if ($bucket === '') {
-            $errors[] = new ValidationError('visitor_bucket', 'Visitor bucket is required.', 'required');
-        }
-
-        if ($errors !== []) {
-            throw new ValidationException($errors);
-        }
+        $fields = new BodyFieldCollector($body);
+        $kind = $fields->oneOf('kind', ['export', 'erasure'], 'Kind must be export or erasure.');
+        $bucket = $fields->requiredString('visitor_bucket', 'Visitor bucket is required.');
+        $fields->throwIfInvalid();
 
         if ($kind === 'export') {
             return $this->response->create([

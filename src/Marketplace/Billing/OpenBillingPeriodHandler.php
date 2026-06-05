@@ -7,8 +7,7 @@ namespace NeneServe\Marketplace\Billing;
 use Nene2\Http\JsonRequestBodyParser;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Routing\Router;
-use Nene2\Validation\ValidationError;
-use Nene2\Validation\ValidationException;
+use NeneServe\Http\BodyFieldCollector;
 use NeneServe\Tenant\Auth\AuthContextResolver;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -29,22 +28,10 @@ final readonly class OpenBillingPeriodHandler
         $campaignId = Router::param($request, 'id') ?? '';
 
         $body = JsonRequestBodyParser::parse($request);
-        $start = isset($body['period_start']) && is_string($body['period_start']) ? $body['period_start'] : '';
-        $end = isset($body['period_end']) && is_string($body['period_end']) ? $body['period_end'] : '';
-
-        $errors = [];
-
-        if ($start === '') {
-            $errors[] = new ValidationError('period_start', 'period_start (YYYY-MM-DD) is required.', 'required');
-        }
-
-        if ($end === '') {
-            $errors[] = new ValidationError('period_end', 'period_end (YYYY-MM-DD) is required.', 'required');
-        }
-
-        if ($errors !== []) {
-            throw new ValidationException($errors);
-        }
+        $fields = new BodyFieldCollector($body);
+        $start = $fields->requiredString('period_start', 'period_start (YYYY-MM-DD) is required.');
+        $end = $fields->requiredString('period_end', 'period_end (YYYY-MM-DD) is required.');
+        $fields->throwIfInvalid();
 
         $period = $this->open->execute(new OpenBillingPeriodInput($context->userId, $campaignId, $start, $end))->period;
 

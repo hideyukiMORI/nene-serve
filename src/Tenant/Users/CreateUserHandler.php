@@ -6,8 +6,7 @@ namespace NeneServe\Tenant\Users;
 
 use Nene2\Http\JsonRequestBodyParser;
 use Nene2\Http\JsonResponseFactory;
-use Nene2\Validation\ValidationError;
-use Nene2\Validation\ValidationException;
+use NeneServe\Http\BodyFieldCollector;
 use NeneServe\Mail\Email;
 use NeneServe\Mail\MailerException;
 use NeneServe\Mail\MailerFactoryInterface;
@@ -40,22 +39,10 @@ final readonly class CreateUserHandler
 
         $body = JsonRequestBodyParser::parse($request);
 
-        $email = isset($body['email']) && is_string($body['email']) ? trim($body['email']) : '';
-        $role = isset($body['role']) && is_string($body['role']) ? $body['role'] : '';
-
-        $errors = [];
-
-        if ($email === '') {
-            $errors[] = new ValidationError('email', 'Email is required.', 'required');
-        }
-
-        if ($role === '') {
-            $errors[] = new ValidationError('role', 'Role is required.', 'required');
-        }
-
-        if ($errors !== []) {
-            throw new ValidationException($errors);
-        }
+        $fields = new BodyFieldCollector($body);
+        $email = $fields->requiredString('email', 'Email is required.', trim: true);
+        $role = $fields->requiredString('role', 'Role is required.');
+        $fields->throwIfInvalid();
 
         $invited = $this->createUser->execute(new CreateInvitedUserInput($context->userId, $email, $role));
 

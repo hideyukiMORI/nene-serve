@@ -6,8 +6,7 @@ namespace NeneServe\Marketplace\Admin;
 
 use Nene2\Http\JsonRequestBodyParser;
 use Nene2\Http\JsonResponseFactory;
-use Nene2\Validation\ValidationError;
-use Nene2\Validation\ValidationException;
+use NeneServe\Http\BodyFieldCollector;
 use NeneServe\Tenant\Auth\AuthContextResolver;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -27,29 +26,12 @@ final readonly class CreatePricingRuleHandler
 
         $body = JsonRequestBodyParser::parse($request);
 
-        $name = isset($body['name']) && is_string($body['name']) ? $body['name'] : '';
-        $model = isset($body['pricing_model']) && is_string($body['pricing_model']) ? $body['pricing_model'] : '';
-        $rateCents = $body['rate_cents'] ?? null;
+        $fields = new BodyFieldCollector($body);
+        $name = $fields->requiredString('name', 'Name is required.');
+        $model = $fields->requiredString('pricing_model', 'Pricing model is required.');
+        $rateCents = $fields->requiredInt('rate_cents', 'Rate (cents) must be an integer.');
+        $fields->throwIfInvalid();
 
-        $errors = [];
-
-        if ($name === '') {
-            $errors[] = new ValidationError('name', 'Name is required.', 'required');
-        }
-
-        if ($model === '') {
-            $errors[] = new ValidationError('pricing_model', 'Pricing model is required.', 'required');
-        }
-
-        if (!is_int($rateCents)) {
-            $errors[] = new ValidationError('rate_cents', 'Rate (cents) must be an integer.', 'invalid');
-        }
-
-        if ($errors !== []) {
-            throw new ValidationException($errors);
-        }
-
-        /** @var int $rateCents */
         $output = $this->createPricingRule->execute(new CreatePricingRuleInput($context->userId, $name, $model, $rateCents));
 
         return $this->response->create($output->pricingRule->toArray(), 201);
