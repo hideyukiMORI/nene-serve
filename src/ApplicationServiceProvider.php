@@ -7,6 +7,10 @@ namespace NeneServe;
 use LogicException;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
+use Nene2\Error\DomainExceptionHandlerInterface;
+use NeneServe\Auth\AuthenticationFailedExceptionHandler;
+use NeneServe\Auth\AuthRouteRegistrar;
+use NeneServe\Auth\AuthServiceProvider;
 use NeneServe\Health\HealthRouteRegistrar;
 use NeneServe\Health\HealthServiceProvider;
 use Psr\Container\ContainerInterface;
@@ -28,20 +32,27 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
 
     public function register(ContainerBuilder $builder): void
     {
-        $builder->addProvider(new HealthServiceProvider());
+        $builder
+            ->addProvider(new HealthServiceProvider())
+            ->addProvider(new AuthServiceProvider());
 
         $builder
             ->set(
                 self::ROUTE_REGISTRARS,
                 static function (ContainerInterface $container): array {
                     $health = $container->get(HealthServiceProvider::ROUTE_REGISTRAR);
+                    $auth = $container->get(AuthServiceProvider::ROUTE_REGISTRAR);
 
                     if (!$health instanceof HealthRouteRegistrar) {
                         throw new LogicException('Health route registrar service is invalid.');
                     }
 
+                    if (!$auth instanceof AuthRouteRegistrar) {
+                        throw new LogicException('Auth route registrar service is invalid.');
+                    }
+
                     /** @var list<callable(\Nene2\Routing\Router): void> $registrars */
-                    $registrars = [$health];
+                    $registrars = [$health, $auth];
 
                     return $registrars;
                 },
@@ -49,8 +60,14 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
             ->set(
                 self::EXCEPTION_HANDLERS,
                 static function (ContainerInterface $container): array {
-                    /** @var list<\Nene2\Error\DomainExceptionHandlerInterface> $handlers */
-                    $handlers = [];
+                    $authenticationFailed = $container->get(AuthServiceProvider::EXCEPTION_HANDLER);
+
+                    if (!$authenticationFailed instanceof AuthenticationFailedExceptionHandler) {
+                        throw new LogicException('Authentication failed exception handler service is invalid.');
+                    }
+
+                    /** @var list<DomainExceptionHandlerInterface> $handlers */
+                    $handlers = [$authenticationFailed];
 
                     return $handlers;
                 },

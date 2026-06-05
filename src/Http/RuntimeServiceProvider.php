@@ -29,6 +29,7 @@ use NeneServe\ApplicationServiceProvider;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
 use NeneServe\Tenant\Auth\CapabilityMiddleware;
 use Nyholm\Psr7\Factory\Psr17Factory;
+use PDO;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
@@ -111,6 +112,18 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                     }
 
                     return new PdoDatabaseTransactionManager($connectionFactory);
+                },
+            )
+            ->set(
+                PDO::class,
+                static function (ContainerInterface $container): PDO {
+                    $connectionFactory = $container->get(DatabaseConnectionFactoryInterface::class);
+
+                    if (!$connectionFactory instanceof DatabaseConnectionFactoryInterface) {
+                        throw new LogicException('Database connection factory service is invalid.');
+                    }
+
+                    return $connectionFactory->create();
                 },
             )
             ->set(Psr17Factory::class, static fn (ContainerInterface $container): Psr17Factory => new Psr17Factory())
