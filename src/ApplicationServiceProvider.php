@@ -15,6 +15,8 @@ use NeneServe\Health\HealthRouteRegistrar;
 use NeneServe\Health\HealthServiceProvider;
 use NeneServe\Measurement\Metrics\MetricsRouteRegistrar;
 use NeneServe\Measurement\Metrics\MetricsServiceProvider;
+use NeneServe\Serving\Creatives\CreativesRouteRegistrar;
+use NeneServe\Serving\Creatives\CreativesServiceProvider;
 use NeneServe\Serving\Placements\CreativeValidationExceptionHandler;
 use NeneServe\Serving\Placements\PlacementNotFoundExceptionHandler;
 use NeneServe\Serving\Placements\PlacementsRouteRegistrar;
@@ -52,7 +54,8 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
             ->addProvider(new SettingsServiceProvider())
             ->addProvider(new UsersServiceProvider())
             ->addProvider(new MetricsServiceProvider())
-            ->addProvider(new PlacementsServiceProvider());
+            ->addProvider(new PlacementsServiceProvider())
+            ->addProvider(new CreativesServiceProvider());
 
         $builder
             ->set(
@@ -65,6 +68,7 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                     $users = $container->get(UsersServiceProvider::ROUTE_REGISTRAR);
                     $metrics = $container->get(MetricsServiceProvider::ROUTE_REGISTRAR);
                     $placements = $container->get(PlacementsServiceProvider::ROUTE_REGISTRAR);
+                    $creatives = $container->get(CreativesServiceProvider::ROUTE_REGISTRAR);
 
                     if (!$health instanceof HealthRouteRegistrar) {
                         throw new LogicException('Health route registrar service is invalid.');
@@ -94,8 +98,12 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Placements route registrar service is invalid.');
                     }
 
+                    if (!$creatives instanceof CreativesRouteRegistrar) {
+                        throw new LogicException('Creatives route registrar service is invalid.');
+                    }
+
                     /** @var list<callable(\Nene2\Routing\Router): void> $registrars */
-                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements];
+                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements, $creatives];
 
                     return $registrars;
                 },

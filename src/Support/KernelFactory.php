@@ -109,7 +109,7 @@ final class KernelFactory
             users: new PdoUserRepository($query),
             organizations: new PdoOrganizationRepository($query),
             placements: new PdoPlacementRepository($query),
-            creatives: new PdoCreativeRepository($pdo),
+            creatives: new PdoCreativeRepository($query),
             tokens: new FileTokenStore($storageDir . '/tokens.json'),
             serviceTokens: new PdoServiceTokenRepository($pdo),
             audit: new PdoAuditLog($query),
