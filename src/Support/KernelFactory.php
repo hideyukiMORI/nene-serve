@@ -123,7 +123,7 @@ final class KernelFactory
             spendSnapshots: new PdoSpendSnapshotRepository($pdo),
             invoiceHandoffs: new PdoInvoiceHandoffRepository($pdo),
             invoiceClient: self::invoiceClient($read),
-            legalHolds: new PdoLegalHoldRepository($pdo),
+            legalHolds: new PdoLegalHoldRepository($query),
             records: self::recordsClient($read),
             dealOpportunities: new PdoDealOpportunityRepository($pdo),
             dealClient: self::dealClient($read),

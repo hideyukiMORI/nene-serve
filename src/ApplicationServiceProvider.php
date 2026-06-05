@@ -18,6 +18,9 @@ use NeneServe\Marketplace\Admin\MarketplaceServiceProvider;
 use NeneServe\Marketplace\Admin\MarketplaceValidationExceptionHandler;
 use NeneServe\Measurement\Metrics\MetricsRouteRegistrar;
 use NeneServe\Measurement\Metrics\MetricsServiceProvider;
+use NeneServe\Retention\LegalHolds\LegalHoldExceptionHandler;
+use NeneServe\Retention\LegalHolds\LegalHoldsRouteRegistrar;
+use NeneServe\Retention\LegalHolds\LegalHoldsServiceProvider;
 use NeneServe\Serving\Creatives\CreativeNotFoundExceptionHandler;
 use NeneServe\Serving\Creatives\CreativeReviewRouteRegistrar;
 use NeneServe\Serving\Creatives\CreativeScanFailedExceptionHandler;
@@ -68,7 +71,8 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
             ->addProvider(new PlacementsServiceProvider())
             ->addProvider(new CreativesServiceProvider())
             ->addProvider(new MarketplaceServiceProvider())
-            ->addProvider(new InvitationsServiceProvider());
+            ->addProvider(new InvitationsServiceProvider())
+            ->addProvider(new LegalHoldsServiceProvider());
 
         $builder
             ->set(
@@ -85,6 +89,7 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                     $creativeReview = $container->get(CreativesServiceProvider::REVIEW_ROUTE_REGISTRAR);
                     $marketplace = $container->get(MarketplaceServiceProvider::ROUTE_REGISTRAR);
                     $invitations = $container->get(InvitationsServiceProvider::ROUTE_REGISTRAR);
+                    $legalHolds = $container->get(LegalHoldsServiceProvider::ROUTE_REGISTRAR);
 
                     if (!$health instanceof HealthRouteRegistrar) {
                         throw new LogicException('Health route registrar service is invalid.');
@@ -130,8 +135,12 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Invitations route registrar service is invalid.');
                     }
 
+                    if (!$legalHolds instanceof LegalHoldsRouteRegistrar) {
+                        throw new LogicException('Legal holds route registrar service is invalid.');
+                    }
+
                     /** @var list<callable(\Nene2\Routing\Router): void> $registrars */
-                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements, $creatives, $creativeReview, $marketplace, $invitations];
+                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements, $creatives, $creativeReview, $marketplace, $invitations, $legalHolds];
 
                     return $registrars;
                 },
@@ -183,6 +192,7 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
 
                     $marketplaceValidation = $container->get(MarketplaceServiceProvider::EXCEPTION_HANDLER);
                     $invitationInvalid = $container->get(InvitationsServiceProvider::EXCEPTION_HANDLER);
+                    $legalHold = $container->get(LegalHoldsServiceProvider::EXCEPTION_HANDLER);
 
                     if (!$marketplaceValidation instanceof MarketplaceValidationExceptionHandler) {
                         throw new LogicException('Marketplace validation exception handler service is invalid.');
@@ -190,6 +200,10 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
 
                     if (!$invitationInvalid instanceof InvitationInvalidExceptionHandler) {
                         throw new LogicException('Invitation invalid exception handler service is invalid.');
+                    }
+
+                    if (!$legalHold instanceof LegalHoldExceptionHandler) {
+                        throw new LogicException('Legal hold exception handler service is invalid.');
                     }
 
                     /** @var list<DomainExceptionHandlerInterface> $handlers */
@@ -204,6 +218,7 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         $scanFailed,
                         $marketplaceValidation,
                         $invitationInvalid,
+                        $legalHold,
                     ];
 
                     return $handlers;
