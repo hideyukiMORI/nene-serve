@@ -6,12 +6,12 @@ namespace NeneServe\Settings;
 
 use LogicException;
 use Nene2\Database\DatabaseQueryExecutorInterface;
+use Nene2\Database\DatabaseTransactionManagerInterface;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Http\RequestScopedHolder;
-use NeneServe\Audit\AuditLogInterface;
 use NeneServe\Http\RuntimeServiceProvider;
 use NeneServe\Mail\MailerFactoryInterface;
 use NeneServe\Support\Crypto;
@@ -21,6 +21,12 @@ use Psr\Container\ContainerInterface;
 final readonly class SettingsServiceProvider implements ServiceProviderInterface
 {
     public const string ROUTE_REGISTRAR = 'nene-serve.route_registrar.settings';
+
+    public const string EXCEPTION_HANDLER_ENCRYPTION = 'nene-serve.exception_handler.encryption_unavailable';
+
+    public const string EXCEPTION_HANDLER_SMTP_NOT_CONFIGURED = 'nene-serve.exception_handler.smtp_not_configured';
+
+    public const string EXCEPTION_HANDLER_SMTP_TEST_FAILED = 'nene-serve.exception_handler.smtp_test_failed';
 
     public function register(ContainerBuilder $builder): void
     {
@@ -72,13 +78,10 @@ final readonly class SettingsServiceProvider implements ServiceProviderInterface
                 },
             )
             ->set(
-                UpdateSmtpSettingsHandler::class,
-                static function (ContainerInterface $container): UpdateSmtpSettingsHandler {
+                UpdateSmtpSettingsUseCaseInterface::class,
+                static function (ContainerInterface $container): UpdateSmtpSettingsUseCaseInterface {
                     $settings = $container->get(SmtpSettingsRepositoryInterface::class);
                     $crypto = $container->get(Crypto::class);
-                    $audit = $container->get(AuditLogInterface::class);
-                    $response = $container->get(JsonResponseFactory::class);
-                    $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
 
                     if (!$settings instanceof SmtpSettingsRepositoryInterface) {
                         throw new LogicException('SMTP settings repository service is invalid.');
@@ -88,31 +91,28 @@ final readonly class SettingsServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Crypto service is invalid.');
                     }
 
-                    if (!$audit instanceof AuditLogInterface) {
-                        throw new LogicException('Audit log service is invalid.');
-                    }
-
-                    if (!$response instanceof JsonResponseFactory) {
-                        throw new LogicException('JSON response factory service is invalid.');
-                    }
-
-                    if (!$problemDetails instanceof ProblemDetailsResponseFactory) {
-                        throw new LogicException('Problem details response factory service is invalid.');
-                    }
-
-                    return new UpdateSmtpSettingsHandler($settings, $crypto, $audit, $response, $problemDetails);
+                    return new UpdateSmtpSettingsUseCase($settings, $crypto, self::transactions($container), self::orgId($container));
                 },
             )
             ->set(
-                TestSmtpSettingsHandler::class,
-                static function (ContainerInterface $container): TestSmtpSettingsHandler {
+                UpdateSmtpSettingsHandler::class,
+                static function (ContainerInterface $container): UpdateSmtpSettingsHandler {
+                    $useCase = $container->get(UpdateSmtpSettingsUseCaseInterface::class);
+
+                    if (!$useCase instanceof UpdateSmtpSettingsUseCaseInterface) {
+                        throw new LogicException('Update SMTP settings use case service is invalid.');
+                    }
+
+                    return new UpdateSmtpSettingsHandler($useCase, self::json($container), self::problem($container));
+                },
+            )
+            ->set(
+                TestSmtpSettingsUseCaseInterface::class,
+                static function (ContainerInterface $container): TestSmtpSettingsUseCaseInterface {
                     $settings = $container->get(SmtpSettingsRepositoryInterface::class);
                     $crypto = $container->get(Crypto::class);
                     $mailerFactory = $container->get(MailerFactoryInterface::class);
                     $users = $container->get(UserRepositoryInterface::class);
-                    $audit = $container->get(AuditLogInterface::class);
-                    $response = $container->get(JsonResponseFactory::class);
-                    $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
 
                     if (!$settings instanceof SmtpSettingsRepositoryInterface) {
                         throw new LogicException('SMTP settings repository service is invalid.');
@@ -130,20 +130,32 @@ final readonly class SettingsServiceProvider implements ServiceProviderInterface
                         throw new LogicException('User repository service is invalid.');
                     }
 
-                    if (!$audit instanceof AuditLogInterface) {
-                        throw new LogicException('Audit log service is invalid.');
-                    }
-
-                    if (!$response instanceof JsonResponseFactory) {
-                        throw new LogicException('JSON response factory service is invalid.');
-                    }
-
-                    if (!$problemDetails instanceof ProblemDetailsResponseFactory) {
-                        throw new LogicException('Problem details response factory service is invalid.');
-                    }
-
-                    return new TestSmtpSettingsHandler($settings, $crypto, $mailerFactory, $users, $audit, $response, $problemDetails);
+                    return new TestSmtpSettingsUseCase($settings, $crypto, $mailerFactory, $users, self::transactions($container), self::orgId($container));
                 },
+            )
+            ->set(
+                TestSmtpSettingsHandler::class,
+                static function (ContainerInterface $container): TestSmtpSettingsHandler {
+                    $useCase = $container->get(TestSmtpSettingsUseCaseInterface::class);
+
+                    if (!$useCase instanceof TestSmtpSettingsUseCaseInterface) {
+                        throw new LogicException('Test SMTP settings use case service is invalid.');
+                    }
+
+                    return new TestSmtpSettingsHandler($useCase, self::json($container), self::problem($container));
+                },
+            )
+            ->set(
+                self::EXCEPTION_HANDLER_ENCRYPTION,
+                static fn (ContainerInterface $c): EncryptionUnavailableExceptionHandler => new EncryptionUnavailableExceptionHandler(self::problem($c)),
+            )
+            ->set(
+                self::EXCEPTION_HANDLER_SMTP_NOT_CONFIGURED,
+                static fn (ContainerInterface $c): SmtpNotConfiguredExceptionHandler => new SmtpNotConfiguredExceptionHandler(self::problem($c)),
+            )
+            ->set(
+                self::EXCEPTION_HANDLER_SMTP_TEST_FAILED,
+                static fn (ContainerInterface $c): SmtpTestFailedExceptionHandler => new SmtpTestFailedExceptionHandler(self::problem($c)),
             )
             ->set(
                 self::ROUTE_REGISTRAR,
@@ -167,5 +179,50 @@ final readonly class SettingsServiceProvider implements ServiceProviderInterface
                     return new SettingsRouteRegistrar($getSmtpHandler, $updateSmtpHandler, $testSmtpHandler);
                 },
             );
+    }
+
+    private static function transactions(ContainerInterface $container): DatabaseTransactionManagerInterface
+    {
+        $transactions = $container->get(DatabaseTransactionManagerInterface::class);
+
+        if (!$transactions instanceof DatabaseTransactionManagerInterface) {
+            throw new LogicException('Database transaction manager service is invalid.');
+        }
+
+        return $transactions;
+    }
+
+    /** @return RequestScopedHolder<string> */
+    private static function orgId(ContainerInterface $container): RequestScopedHolder
+    {
+        $orgId = $container->get(RuntimeServiceProvider::ORG_ID_HOLDER);
+
+        if (!$orgId instanceof RequestScopedHolder) {
+            throw new LogicException('Organization id holder service is invalid.');
+        }
+
+        return $orgId;
+    }
+
+    private static function json(ContainerInterface $container): JsonResponseFactory
+    {
+        $json = $container->get(JsonResponseFactory::class);
+
+        if (!$json instanceof JsonResponseFactory) {
+            throw new LogicException('JSON response factory service is invalid.');
+        }
+
+        return $json;
+    }
+
+    private static function problem(ContainerInterface $container): ProblemDetailsResponseFactory
+    {
+        $problem = $container->get(ProblemDetailsResponseFactory::class);
+
+        if (!$problem instanceof ProblemDetailsResponseFactory) {
+            throw new LogicException('Problem details response factory service is invalid.');
+        }
+
+        return $problem;
     }
 }

@@ -9,9 +9,6 @@ use Nene2\Http\JsonRequestBodyParser;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Validation\ValidationError;
 use Nene2\Validation\ValidationException;
-use NeneServe\Audit\AuditLogInterface;
-use NeneServe\Support\Crypto;
-use NeneServe\Support\CryptoException;
 use NeneServe\Tenant\Auth\AuthContextResolver;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -26,9 +23,7 @@ final readonly class UpdateSmtpSettingsHandler
     private const ENCRYPTIONS = ['none', 'starttls', 'tls'];
 
     public function __construct(
-        private SmtpSettingsRepositoryInterface $settings,
-        private Crypto $crypto,
-        private AuditLogInterface $audit,
+        private UpdateSmtpSettingsUseCaseInterface $update,
         private JsonResponseFactory $response,
         private ProblemDetailsResponseFactory $problemDetails,
     ) {
@@ -75,38 +70,18 @@ final readonly class UpdateSmtpSettingsHandler
         /** @var 'none'|'starttls'|'tls' $encryption */
         $username = isset($body['username']) && is_string($body['username']) ? $body['username'] : '';
         $fromName = isset($body['from_name']) && is_string($body['from_name']) ? $body['from_name'] : '';
+        $rawPassword = isset($body['password']) && is_string($body['password']) ? $body['password'] : null;
 
-        $existing = $this->settings->find($context->organizationId);
-        $passwordEncrypted = $existing?->passwordEncrypted;
-        $newPassword = $body['password'] ?? null;
-
-        if (is_string($newPassword) && $newPassword !== '') {
-            try {
-                $passwordEncrypted = $this->crypto->encrypt($newPassword);
-            } catch (CryptoException) {
-                return $this->problemDetails->create($request, 'encryption-unavailable', 'Encryption unavailable', 500, 'At-rest encryption is not configured.');
-            }
-        }
-
-        $record = new SmtpSettingsRecord(
-            $context->organizationId,
+        $record = $this->update->execute(new UpdateSmtpSettingsInput(
+            $context->userId,
             $host,
             $port,
             $username,
-            $passwordEncrypted,
+            $rawPassword,
             $fromAddress,
             $fromName,
             $encryption,
-        );
-        $this->settings->save($record);
-        $this->audit->record(
-            $context->organizationId,
-            $context->userId,
-            'settings.smtp_updated',
-            'smtp_settings',
-            $context->organizationId,
-            ['host' => $host, 'encryption' => $encryption],
-        );
+        ))->record;
 
         return $this->response->create($record->toAdminArray() + ['configured' => true]);
     }

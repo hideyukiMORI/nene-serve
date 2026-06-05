@@ -4,19 +4,25 @@ declare(strict_types=1);
 
 namespace NeneServe\Tests\Settings;
 
+use Nene2\Database\DatabaseQueryExecutorInterface;
+use Nene2\Database\DatabaseTransactionManagerInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
+use Nene2\Http\RequestScopedHolder;
 use Nene2\Validation\ValidationException;
-use NeneServe\Audit\AuditLogInterface;
 use NeneServe\Mail\Email;
 use NeneServe\Mail\MailerException;
 use NeneServe\Mail\MailerFactoryInterface;
 use NeneServe\Mail\MailerInterface;
 use NeneServe\Mail\SmtpConfig;
+use NeneServe\Settings\SmtpNotConfiguredException;
 use NeneServe\Settings\SmtpSettingsRecord;
 use NeneServe\Settings\SmtpSettingsRepositoryInterface;
+use NeneServe\Settings\SmtpTestFailedException;
 use NeneServe\Settings\TestSmtpSettingsHandler;
+use NeneServe\Settings\TestSmtpSettingsUseCase;
 use NeneServe\Settings\UpdateSmtpSettingsHandler;
+use NeneServe\Settings\UpdateSmtpSettingsUseCase;
 use NeneServe\Support\Crypto;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
 use NeneServe\Tenant\Role;
@@ -51,11 +57,10 @@ final class SmtpSettingsWriteTest extends TestCase
         self::assertSame('mail.acme.test', $body['host']);
     }
 
-    public function testTestEndpointReturns422WhenNotConfigured(): void
+    public function testTestThrowsWhenNotConfigured(): void
     {
-        $response = $this->test($this->repo(null), $this->mailer(false));
-
-        self::assertSame(422, $response->getStatusCode());
+        $this->expectException(SmtpNotConfiguredException::class);
+        $this->test($this->repo(null), $this->mailer(false));
     }
 
     public function testTestEndpointSendsAndReturnsSent(): void
@@ -69,23 +74,17 @@ final class SmtpSettingsWriteTest extends TestCase
         self::assertTrue($body['sent']);
     }
 
-    public function testTestEndpointReturns502OnMailerFailure(): void
+    public function testTestThrowsOnMailerFailure(): void
     {
-        $response = $this->test($this->repo($this->configuredRecord()), $this->mailer(true));
-
-        self::assertSame(502, $response->getStatusCode());
+        $this->expectException(SmtpTestFailedException::class);
+        $this->test($this->repo($this->configuredRecord()), $this->mailer(true));
     }
 
     private function update(string $json, SmtpSettingsRepositoryInterface $settings): ResponseInterface
     {
         $psr17 = new Psr17Factory();
-        $handler = new UpdateSmtpSettingsHandler(
-            $settings,
-            new Crypto(),
-            $this->audit(),
-            new JsonResponseFactory($psr17, $psr17),
-            new ProblemDetailsResponseFactory($psr17, $psr17),
-        );
+        $useCase = new UpdateSmtpSettingsUseCase($settings, new Crypto(), $this->transactions(), $this->orgId());
+        $handler = new UpdateSmtpSettingsHandler($useCase, new JsonResponseFactory($psr17, $psr17), new ProblemDetailsResponseFactory($psr17, $psr17));
 
         $request = $psr17->createServerRequest('PUT', '/admin/settings/smtp')
             ->withHeader('Content-Type', 'application/json')
@@ -98,15 +97,8 @@ final class SmtpSettingsWriteTest extends TestCase
     private function test(SmtpSettingsRepositoryInterface $settings, MailerFactoryInterface $mailerFactory): ResponseInterface
     {
         $psr17 = new Psr17Factory();
-        $handler = new TestSmtpSettingsHandler(
-            $settings,
-            new Crypto(),
-            $mailerFactory,
-            $this->users(),
-            $this->audit(),
-            new JsonResponseFactory($psr17, $psr17),
-            new ProblemDetailsResponseFactory($psr17, $psr17),
-        );
+        $useCase = new TestSmtpSettingsUseCase($settings, new Crypto(), $mailerFactory, $this->users(), $this->transactions(), $this->orgId());
+        $handler = new TestSmtpSettingsHandler($useCase, new JsonResponseFactory($psr17, $psr17), new ProblemDetailsResponseFactory($psr17, $psr17));
 
         $request = $psr17->createServerRequest('POST', '/admin/settings/smtp/test')
             ->withAttribute(AdminAuthMiddleware::CLAIMS_ATTRIBUTE, self::CLAIMS);
@@ -117,6 +109,53 @@ final class SmtpSettingsWriteTest extends TestCase
     private function configuredRecord(): SmtpSettingsRecord
     {
         return new SmtpSettingsRecord('org-acme', 'mail.acme.test', 587, 'mailer', null, 'no-reply@acme.test', 'Acme', 'starttls');
+    }
+
+    /** @return RequestScopedHolder<string> */
+    private function orgId(): RequestScopedHolder
+    {
+        /** @var RequestScopedHolder<string> $holder */
+        $holder = new RequestScopedHolder();
+        $holder->set('org-acme');
+
+        return $holder;
+    }
+
+    private function transactions(): DatabaseTransactionManagerInterface
+    {
+        return new class () implements DatabaseTransactionManagerInterface {
+            public function transactional(callable $callback): mixed
+            {
+                $executor = new class () implements DatabaseQueryExecutorInterface {
+                    public function execute(string $sql, array $parameters = []): int
+                    {
+                        return 0;
+                    }
+
+                    public function insert(string $sql, array $parameters = []): int
+                    {
+                        return 0;
+                    }
+
+                    public function lastInsertId(): int
+                    {
+                        return 0;
+                    }
+
+                    public function fetchOne(string $sql, array $parameters = []): ?array
+                    {
+                        return null;
+                    }
+
+                    public function fetchAll(string $sql, array $parameters = []): array
+                    {
+                        return [];
+                    }
+                };
+
+                return $callback($executor);
+            }
+        };
     }
 
     private function repo(?SmtpSettingsRecord $record): SmtpSettingsRepositoryInterface
@@ -196,25 +235,6 @@ final class SmtpSettingsWriteTest extends TestCase
             }
 
             public function listAll(int $limit, int $offset): array
-            {
-                return [];
-            }
-        };
-    }
-
-    private function audit(): AuditLogInterface
-    {
-        return new class () implements AuditLogInterface {
-            public function record(string $organizationId, string $actorUserId, string $action, string $subjectType, string $subjectId, array $metadata = []): void
-            {
-            }
-
-            public function forSubject(string $organizationId, string $subjectType, string $subjectId): array
-            {
-                return [];
-            }
-
-            public function allForOrganization(string $organizationId): array
             {
                 return [];
             }

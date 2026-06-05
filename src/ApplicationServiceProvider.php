@@ -55,8 +55,11 @@ use NeneServe\Serving\Placements\PlacementsRouteRegistrar;
 use NeneServe\Serving\Placements\PlacementsServiceProvider;
 use NeneServe\Serving\PublicApi\PublicRouteRegistrar;
 use NeneServe\Serving\PublicApi\PublicServiceProvider;
+use NeneServe\Settings\EncryptionUnavailableExceptionHandler;
 use NeneServe\Settings\SettingsRouteRegistrar;
 use NeneServe\Settings\SettingsServiceProvider;
+use NeneServe\Settings\SmtpNotConfiguredExceptionHandler;
+use NeneServe\Settings\SmtpTestFailedExceptionHandler;
 use NeneServe\Tenant\Account\AccountRouteRegistrar;
 use NeneServe\Tenant\Account\AccountServiceProvider;
 use NeneServe\Tenant\Invitations\InvitationInvalidExceptionHandler;
@@ -325,6 +328,22 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Invalid plan state exception handler service is invalid.');
                     }
 
+                    $encryptionUnavailable = $container->get(SettingsServiceProvider::EXCEPTION_HANDLER_ENCRYPTION);
+                    $smtpNotConfigured = $container->get(SettingsServiceProvider::EXCEPTION_HANDLER_SMTP_NOT_CONFIGURED);
+                    $smtpTestFailed = $container->get(SettingsServiceProvider::EXCEPTION_HANDLER_SMTP_TEST_FAILED);
+
+                    if (!$encryptionUnavailable instanceof EncryptionUnavailableExceptionHandler) {
+                        throw new LogicException('Encryption unavailable exception handler service is invalid.');
+                    }
+
+                    if (!$smtpNotConfigured instanceof SmtpNotConfiguredExceptionHandler) {
+                        throw new LogicException('SMTP not configured exception handler service is invalid.');
+                    }
+
+                    if (!$smtpTestFailed instanceof SmtpTestFailedExceptionHandler) {
+                        throw new LogicException('SMTP test failed exception handler service is invalid.');
+                    }
+
                     /** @var list<DomainExceptionHandlerInterface> $handlers */
                     $handlers = [
                         $authenticationFailed,
@@ -349,6 +368,9 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         $mcpValidation,
                         $changePlanNotFound,
                         $invalidPlanState,
+                        $encryptionUnavailable,
+                        $smtpNotConfigured,
+                        $smtpTestFailed,
                     ];
 
                     return $handlers;
