@@ -15,6 +15,10 @@ use NeneServe\Health\HealthRouteRegistrar;
 use NeneServe\Health\HealthServiceProvider;
 use NeneServe\Measurement\Metrics\MetricsRouteRegistrar;
 use NeneServe\Measurement\Metrics\MetricsServiceProvider;
+use NeneServe\Serving\Placements\CreativeValidationExceptionHandler;
+use NeneServe\Serving\Placements\PlacementNotFoundExceptionHandler;
+use NeneServe\Serving\Placements\PlacementsRouteRegistrar;
+use NeneServe\Serving\Placements\PlacementsServiceProvider;
 use NeneServe\Settings\SettingsRouteRegistrar;
 use NeneServe\Settings\SettingsServiceProvider;
 use NeneServe\Tenant\Account\AccountRouteRegistrar;
@@ -47,7 +51,8 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
             ->addProvider(new AccountServiceProvider())
             ->addProvider(new SettingsServiceProvider())
             ->addProvider(new UsersServiceProvider())
-            ->addProvider(new MetricsServiceProvider());
+            ->addProvider(new MetricsServiceProvider())
+            ->addProvider(new PlacementsServiceProvider());
 
         $builder
             ->set(
@@ -59,6 +64,7 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                     $settings = $container->get(SettingsServiceProvider::ROUTE_REGISTRAR);
                     $users = $container->get(UsersServiceProvider::ROUTE_REGISTRAR);
                     $metrics = $container->get(MetricsServiceProvider::ROUTE_REGISTRAR);
+                    $placements = $container->get(PlacementsServiceProvider::ROUTE_REGISTRAR);
 
                     if (!$health instanceof HealthRouteRegistrar) {
                         throw new LogicException('Health route registrar service is invalid.');
@@ -84,8 +90,12 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Metrics route registrar service is invalid.');
                     }
 
+                    if (!$placements instanceof PlacementsRouteRegistrar) {
+                        throw new LogicException('Placements route registrar service is invalid.');
+                    }
+
                     /** @var list<callable(\Nene2\Routing\Router): void> $registrars */
-                    $registrars = [$health, $auth, $account, $settings, $users, $metrics];
+                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements];
 
                     return $registrars;
                 },
@@ -95,6 +105,8 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                 static function (ContainerInterface $container): array {
                     $authenticationFailed = $container->get(AuthServiceProvider::EXCEPTION_HANDLER);
                     $userValidation = $container->get(UsersServiceProvider::EXCEPTION_HANDLER);
+                    $placementNotFound = $container->get(PlacementsServiceProvider::EXCEPTION_HANDLER_NOT_FOUND);
+                    $placementValidation = $container->get(PlacementsServiceProvider::EXCEPTION_HANDLER_VALIDATION);
 
                     if (!$authenticationFailed instanceof AuthenticationFailedExceptionHandler) {
                         throw new LogicException('Authentication failed exception handler service is invalid.');
@@ -104,8 +116,16 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('User validation exception handler service is invalid.');
                     }
 
+                    if (!$placementNotFound instanceof PlacementNotFoundExceptionHandler) {
+                        throw new LogicException('Placement not found exception handler service is invalid.');
+                    }
+
+                    if (!$placementValidation instanceof CreativeValidationExceptionHandler) {
+                        throw new LogicException('Placement validation exception handler service is invalid.');
+                    }
+
                     /** @var list<DomainExceptionHandlerInterface> $handlers */
-                    $handlers = [$authenticationFailed, $userValidation];
+                    $handlers = [$authenticationFailed, $userValidation, $placementNotFound, $placementValidation];
 
                     return $handlers;
                 },

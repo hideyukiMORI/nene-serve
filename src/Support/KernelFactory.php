@@ -108,7 +108,7 @@ final class KernelFactory
         return new Kernel(
             users: new PdoUserRepository($query),
             organizations: new PdoOrganizationRepository($query),
-            placements: new PdoPlacementRepository($pdo),
+            placements: new PdoPlacementRepository($query),
             creatives: new PdoCreativeRepository($pdo),
             tokens: new FileTokenStore($storageDir . '/tokens.json'),
             serviceTokens: new PdoServiceTokenRepository($pdo),
