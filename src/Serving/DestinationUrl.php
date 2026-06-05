@@ -20,7 +20,9 @@ final class DestinationUrl
         }
 
         $scheme = strtolower($parts['scheme']);
-        $host = strtolower($parts['host']);
+        // parse_url() returns an IPv6 host wrapped in brackets (e.g. "[::1]");
+        // strip them so the loopback allowlist below can match.
+        $host = strtolower(trim($parts['host'], '[]'));
 
         if ($scheme === 'https') {
             return true;
