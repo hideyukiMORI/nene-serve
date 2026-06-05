@@ -6,11 +6,12 @@ namespace NeneServe\Serving\Placements;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Serving\PdoPlacementRepository;
 use NeneServe\Serving\Placement;
+use NeneServe\Serving\PlacementRepositoryInterface;
 use NeneServe\Serving\UseCase\PlacementNotFoundException;
-use NeneServe\Tenant\AuthContext;
 
 /**
  * Lifecycle "delete" for a placement = archive tombstone (ADR 0022 §3): the row
@@ -19,15 +20,21 @@ use NeneServe\Tenant\AuthContext;
  */
 final readonly class ArchivePlacementUseCase implements ArchivePlacementUseCaseInterface
 {
+    /**
+     * @param RequestScopedHolder<string> $organizationId
+     */
     public function __construct(
-        private DatabaseQueryExecutorInterface $query,
+        private PlacementRepositoryInterface $placements,
         private DatabaseTransactionManagerInterface $transactions,
+        private RequestScopedHolder $organizationId,
     ) {
     }
 
-    public function execute(AuthContext $actor, string $placementId): Placement
+    public function execute(ArchivePlacementInput $input): ArchivePlacementOutput
     {
-        $placement = (new PdoPlacementRepository($this->query))->findByIdInOrganization($placementId, $actor->organizationId);
+        $organizationId = $this->organizationId->get();
+
+        $placement = $this->placements->findByIdInOrganization($input->placementId, $organizationId);
 
         if ($placement === null) {
             throw new PlacementNotFoundException();
@@ -35,20 +42,22 @@ final readonly class ArchivePlacementUseCase implements ArchivePlacementUseCaseI
 
         $at = gmdate('c');
 
-        return $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($placement, $actor, $placementId, $at): Placement {
-                (new PdoPlacementRepository($tx))->archive($placementId, $actor->organizationId, $at);
+        $archived = $this->transactions->transactional(
+            static function (DatabaseQueryExecutorInterface $tx) use ($placement, $input, $organizationId, $at): Placement {
+                (new PdoPlacementRepository($tx))->archive($input->placementId, $organizationId, $at);
                 (new PdoAuditLog($tx))->record(
-                    $actor->organizationId,
-                    $actor->userId,
+                    $organizationId,
+                    $input->actorUserId,
                     'placement.archived',
                     'placement',
-                    $placementId,
+                    $input->placementId,
                     ['before' => ['status' => $placement->status], 'after' => ['status' => 'archived', 'archived_at' => $at]],
                 );
 
                 return $placement->archive($at);
             },
         );
+
+        return new ArchivePlacementOutput($archived);
     }
 }

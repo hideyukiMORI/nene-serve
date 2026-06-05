@@ -40,7 +40,7 @@ final readonly class ListPlacementsHandler
                 'public_placement_key' => $p->publicPlacementKey,
                 'status' => $p->status,
             ],
-            (new PdoPlacementRepository($this->query))->listByOrganization($context->organizationId),
+            (new PdoPlacementRepository($this->query))->listByOrganization($context->organizationId, 100, 0),
         );
 
         return $this->response->create(['placements' => $placements]);

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\Placements;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
-use NeneServe\Serving\PlacementRepositoryInterface;
-use NeneServe\Tenant\Auth\AuthContextResolver;
+use Nene2\Http\PaginationQueryParser;
+use Nene2\Http\PaginationResponse;
+use NeneServe\Serving\Placement;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -15,25 +15,23 @@ use Psr\Http\Message\ServerRequestInterface;
 final readonly class ListPlacementsHandler
 {
     public function __construct(
-        private PlacementRepositoryInterface $placements,
+        private ListPlacementsUseCaseInterface $useCase,
         private JsonResponseFactory $response,
-        private ProblemDetailsResponseFactory $problemDetails,
     ) {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $context = AuthContextResolver::fromRequest($request);
+        $pagination = PaginationQueryParser::parse($request);
 
-        if ($context === null) {
-            return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
-        }
+        $output = $this->useCase->execute(new ListPlacementsInput($pagination->limit, $pagination->offset));
 
-        $placements = array_map(
-            static fn ($placement) => $placement->toAdminArray(),
-            $this->placements->listByOrganization($context->organizationId),
+        return $this->response->create(
+            (new PaginationResponse(
+                items: array_map(static fn (Placement $placement): array => $placement->toAdminArray(), $output->items),
+                limit: $output->limit,
+                offset: $output->offset,
+            ))->toArray(),
         );
-
-        return $this->response->create(['placements' => $placements]);
     }
 }

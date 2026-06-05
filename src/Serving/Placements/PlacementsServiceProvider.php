@@ -11,6 +11,8 @@ use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
+use Nene2\Http\RequestScopedHolder;
+use NeneServe\Http\RuntimeServiceProvider;
 use NeneServe\Serving\PdoPlacementRepository;
 use NeneServe\Serving\PlacementRepositoryInterface;
 use Psr\Container\ContainerInterface;
@@ -28,83 +30,70 @@ final readonly class PlacementsServiceProvider implements ServiceProviderInterfa
         $builder
             ->set(
                 PlacementRepositoryInterface::class,
-                static function (ContainerInterface $container): PlacementRepositoryInterface {
-                    $query = $container->get(DatabaseQueryExecutorInterface::class);
-
-                    if (!$query instanceof DatabaseQueryExecutorInterface) {
-                        throw new LogicException('Database query executor service is invalid.');
-                    }
-
-                    return new PdoPlacementRepository($query);
-                },
+                static fn (ContainerInterface $c): PlacementRepositoryInterface => new PdoPlacementRepository(self::query($c)),
+            )
+            ->set(
+                ListPlacementsUseCaseInterface::class,
+                static fn (ContainerInterface $c): ListPlacementsUseCaseInterface => new ListPlacementsUseCase(self::placements($c), self::orgId($c)),
+            )
+            ->set(
+                GetPlacementByIdUseCaseInterface::class,
+                static fn (ContainerInterface $c): GetPlacementByIdUseCaseInterface => new GetPlacementByIdUseCase(self::placements($c), self::orgId($c)),
             )
             ->set(
                 CreatePlacementUseCaseInterface::class,
-                static function (ContainerInterface $container): CreatePlacementUseCaseInterface {
-                    $transactions = $container->get(DatabaseTransactionManagerInterface::class);
-
-                    if (!$transactions instanceof DatabaseTransactionManagerInterface) {
-                        throw new LogicException('Database transaction manager service is invalid.');
-                    }
-
-                    return new CreatePlacementUseCase($transactions);
-                },
+                static fn (ContainerInterface $c): CreatePlacementUseCaseInterface => new CreatePlacementUseCase(self::transactions($c), self::orgId($c)),
             )
             ->set(
                 ArchivePlacementUseCaseInterface::class,
-                static function (ContainerInterface $container): ArchivePlacementUseCaseInterface {
-                    $query = $container->get(DatabaseQueryExecutorInterface::class);
-                    $transactions = $container->get(DatabaseTransactionManagerInterface::class);
-
-                    if (!$query instanceof DatabaseQueryExecutorInterface) {
-                        throw new LogicException('Database query executor service is invalid.');
-                    }
-
-                    if (!$transactions instanceof DatabaseTransactionManagerInterface) {
-                        throw new LogicException('Database transaction manager service is invalid.');
-                    }
-
-                    return new ArchivePlacementUseCase($query, $transactions);
-                },
+                static fn (ContainerInterface $c): ArchivePlacementUseCaseInterface => new ArchivePlacementUseCase(self::placements($c), self::transactions($c), self::orgId($c)),
             )
             ->set(
                 ListPlacementsHandler::class,
-                static fn (ContainerInterface $c): ListPlacementsHandler => new ListPlacementsHandler(
-                    self::placements($c),
-                    self::json($c),
-                    self::problem($c),
-                ),
+                static function (ContainerInterface $c): ListPlacementsHandler {
+                    $useCase = $c->get(ListPlacementsUseCaseInterface::class);
+
+                    if (!$useCase instanceof ListPlacementsUseCaseInterface) {
+                        throw new LogicException('List placements use case service is invalid.');
+                    }
+
+                    return new ListPlacementsHandler($useCase, self::json($c));
+                },
             )
             ->set(
                 GetPlacementHandler::class,
-                static fn (ContainerInterface $c): GetPlacementHandler => new GetPlacementHandler(
-                    self::placements($c),
-                    self::json($c),
-                    self::problem($c),
-                ),
+                static function (ContainerInterface $c): GetPlacementHandler {
+                    $useCase = $c->get(GetPlacementByIdUseCaseInterface::class);
+
+                    if (!$useCase instanceof GetPlacementByIdUseCaseInterface) {
+                        throw new LogicException('Get placement use case service is invalid.');
+                    }
+
+                    return new GetPlacementHandler($useCase, self::json($c));
+                },
             )
             ->set(
                 CreatePlacementHandler::class,
-                static function (ContainerInterface $container): CreatePlacementHandler {
-                    $useCase = $container->get(CreatePlacementUseCaseInterface::class);
+                static function (ContainerInterface $c): CreatePlacementHandler {
+                    $useCase = $c->get(CreatePlacementUseCaseInterface::class);
 
                     if (!$useCase instanceof CreatePlacementUseCaseInterface) {
                         throw new LogicException('Create placement use case service is invalid.');
                     }
 
-                    return new CreatePlacementHandler($useCase, self::json($container), self::problem($container));
+                    return new CreatePlacementHandler($useCase, self::json($c), self::problem($c));
                 },
             )
             ->set(
                 ArchivePlacementHandler::class,
-                static function (ContainerInterface $container): ArchivePlacementHandler {
-                    $useCase = $container->get(ArchivePlacementUseCaseInterface::class);
+                static function (ContainerInterface $c): ArchivePlacementHandler {
+                    $useCase = $c->get(ArchivePlacementUseCaseInterface::class);
 
                     if (!$useCase instanceof ArchivePlacementUseCaseInterface) {
                         throw new LogicException('Archive placement use case service is invalid.');
                     }
 
-                    return new ArchivePlacementHandler($useCase, self::json($container), self::problem($container));
+                    return new ArchivePlacementHandler($useCase, self::json($c), self::problem($c));
                 },
             )
             ->set(
@@ -142,6 +131,40 @@ final readonly class PlacementsServiceProvider implements ServiceProviderInterfa
                     return new PlacementsRouteRegistrar($list, $get, $create, $archive);
                 },
             );
+    }
+
+    private static function query(ContainerInterface $container): DatabaseQueryExecutorInterface
+    {
+        $query = $container->get(DatabaseQueryExecutorInterface::class);
+
+        if (!$query instanceof DatabaseQueryExecutorInterface) {
+            throw new LogicException('Database query executor service is invalid.');
+        }
+
+        return $query;
+    }
+
+    private static function transactions(ContainerInterface $container): DatabaseTransactionManagerInterface
+    {
+        $transactions = $container->get(DatabaseTransactionManagerInterface::class);
+
+        if (!$transactions instanceof DatabaseTransactionManagerInterface) {
+            throw new LogicException('Database transaction manager service is invalid.');
+        }
+
+        return $transactions;
+    }
+
+    /** @return RequestScopedHolder<string> */
+    private static function orgId(ContainerInterface $container): RequestScopedHolder
+    {
+        $orgId = $container->get(RuntimeServiceProvider::ORG_ID_HOLDER);
+
+        if (!$orgId instanceof RequestScopedHolder) {
+            throw new LogicException('Organization id holder service is invalid.');
+        }
+
+        return $orgId;
     }
 
     private static function placements(ContainerInterface $container): PlacementRepositoryInterface

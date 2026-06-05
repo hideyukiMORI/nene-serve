@@ -9,15 +9,24 @@ use Nene2\Http\JsonResponseFactory;
 use Nene2\Routing\Router;
 use Nene2\Validation\ValidationException;
 use NeneServe\Serving\Placement;
-use NeneServe\Serving\PlacementRepositoryInterface;
 use NeneServe\Serving\Placements\ArchivePlacementHandler;
+use NeneServe\Serving\Placements\ArchivePlacementInput;
+use NeneServe\Serving\Placements\ArchivePlacementOutput;
 use NeneServe\Serving\Placements\ArchivePlacementUseCaseInterface;
 use NeneServe\Serving\Placements\CreatePlacementHandler;
+use NeneServe\Serving\Placements\CreatePlacementInput;
+use NeneServe\Serving\Placements\CreatePlacementOutput;
 use NeneServe\Serving\Placements\CreatePlacementUseCaseInterface;
+use NeneServe\Serving\Placements\GetPlacementByIdInput;
+use NeneServe\Serving\Placements\GetPlacementByIdOutput;
+use NeneServe\Serving\Placements\GetPlacementByIdUseCaseInterface;
 use NeneServe\Serving\Placements\GetPlacementHandler;
 use NeneServe\Serving\Placements\ListPlacementsHandler;
+use NeneServe\Serving\Placements\ListPlacementsInput;
+use NeneServe\Serving\Placements\ListPlacementsOutput;
+use NeneServe\Serving\Placements\ListPlacementsUseCaseInterface;
+use NeneServe\Serving\UseCase\PlacementNotFoundException;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
-use NeneServe\Tenant\AuthContext;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
@@ -26,28 +35,40 @@ final class PlacementsHandlerTest extends TestCase
 {
     private const CLAIMS = ['org' => 'org-acme', 'role' => 'org_admin', 'sub' => 'u-1'];
 
-    public function testListReturnsTenantPlacements(): void
+    public function testListReturnsPaginatedEnvelope(): void
     {
         $psr17 = new Psr17Factory();
-        $handler = new ListPlacementsHandler($this->repo($this->placement()), $this->json($psr17), $this->problem($psr17));
+        $useCase = new class () implements ListPlacementsUseCaseInterface {
+            public function execute(ListPlacementsInput $input): ListPlacementsOutput
+            {
+                return new ListPlacementsOutput([new Placement('plc-1', 'org-acme', 'pk_home', [], 'active', null)], $input->limit, $input->offset);
+            }
+        };
+        $handler = new ListPlacementsHandler($useCase, $this->json($psr17));
 
         $response = $handler->handle($this->request($psr17, 'GET', '/admin/placements'));
 
         self::assertSame(200, $response->getStatusCode());
-        /** @var array{placements: list<array{id: string}>} $body */
+        /** @var array{items: list<array{id: string}>, limit: int, offset: int} $body */
         $body = json_decode((string) $response->getBody(), true);
-        self::assertSame('plc-1', $body['placements'][0]['id']);
+        self::assertSame('plc-1', $body['items'][0]['id']);
+        self::assertSame(20, $body['limit']);
+        self::assertSame(0, $body['offset']);
     }
 
-    public function testGetReturns404WhenMissing(): void
+    public function testGetThrowsWhenMissing(): void
     {
         $psr17 = new Psr17Factory();
-        $handler = new GetPlacementHandler($this->repo(null), $this->json($psr17), $this->problem($psr17));
+        $useCase = new class () implements GetPlacementByIdUseCaseInterface {
+            public function execute(GetPlacementByIdInput $input): GetPlacementByIdOutput
+            {
+                throw new PlacementNotFoundException();
+            }
+        };
+        $handler = new GetPlacementHandler($useCase, $this->json($psr17));
 
-        $request = $this->request($psr17, 'GET', '/admin/placements/x')
-            ->withAttribute(Router::PARAMETERS_ATTRIBUTE, ['id' => 'x']);
-
-        self::assertSame(404, $handler->handle($request)->getStatusCode());
+        $this->expectException(PlacementNotFoundException::class);
+        $handler->handle($this->request($psr17, 'GET', '/admin/placements/x')->withAttribute(Router::PARAMETERS_ATTRIBUTE, ['id' => 'x']));
     }
 
     public function testCreateRejectsMissingKey(): void
@@ -72,17 +93,18 @@ final class PlacementsHandlerTest extends TestCase
     public function testArchiveReturns200(): void
     {
         $psr17 = new Psr17Factory();
-        $handler = new ArchivePlacementHandler($this->archiveUseCase(), $this->json($psr17), $this->problem($psr17));
+        $useCase = new class () implements ArchivePlacementUseCaseInterface {
+            public function execute(ArchivePlacementInput $input): ArchivePlacementOutput
+            {
+                return new ArchivePlacementOutput(new Placement($input->placementId, 'org-acme', 'pk_home', [], 'archived', null, true, null, gmdate('c')));
+            }
+        };
+        $handler = new ArchivePlacementHandler($useCase, $this->json($psr17), $this->problem($psr17));
 
         $request = $this->request($psr17, 'POST', '/admin/placements/plc-1/archive')
             ->withAttribute(Router::PARAMETERS_ATTRIBUTE, ['id' => 'plc-1']);
 
         self::assertSame(200, $handler->handle($request)->getStatusCode());
-    }
-
-    private function placement(): Placement
-    {
-        return new Placement('plc-1', 'org-acme', 'pk_home', [], 'active', null);
     }
 
     private function request(Psr17Factory $psr17, string $method, string $path): ServerRequestInterface
@@ -107,54 +129,12 @@ final class PlacementsHandlerTest extends TestCase
         return new ProblemDetailsResponseFactory($psr17, $psr17);
     }
 
-    private function repo(?Placement $placement): PlacementRepositoryInterface
-    {
-        return new class ($placement) implements PlacementRepositoryInterface {
-            public function __construct(private readonly ?Placement $placement)
-            {
-            }
-
-            public function findByPublicKey(string $publicPlacementKey): ?Placement
-            {
-                return $this->placement;
-            }
-
-            public function findByIdInOrganization(string $id, string $organizationId): ?Placement
-            {
-                return $this->placement;
-            }
-
-            public function listByOrganization(string $organizationId): array
-            {
-                return $this->placement === null ? [] : [$this->placement];
-            }
-
-            public function save(Placement $placement): void
-            {
-            }
-
-            public function archive(string $id, string $organizationId, string $at): void
-            {
-            }
-        };
-    }
-
     private function createUseCase(): CreatePlacementUseCaseInterface
     {
         return new class () implements CreatePlacementUseCaseInterface {
-            public function execute(AuthContext $actor, string $publicPlacementKey, array $allowedOrigins, ?string $defaultCreativeId = null, string $status = 'draft'): Placement
+            public function execute(CreatePlacementInput $input): CreatePlacementOutput
             {
-                return new Placement('plc-new', $actor->organizationId, $publicPlacementKey, $allowedOrigins, $status, $defaultCreativeId);
-            }
-        };
-    }
-
-    private function archiveUseCase(): ArchivePlacementUseCaseInterface
-    {
-        return new class () implements ArchivePlacementUseCaseInterface {
-            public function execute(AuthContext $actor, string $placementId): Placement
-            {
-                return new Placement($placementId, $actor->organizationId, 'pk_home', [], 'archived', null, true, null, gmdate('c'));
+                return new CreatePlacementOutput(new Placement('plc-new', 'org-acme', $input->publicPlacementKey, $input->allowedOrigins, $input->status, $input->defaultCreativeId));
             }
         };
     }

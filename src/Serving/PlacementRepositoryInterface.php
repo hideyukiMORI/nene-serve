@@ -15,7 +15,7 @@ interface PlacementRepositoryInterface
     /**
      * @return list<Placement>
      */
-    public function listByOrganization(string $organizationId): array;
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array;
 
     public function save(Placement $placement): void;
 

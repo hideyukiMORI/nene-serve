@@ -35,12 +35,12 @@ final readonly class ArchivePlacementHandler
         $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
         $id = is_array($parameters) && is_string($parameters['id'] ?? null) ? $parameters['id'] : '';
 
-        $placement = $this->archive->execute($context, $id);
+        $output = $this->archive->execute(new ArchivePlacementInput($context->userId, $id));
 
         return $this->response->create([
-            'id' => $placement->id,
-            'status' => $placement->status,
-            'archived_at' => $placement->archivedAt,
+            'id' => $output->placement->id,
+            'status' => $output->placement->status,
+            'archived_at' => $output->placement->archivedAt,
         ]);
     }
 }

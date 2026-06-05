@@ -6,10 +6,10 @@ namespace NeneServe\Serving\Placements;
 
 use NeneServe\Serving\UseCase\PlacementNotFoundException;
 
-interface ArchivePlacementUseCaseInterface
+interface GetPlacementByIdUseCaseInterface
 {
     /**
      * @throws PlacementNotFoundException
      */
-    public function execute(ArchivePlacementInput $input): ArchivePlacementOutput;
+    public function execute(GetPlacementByIdInput $input): GetPlacementByIdOutput;
 }

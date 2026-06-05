@@ -48,14 +48,10 @@ final readonly class CreatePlacementHandler
         $default = isset($body['default_creative_id']) && is_string($body['default_creative_id']) ? $body['default_creative_id'] : null;
         $status = isset($body['status']) && is_string($body['status']) ? $body['status'] : 'draft';
 
-        $placement = $this->createPlacement->execute($context, $key, $origins, $default, $status);
+        $output = $this->createPlacement->execute(
+            new CreatePlacementInput($context->userId, $key, $origins, $default, $status),
+        );
 
-        return $this->response->create([
-            'id' => $placement->id,
-            'public_placement_key' => $placement->publicPlacementKey,
-            'allowed_origins' => $placement->allowedOrigins,
-            'status' => $placement->status,
-            'default_creative_id' => $placement->defaultCreativeId,
-        ], 201);
+        return $this->response->create($output->placement->toAdminArray(), 201);
     }
 }

@@ -35,11 +35,11 @@ final readonly class PdoPlacementRepository implements PlacementRepositoryInterf
         return $row === null ? null : $this->hydrateRow($row);
     }
 
-    public function listByOrganization(string $organizationId): array
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array
     {
         $rows = $this->query->fetchAll(
-            'SELECT ' . self::COLUMNS . ' FROM placements WHERE organization_id = ? ORDER BY public_placement_key',
-            [$organizationId],
+            'SELECT ' . self::COLUMNS . ' FROM placements WHERE organization_id = ? ORDER BY public_placement_key LIMIT ? OFFSET ?',
+            [$organizationId, $limit, $offset],
         );
 
         return array_map($this->hydrateRow(...), $rows);
