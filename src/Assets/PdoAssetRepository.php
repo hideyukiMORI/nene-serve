@@ -4,39 +4,37 @@ declare(strict_types=1);
 
 namespace NeneServe\Assets;
 
-use PDO;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 
-final class PdoAssetRepository implements AssetRepositoryInterface
+final readonly class PdoAssetRepository implements AssetRepositoryInterface
 {
     private const COLUMNS = 'id, organization_id, kind, content_type, byte_size';
 
     public function __construct(
-        private readonly PDO $pdo,
+        private DatabaseQueryExecutorInterface $query,
     ) {
     }
 
     public function findById(string $id): ?Asset
     {
-        $stmt = $this->pdo->prepare('SELECT ' . self::COLUMNS . ' FROM assets WHERE id = ? LIMIT 1');
-        $stmt->execute([$id]);
-        $row = $stmt->fetch();
+        $row = $this->query->fetchOne('SELECT ' . self::COLUMNS . ' FROM assets WHERE id = ? LIMIT 1', [$id]);
 
-        return $row === false ? null : $this->hydrate($row);
+        return $row === null ? null : $this->hydrate($row);
     }
 
     public function save(Asset $asset): void
     {
-        $stmt = $this->pdo->prepare(
+        $this->query->execute(
             'INSERT INTO assets (id, organization_id, kind, content_type, byte_size)
              VALUES (?, ?, ?, ?, ?)',
+            [
+                $asset->id,
+                $asset->organizationId,
+                $asset->kind,
+                $asset->contentType,
+                $asset->byteSize,
+            ],
         );
-        $stmt->execute([
-            $asset->id,
-            $asset->organizationId,
-            $asset->kind,
-            $asset->contentType,
-            $asset->byteSize,
-        ]);
     }
 
     /** @param array<string, mixed> $row */

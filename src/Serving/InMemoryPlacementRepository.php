@@ -35,12 +35,14 @@ final class InMemoryPlacementRepository implements PlacementRepositoryInterface
         return ($p !== null && $p->organizationId === $organizationId) ? $p : null;
     }
 
-    public function listByOrganization(string $organizationId): array
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array
     {
-        return array_values(array_filter(
+        $matches = array_values(array_filter(
             $this->placements,
             static fn (Placement $p): bool => $p->organizationId === $organizationId,
         ));
+
+        return array_slice($matches, $offset, $limit);
     }
 
     public function save(Placement $placement): void

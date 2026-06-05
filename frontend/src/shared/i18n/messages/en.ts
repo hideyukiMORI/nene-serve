@@ -7,12 +7,37 @@ export interface MessageCatalog {
   'app.title': string
   'app.subtitle': string
 
+  'nav.home': string
   'nav.placements': string
+  'nav.group.prepare': string
   'nav.group.build': string
   'nav.group.govern': string
   'nav.group.measure': string
   'nav.group.business': string
   'nav.group.admin': string
+
+  'home.greeting': string
+  'home.lead': string
+  'home.setup.title': string
+  'home.setup.subtitle': string
+  'home.setup.progress': string
+  'home.setup.resume': string
+  'home.step.doThis': string
+  'home.step.done': string
+  'home.steps.smtp.title': string
+  'home.steps.smtp.desc': string
+  'home.steps.invite.title': string
+  'home.steps.invite.desc': string
+  'home.steps.placement.title': string
+  'home.steps.placement.desc': string
+  'home.steps.creative.title': string
+  'home.steps.creative.desc': string
+  'home.steps.approve.title': string
+  'home.steps.approve.desc': string
+  'home.steps.embed.title': string
+  'home.steps.embed.desc': string
+  'home.steps.measure.title': string
+  'home.steps.measure.desc': string
 
   'shell.theme': string
   'shell.themeLight': string
@@ -196,12 +221,38 @@ export const en: MessageCatalog = {
   'app.title': 'NeNe Serve',
   'app.subtitle': 'Ad serving & analytics',
 
+  'nav.home': 'Home',
   'nav.placements': 'Placements',
+  'nav.group.prepare': 'Prepare',
   'nav.group.build': 'Build',
   'nav.group.govern': 'Govern',
   'nav.group.measure': 'Measure',
   'nav.group.business': 'Business',
   'nav.group.admin': 'Admin',
+
+  'home.greeting': 'Welcome to NeNe Serve',
+  'home.lead':
+    "Run ads on sites you control — register a creative, get it approved, embed one line, and watch the results. Here's the path.",
+  'home.setup.title': 'Getting started',
+  'home.setup.subtitle': 'Complete the loop once and your first ad goes live.',
+  'home.setup.progress': '{{done}} of {{total}} steps complete',
+  'home.setup.resume': 'Resume setup',
+  'home.step.doThis': 'Do this',
+  'home.step.done': 'Done',
+  'home.steps.smtp.title': 'Configure outbound email',
+  'home.steps.smtp.desc': 'Add SMTP so invitations and test mail can be sent.',
+  'home.steps.invite.title': 'Invite your team',
+  'home.steps.invite.desc': 'Add a teammate so someone else can approve your work (four-eyes).',
+  'home.steps.placement.title': 'Create a placement',
+  'home.steps.placement.desc': 'Define an ad slot and get its embed key.',
+  'home.steps.creative.title': 'Upload a creative',
+  'home.steps.creative.desc': 'Add the ad content and submit it for review.',
+  'home.steps.approve.title': 'Approve the creative',
+  'home.steps.approve.desc': 'A second reviewer approves it — only approved creatives serve.',
+  'home.steps.embed.title': 'Embed on your site',
+  'home.steps.embed.desc': 'Paste one serve.js line where the ad should appear.',
+  'home.steps.measure.title': 'Read your results',
+  'home.steps.measure.desc': 'Impressions and clicks roll up in Metrics.',
 
   'shell.theme': 'Theme',
   'shell.themeLight': 'Light',

@@ -24,12 +24,12 @@ final class InMemoryAdvertiserRepository implements AdvertiserRepositoryInterfac
         return ($advertiser !== null && $advertiser->organizationId === $organizationId) ? $advertiser : null;
     }
 
-    public function listByOrganization(string $organizationId): array
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array
     {
-        return array_values(array_filter(
+        return array_slice(array_values(array_filter(
             $this->advertisers,
             static fn (Advertiser $a): bool => $a->organizationId === $organizationId,
-        ));
+        )), $offset, $limit);
     }
 
     public function save(Advertiser $advertiser): void

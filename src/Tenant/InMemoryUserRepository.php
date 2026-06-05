@@ -54,12 +54,12 @@ final class InMemoryUserRepository implements UserRepositoryInterface
         $this->users[] = $user;
     }
 
-    public function listByOrganization(string $organizationId): array
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array
     {
-        return array_values(array_filter(
+        return array_slice(array_values(array_filter(
             $this->users,
             static fn (User $u): bool => $u->organizationId === $organizationId,
-        ));
+        )), $offset, $limit);
     }
 
     public function findByIdAcrossTenants(string $userId): ?User
@@ -73,8 +73,8 @@ final class InMemoryUserRepository implements UserRepositoryInterface
         return null;
     }
 
-    public function listAll(): array
+    public function listAll(int $limit, int $offset): array
     {
-        return $this->users;
+        return array_slice($this->users, $offset, $limit);
     }
 }

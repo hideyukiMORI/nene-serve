@@ -784,14 +784,30 @@ export interface operations {
     };
     listUsers: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            200: components["responses"]["UserList"];
+            /** @description Paginated users. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["User"][];
+                        limit: number;
+                        offset: number;
+                        total?: number | null;
+                    };
+                };
+            };
             401: components["responses"]["Problem"];
             403: components["responses"]["Problem"];
         };
@@ -1131,21 +1147,27 @@ export interface operations {
     };
     listPlacements: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Placements. */
+            /** @description Paginated placements. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        placements?: components["schemas"]["Placement"][];
+                        items: components["schemas"]["Placement"][];
+                        limit: number;
+                        offset: number;
+                        total?: number | null;
                     };
                 };
             };
@@ -1228,20 +1250,28 @@ export interface operations {
     };
     listCreatives: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Creatives. */
+            /** @description Paginated creatives. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Creative"][];
+                    "application/json": {
+                        items: components["schemas"]["Creative"][];
+                        limit: number;
+                        offset: number;
+                        total?: number | null;
+                    };
                 };
             };
             403: components["responses"]["Problem"];
@@ -1434,20 +1464,28 @@ export interface operations {
     };
     listReviewQueue: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Review queue. */
+            /** @description Paginated review queue. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Creative"][];
+                    "application/json": {
+                        items: components["schemas"]["Creative"][];
+                        limit: number;
+                        offset: number;
+                        total?: number | null;
+                    };
                 };
             };
             403: components["responses"]["Problem"];
@@ -1455,20 +1493,28 @@ export interface operations {
     };
     listAdvertisers: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Advertisers. */
+            /** @description Paginated advertisers. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>[];
+                    "application/json": {
+                        items: Record<string, never>[];
+                        limit: number;
+                        offset: number;
+                        total?: number | null;
+                    };
                 };
             };
             403: components["responses"]["Problem"];
@@ -1505,21 +1551,27 @@ export interface operations {
     };
     listPricingRules: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Pricing rules. */
+            /** @description Paginated pricing rules. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        pricing_rules?: Record<string, never>[];
+                        items: Record<string, never>[];
+                        limit: number;
+                        offset: number;
+                        total?: number | null;
                     };
                 };
             };
@@ -1560,21 +1612,27 @@ export interface operations {
     };
     listCampaigns: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Campaigns. */
+            /** @description Paginated campaigns. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        campaigns?: Record<string, never>[];
+                        items: Record<string, never>[];
+                        limit: number;
+                        offset: number;
+                        total?: number | null;
                     };
                 };
             };

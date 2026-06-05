@@ -4,42 +4,45 @@ declare(strict_types=1);
 
 namespace NeneServe\Retention;
 
-use PDO;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 
-final class PdoLegalHoldRepository implements LegalHoldRepositoryInterface
+final readonly class PdoLegalHoldRepository implements LegalHoldRepositoryInterface
 {
     private const COLUMNS = 'id, organization_id, reason, placed_at, released_at';
 
     public function __construct(
-        private readonly PDO $pdo,
+        private DatabaseQueryExecutorInterface $query,
     ) {
     }
 
     public function findByIdInOrganization(string $id, string $organizationId): ?LegalHold
     {
-        $stmt = $this->pdo->prepare('SELECT ' . self::COLUMNS . ' FROM legal_holds WHERE id = ? AND organization_id = ? LIMIT 1');
-        $stmt->execute([$id, $organizationId]);
-        $row = $stmt->fetch();
+        $row = $this->query->fetchOne(
+            'SELECT ' . self::COLUMNS . ' FROM legal_holds WHERE id = ? AND organization_id = ? LIMIT 1',
+            [$id, $organizationId],
+        );
 
-        return $row === false ? null : $this->hydrate($row);
+        return $row === null ? null : $this->hydrate($row);
     }
 
     public function hasActiveHold(string $organizationId): bool
     {
-        $stmt = $this->pdo->prepare('SELECT 1 FROM legal_holds WHERE organization_id = ? AND released_at IS NULL LIMIT 1');
-        $stmt->execute([$organizationId]);
+        $row = $this->query->fetchOne(
+            'SELECT 1 AS active FROM legal_holds WHERE organization_id = ? AND released_at IS NULL LIMIT 1',
+            [$organizationId],
+        );
 
-        return $stmt->fetchColumn() !== false;
+        return $row !== null;
     }
 
     public function save(LegalHold $hold): void
     {
-        $stmt = $this->pdo->prepare(
+        $this->query->execute(
             'INSERT INTO legal_holds (id, organization_id, reason, placed_at, released_at)
              VALUES (?, ?, ?, ?, ?) AS new
              ON DUPLICATE KEY UPDATE reason = new.reason, placed_at = new.placed_at, released_at = new.released_at',
+            [$hold->id, $hold->organizationId, $hold->reason, $hold->placedAt, $hold->releasedAt],
         );
-        $stmt->execute([$hold->id, $hold->organizationId, $hold->reason, $hold->placedAt, $hold->releasedAt]);
     }
 
     /** @param array<string, mixed> $row */

@@ -4,64 +4,93 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving;
 
-use PDO;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 
-final class PdoCreativeRepository implements CreativeRepositoryInterface
+final readonly class PdoCreativeRepository implements CreativeRepositoryInterface
 {
     private const COLUMNS = 'id, organization_id, type, review_status, destination_url, asset_url, width, height, version, submitted_by, review_reason, poster_url, duration_seconds, bundle_id, bundle_size_bytes, scan_status, campaign_id';
 
     public function __construct(
-        private readonly PDO $pdo,
+        private DatabaseQueryExecutorInterface $query,
     ) {
     }
 
     public function findByIdInOrganization(string $id, string $organizationId): ?Creative
     {
-        $stmt = $this->pdo->prepare(
+        $row = $this->query->fetchOne(
             'SELECT ' . self::COLUMNS . ' FROM creatives WHERE id = ? AND organization_id = ? LIMIT 1',
+            [$id, $organizationId],
         );
-        $stmt->execute([$id, $organizationId]);
-        $row = $stmt->fetch();
 
-        return $row === false ? null : $this->hydrate($row);
+        return $row === null ? null : $this->hydrate($row);
     }
 
-    public function listByOrganization(string $organizationId): array
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array
     {
-        $stmt = $this->pdo->prepare(
-            'SELECT ' . self::COLUMNS . ' FROM creatives WHERE organization_id = ? ORDER BY id',
+        $rows = $this->query->fetchAll(
+            'SELECT ' . self::COLUMNS . ' FROM creatives WHERE organization_id = ? ORDER BY id LIMIT ? OFFSET ?',
+            [$organizationId, $limit, $offset],
         );
-        $stmt->execute([$organizationId]);
 
-        return array_map($this->hydrate(...), array_values($stmt->fetchAll()));
+        return array_map($this->hydrate(...), $rows);
+    }
+
+    public function listReviewQueue(string $organizationId, int $limit, int $offset): array
+    {
+        $rows = $this->query->fetchAll(
+            'SELECT ' . self::COLUMNS . " FROM creatives WHERE organization_id = ? AND review_status IN ('submitted', 'in_review') ORDER BY id LIMIT ? OFFSET ?",
+            [$organizationId, $limit, $offset],
+        );
+
+        return array_map($this->hydrate(...), $rows);
     }
 
     public function save(Creative $creative): void
     {
-        $stmt = $this->pdo->prepare(
+        $this->query->execute(
             'INSERT INTO creatives (id, organization_id, type, review_status, destination_url, asset_url, width, height, version, submitted_by, review_reason, poster_url, duration_seconds, bundle_id, bundle_size_bytes, scan_status, campaign_id)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) AS new
              ON DUPLICATE KEY UPDATE type = new.type, review_status = new.review_status, destination_url = new.destination_url, asset_url = new.asset_url, width = new.width, height = new.height, version = new.version, submitted_by = new.submitted_by, review_reason = new.review_reason, poster_url = new.poster_url, duration_seconds = new.duration_seconds, bundle_id = new.bundle_id, bundle_size_bytes = new.bundle_size_bytes, scan_status = new.scan_status, campaign_id = new.campaign_id',
+            [
+                $creative->id,
+                $creative->organizationId,
+                $creative->type->value,
+                $creative->reviewStatus->value,
+                $creative->destinationUrl,
+                $creative->assetUrl,
+                $creative->width,
+                $creative->height,
+                $creative->version,
+                $creative->submittedBy,
+                $creative->reviewReason,
+                $creative->posterUrl,
+                $creative->durationSeconds,
+                $creative->bundleId,
+                $creative->bundleSizeBytes,
+                $creative->scanStatus?->value,
+                $creative->campaignId,
+            ],
         );
-        $stmt->execute([
-            $creative->id,
-            $creative->organizationId,
-            $creative->type->value,
-            $creative->reviewStatus->value,
-            $creative->destinationUrl,
-            $creative->assetUrl,
-            $creative->width,
-            $creative->height,
-            $creative->version,
-            $creative->submittedBy,
-            $creative->reviewReason,
-            $creative->posterUrl,
-            $creative->durationSeconds,
-            $creative->bundleId,
-            $creative->bundleSizeBytes,
-            $creative->scanStatus?->value,
-            $creative->campaignId,
-        ]);
+    }
+
+    public function idsByCampaign(string $organizationId, string $campaignId): array
+    {
+        $rows = $this->query->fetchAll(
+            'SELECT id FROM creatives WHERE organization_id = ? AND campaign_id = ?',
+            [$organizationId, $campaignId],
+        );
+
+        return array_map(static fn (array $row): string => (string) $row['id'], $rows);
+    }
+
+    public function idsWithCampaign(string $organizationId): array
+    {
+        $rows = $this->query->fetchAll(
+            'SELECT id FROM creatives WHERE organization_id = ? AND campaign_id IS NOT NULL',
+            [$organizationId],
+        );
+
+        return array_map(static fn (array $row): string => (string) $row['id'], $rows);
     }
 
     /** @param array<string, mixed> $row */
@@ -86,21 +115,5 @@ final class PdoCreativeRepository implements CreativeRepositoryInterface
             $row['scan_status'] !== null ? ScanStatus::from((string) $row['scan_status']) : null,
             $row['campaign_id'] !== null ? (string) $row['campaign_id'] : null,
         );
-    }
-
-    public function idsByCampaign(string $organizationId, string $campaignId): array
-    {
-        $stmt = $this->pdo->prepare('SELECT id FROM creatives WHERE organization_id = ? AND campaign_id = ?');
-        $stmt->execute([$organizationId, $campaignId]);
-
-        return array_map(static fn ($v): string => (string) $v, $stmt->fetchAll(PDO::FETCH_COLUMN));
-    }
-
-    public function idsWithCampaign(string $organizationId): array
-    {
-        $stmt = $this->pdo->prepare('SELECT id FROM creatives WHERE organization_id = ? AND campaign_id IS NOT NULL');
-        $stmt->execute([$organizationId]);
-
-        return array_map(static fn ($v): string => (string) $v, $stmt->fetchAll(PDO::FETCH_COLUMN));
     }
 }

@@ -10,7 +10,7 @@ export function useUsers(): UseQueryResult<User[], AppError> {
     queryKey: userKeys.list(),
     queryFn: async () => {
       const dto = await apiClient.get<UserListDto>('/admin/users')
-      return dto.users.map(mapUserDtoToModel)
+      return dto.items.map(mapUserDtoToModel)
     },
   })
 }

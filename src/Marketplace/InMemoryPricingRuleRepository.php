@@ -24,12 +24,12 @@ final class InMemoryPricingRuleRepository implements PricingRuleRepositoryInterf
         return ($rule !== null && $rule->organizationId === $organizationId) ? $rule : null;
     }
 
-    public function listByOrganization(string $organizationId): array
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array
     {
-        return array_values(array_filter(
+        return array_slice(array_values(array_filter(
             $this->rules,
             static fn (PricingRule $r): bool => $r->organizationId === $organizationId,
-        ));
+        )), $offset, $limit);
     }
 
     public function currentVersion(string $organizationId, string $name): int

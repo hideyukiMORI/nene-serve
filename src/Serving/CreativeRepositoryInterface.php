@@ -12,7 +12,14 @@ interface CreativeRepositoryInterface
     /**
      * @return list<Creative>
      */
-    public function listByOrganization(string $organizationId): array;
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array;
+
+    /**
+     * Creatives awaiting a review decision (submitted / in_review), tenant-scoped.
+     *
+     * @return list<Creative>
+     */
+    public function listReviewQueue(string $organizationId, int $limit, int $offset): array;
 
     /** Insert or replace a creative version (admin surface). */
     public function save(Creative $creative): void;

@@ -101,6 +101,86 @@ export function IconShield(props: IconProps) {
   )
 }
 
+export function IconHome(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" strokeWidth={1.8} {...base} {...props}>
+      <path d="M4 11l8-6.5L20 11" />
+      <path d="M5.5 9.8V20h13V9.8" />
+      <path d="M10 20v-5.5h4V20" />
+    </svg>
+  )
+}
+
+export function IconImage(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" strokeWidth={1.8} {...base} {...props}>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+      <circle cx="9" cy="10" r="1.8" />
+      <path d="M5 17l4.5-4 3 2.5L16 12l3.2 3.4" />
+    </svg>
+  )
+}
+
+export function IconLink(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" strokeWidth={1.8} {...base} {...props}>
+      <path d="M10 14a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1.5 1.5" />
+      <path d="M14 10a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1.5-1.5" />
+    </svg>
+  )
+}
+
+export function IconSparkle(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" width="13" height="13" strokeWidth={1.6} {...base} {...props}>
+      <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
+    </svg>
+  )
+}
+
+/**
+ * Beacon mark — concentric signal rings around a filled core. Self-colored via
+ * `currentColor`, so it reads correctly on the accent auth panel.
+ */
+export function IconBeacon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 32 32" width="20" height="20" fill="none" aria-hidden="true" {...props}>
+      <circle cx="16" cy="16" r="3" fill="currentColor" />
+      <circle cx="16" cy="16" r="7.5" stroke="currentColor" strokeWidth="2.4" />
+      <circle cx="16" cy="16" r="12" stroke="currentColor" strokeWidth="2.2" opacity="0.9" />
+    </svg>
+  )
+}
+
+export function IconStore(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" width="15" height="15" strokeWidth={1.8} {...base} {...props}>
+      <path d="M3 9l1.4-5h15.2L21 9" />
+      <path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0" />
+      <path d="M5 11v9h14v-9" />
+      <path d="M10 20v-4h4v4" />
+    </svg>
+  )
+}
+
+export function IconMail(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" width="15" height="15" strokeWidth={1.8} {...base} {...props}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M3.5 7l8.5 6 8.5-6" />
+    </svg>
+  )
+}
+
+export function IconLock(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" width="15" height="15" strokeWidth={1.8} {...base} {...props}>
+      <rect x="4.5" y="10.5" width="15" height="9.5" rx="2" />
+      <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
+    </svg>
+  )
+}
+
 /**
  * Brand mark — "rising cards": three faint stage tracks, an ascending
  * connector, and three stacked cards climbing to the accent-filled top card.

@@ -10,7 +10,7 @@ export function useCampaigns(): UseQueryResult<Campaign[], AppError> {
     queryKey: campaignKeys.list(),
     queryFn: async () => {
       const dto = await apiClient.get<CampaignListDto>('/admin/campaigns')
-      return dto.campaigns.map(mapCampaignDtoToModel)
+      return dto.items.map(mapCampaignDtoToModel)
     },
   })
 }

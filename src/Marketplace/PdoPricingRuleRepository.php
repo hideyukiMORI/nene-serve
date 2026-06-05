@@ -4,58 +4,63 @@ declare(strict_types=1);
 
 namespace NeneServe\Marketplace;
 
-use PDO;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 
-final class PdoPricingRuleRepository implements PricingRuleRepositoryInterface
+final readonly class PdoPricingRuleRepository implements PricingRuleRepositoryInterface
 {
     private const COLUMNS = 'id, organization_id, name, pricing_model, rate_cents, version, created_at';
 
     public function __construct(
-        private readonly PDO $pdo,
+        private DatabaseQueryExecutorInterface $query,
     ) {
     }
 
     public function findByIdInOrganization(string $id, string $organizationId): ?PricingRule
     {
-        $stmt = $this->pdo->prepare('SELECT ' . self::COLUMNS . ' FROM pricing_rules WHERE id = ? AND organization_id = ? LIMIT 1');
-        $stmt->execute([$id, $organizationId]);
-        $row = $stmt->fetch();
+        $row = $this->query->fetchOne(
+            'SELECT ' . self::COLUMNS . ' FROM pricing_rules WHERE id = ? AND organization_id = ? LIMIT 1',
+            [$id, $organizationId],
+        );
 
-        return $row === false ? null : $this->hydrate($row);
+        return $row === null ? null : $this->hydrate($row);
     }
 
-    public function listByOrganization(string $organizationId): array
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array
     {
-        $stmt = $this->pdo->prepare('SELECT ' . self::COLUMNS . ' FROM pricing_rules WHERE organization_id = ? ORDER BY name, version');
-        $stmt->execute([$organizationId]);
+        $rows = $this->query->fetchAll(
+            'SELECT ' . self::COLUMNS . ' FROM pricing_rules WHERE organization_id = ? ORDER BY name, version LIMIT ? OFFSET ?',
+            [$organizationId, $limit, $offset],
+        );
 
-        return array_map($this->hydrate(...), array_values($stmt->fetchAll()));
+        return array_map($this->hydrate(...), $rows);
     }
 
     public function currentVersion(string $organizationId, string $name): int
     {
-        $stmt = $this->pdo->prepare('SELECT COALESCE(MAX(version), 0) FROM pricing_rules WHERE organization_id = ? AND name = ?');
-        $stmt->execute([$organizationId, $name]);
+        $row = $this->query->fetchOne(
+            'SELECT COALESCE(MAX(version), 0) AS current FROM pricing_rules WHERE organization_id = ? AND name = ?',
+            [$organizationId, $name],
+        );
 
-        return (int) $stmt->fetchColumn();
+        return (int) ($row['current'] ?? 0);
     }
 
     public function save(PricingRule $rule): void
     {
         // INSERT only — pricing rules are immutable; a change is a new version row.
-        $stmt = $this->pdo->prepare(
+        $this->query->execute(
             'INSERT INTO pricing_rules (id, organization_id, name, pricing_model, rate_cents, version, created_at)
              VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [
+                $rule->id,
+                $rule->organizationId,
+                $rule->name,
+                $rule->model->value,
+                $rule->rateCents,
+                $rule->version,
+                $rule->createdAt,
+            ],
         );
-        $stmt->execute([
-            $rule->id,
-            $rule->organizationId,
-            $rule->name,
-            $rule->model->value,
-            $rule->rateCents,
-            $rule->version,
-            $rule->createdAt,
-        ]);
     }
 
     /** @param array<string, mixed> $row */

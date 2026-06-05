@@ -1,3 +1,5 @@
+import type { Paginated } from '@/shared/api/pagination'
+
 /** Wire shapes for admin creative endpoints (snake_case, the admin projection). */
 export interface CreativeDto {
   id: string
@@ -11,6 +13,4 @@ export interface CreativeDto {
   review_reason?: string | null
 }
 
-export interface CreativeListDto {
-  creatives: CreativeDto[]
-}
+export type CreativeListDto = Paginated<CreativeDto>

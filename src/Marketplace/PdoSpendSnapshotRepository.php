@@ -4,57 +4,58 @@ declare(strict_types=1);
 
 namespace NeneServe\Marketplace;
 
-use PDO;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 
-final class PdoSpendSnapshotRepository implements SpendSnapshotRepositoryInterface
+final readonly class PdoSpendSnapshotRepository implements SpendSnapshotRepositoryInterface
 {
     private const COLUMNS = 'id, organization_id, billing_period_id, version, billable_impressions, billable_clicks, pricing_rule_id, pricing_rule_version, spent_cents, hash, created_at';
 
     public function __construct(
-        private readonly PDO $pdo,
+        private DatabaseQueryExecutorInterface $query,
     ) {
     }
 
     public function currentVersion(string $organizationId, string $billingPeriodId): int
     {
-        $stmt = $this->pdo->prepare('SELECT COALESCE(MAX(version), 0) FROM spend_snapshots WHERE organization_id = ? AND billing_period_id = ?');
-        $stmt->execute([$organizationId, $billingPeriodId]);
+        $row = $this->query->fetchOne(
+            'SELECT COALESCE(MAX(version), 0) AS current FROM spend_snapshots WHERE organization_id = ? AND billing_period_id = ?',
+            [$organizationId, $billingPeriodId],
+        );
 
-        return (int) $stmt->fetchColumn();
+        return (int) ($row['current'] ?? 0);
     }
 
     public function latestForPeriod(string $organizationId, string $billingPeriodId): ?SpendSnapshot
     {
-        $stmt = $this->pdo->prepare(
+        $row = $this->query->fetchOne(
             'SELECT ' . self::COLUMNS . ' FROM spend_snapshots WHERE organization_id = ? AND billing_period_id = ? ORDER BY version DESC LIMIT 1',
+            [$organizationId, $billingPeriodId],
         );
-        $stmt->execute([$organizationId, $billingPeriodId]);
-        $row = $stmt->fetch();
 
-        return $row === false ? null : $this->hydrate($row);
+        return $row === null ? null : $this->hydrate($row);
     }
 
     public function save(SpendSnapshot $snapshot): void
     {
         // INSERT only — snapshots are append-only/immutable (re-derive = new version).
-        $stmt = $this->pdo->prepare(
+        $this->query->execute(
             'INSERT INTO spend_snapshots
                 (id, organization_id, billing_period_id, version, billable_impressions, billable_clicks, pricing_rule_id, pricing_rule_version, spent_cents, hash, created_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                $snapshot->id,
+                $snapshot->organizationId,
+                $snapshot->billingPeriodId,
+                $snapshot->version,
+                $snapshot->billableImpressions,
+                $snapshot->billableClicks,
+                $snapshot->pricingRuleId,
+                $snapshot->pricingRuleVersion,
+                $snapshot->spentCents,
+                $snapshot->hash,
+                $snapshot->createdAt,
+            ],
         );
-        $stmt->execute([
-            $snapshot->id,
-            $snapshot->organizationId,
-            $snapshot->billingPeriodId,
-            $snapshot->version,
-            $snapshot->billableImpressions,
-            $snapshot->billableClicks,
-            $snapshot->pricingRuleId,
-            $snapshot->pricingRuleVersion,
-            $snapshot->spentCents,
-            $snapshot->hash,
-            $snapshot->createdAt,
-        ]);
     }
 
     /** @param array<string, mixed> $row */

@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { CreativesPage } from '@/pages/creatives/CreativesPage'
+import { HomePage } from '@/pages/home/HomePage'
 import { LoginPage } from '@/pages/login/LoginPage'
 import { MarketplacePage } from '@/pages/marketplace/MarketplacePage'
 import { MetricsPage } from '@/pages/metrics/MetricsPage'
@@ -23,7 +24,8 @@ const router = createBrowserRouter([
     ),
     errorElement: <NotFoundPage />,
     children: [
-      { path: '/', element: <PlacementsPage /> },
+      { path: '/', element: <HomePage /> },
+      { path: '/placements', element: <PlacementsPage /> },
       { path: '/creatives', element: <CreativesPage /> },
       { path: '/review', element: <ReviewPage /> },
       { path: '/metrics', element: <MetricsPage /> },

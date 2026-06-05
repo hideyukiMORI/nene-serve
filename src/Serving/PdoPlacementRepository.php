@@ -4,71 +4,73 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving;
 
-use PDO;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 
-final class PdoPlacementRepository implements PlacementRepositoryInterface
+final readonly class PdoPlacementRepository implements PlacementRepositoryInterface
 {
     private const COLUMNS = 'id, organization_id, public_placement_key, allowed_origins, status, default_creative_id, measurement_enabled, frequency_cap, archived_at';
 
     public function __construct(
-        private readonly PDO $pdo,
+        private DatabaseQueryExecutorInterface $query,
     ) {
     }
 
     public function findByPublicKey(string $publicPlacementKey): ?Placement
     {
-        $stmt = $this->pdo->prepare(
+        $row = $this->query->fetchOne(
             'SELECT ' . self::COLUMNS . ' FROM placements WHERE public_placement_key = ? LIMIT 1',
+            [$publicPlacementKey],
         );
-        $stmt->execute([$publicPlacementKey]);
 
-        return $this->hydrate($stmt->fetch());
+        return $row === null ? null : $this->hydrateRow($row);
     }
 
     public function findByIdInOrganization(string $id, string $organizationId): ?Placement
     {
-        $stmt = $this->pdo->prepare(
+        $row = $this->query->fetchOne(
             'SELECT ' . self::COLUMNS . ' FROM placements WHERE id = ? AND organization_id = ? LIMIT 1',
+            [$id, $organizationId],
         );
-        $stmt->execute([$id, $organizationId]);
 
-        return $this->hydrate($stmt->fetch());
+        return $row === null ? null : $this->hydrateRow($row);
     }
 
-    public function listByOrganization(string $organizationId): array
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array
     {
-        $stmt = $this->pdo->prepare(
-            'SELECT ' . self::COLUMNS . ' FROM placements WHERE organization_id = ? ORDER BY public_placement_key',
+        $rows = $this->query->fetchAll(
+            'SELECT ' . self::COLUMNS . ' FROM placements WHERE organization_id = ? ORDER BY public_placement_key LIMIT ? OFFSET ?',
+            [$organizationId, $limit, $offset],
         );
-        $stmt->execute([$organizationId]);
 
-        return array_map($this->hydrateRow(...), array_values($stmt->fetchAll()));
+        return array_map($this->hydrateRow(...), $rows);
     }
 
     public function save(Placement $placement): void
     {
-        $stmt = $this->pdo->prepare(
+        $this->query->execute(
             'INSERT INTO placements (id, organization_id, public_placement_key, allowed_origins, status, default_creative_id, measurement_enabled, frequency_cap, archived_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) AS new
              ON DUPLICATE KEY UPDATE public_placement_key = new.public_placement_key, allowed_origins = new.allowed_origins, status = new.status, default_creative_id = new.default_creative_id, measurement_enabled = new.measurement_enabled, frequency_cap = new.frequency_cap, archived_at = new.archived_at',
+            [
+                $placement->id,
+                $placement->organizationId,
+                $placement->publicPlacementKey,
+                (string) json_encode($placement->allowedOrigins),
+                $placement->status,
+                $placement->defaultCreativeId,
+                $placement->measurementEnabled ? 1 : 0,
+                $placement->frequencyCap,
+                $placement->archivedAt,
+            ],
         );
-        $stmt->execute([
-            $placement->id,
-            $placement->organizationId,
-            $placement->publicPlacementKey,
-            (string) json_encode($placement->allowedOrigins),
-            $placement->status,
-            $placement->defaultCreativeId,
-            $placement->measurementEnabled ? 1 : 0,
-            $placement->frequencyCap,
-            $placement->archivedAt,
-        ]);
     }
 
-    /** @param array<string, mixed>|false $row */
-    private function hydrate(array|false $row): ?Placement
+    public function archive(string $id, string $organizationId, string $at): void
     {
-        return $row === false ? null : $this->hydrateRow($row);
+        $this->query->execute(
+            "UPDATE placements SET status = 'archived', archived_at = ? WHERE id = ? AND organization_id = ?",
+            [$at, $id, $organizationId],
+        );
     }
 
     /** @param array<string, mixed> $row */
@@ -88,13 +90,5 @@ final class PdoPlacementRepository implements PlacementRepositoryInterface
             $row['frequency_cap'] !== null ? (int) $row['frequency_cap'] : null,
             $row['archived_at'] !== null ? (string) $row['archived_at'] : null,
         );
-    }
-
-    public function archive(string $id, string $organizationId, string $at): void
-    {
-        $stmt = $this->pdo->prepare(
-            "UPDATE placements SET status = 'archived', archived_at = ? WHERE id = ? AND organization_id = ?",
-        );
-        $stmt->execute([$at, $id, $organizationId]);
     }
 }

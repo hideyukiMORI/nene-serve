@@ -1,19 +1,28 @@
 {
-    "name": "nene/serve",
-    "description": "NeNe Serve — first-party ad serving for NENE2. Not the books of account; tax-neutral (ADR 0014).",
+    "name": "hideyukimori/nene-serve",
+    "description": "NeNe Serve — first-party ad serving on NENE2. Not the books of account; tax-neutral (ADR 0014).",
     "type": "project",
     "license": "proprietary",
     "require": {
-        "php": ">=8.3",
+        "php": ">=8.4.1 <9.0",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "ext-pdo": "*"
+        "ext-pdo": "*",
+        "hideyukimori/nene2": "@dev"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.64",
-        "phpstan/phpstan": "^2.0",
-        "phpunit/phpunit": "^11.0"
+        "friendsofphp/php-cs-fixer": "^3.95",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^13.1",
+        "robmorgan/phinx": "^0.16.11",
+        "symfony/yaml": "^8.0"
     },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../NENE2"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "NeneServe\\": "src/"
@@ -29,8 +38,15 @@
         "locales:check": "php scripts/locales-check.php",
         "test": "phpunit",
         "stan": "phpstan analyse",
+        "analyse": "phpstan analyse --memory-limit 512M",
         "cs": "php-cs-fixer fix --dry-run --diff",
-        "cs:fix": "php-cs-fixer fix"
+        "cs:fix": "php-cs-fixer fix",
+        "mcp": "php vendor/hideyukimori/nene2/tools/validate-mcp-tools.php --root=.",
+        "check": [
+            "@test",
+            "@stan",
+            "@cs"
+        ]
     },
     "config": {
         "optimize-autoloader": true,

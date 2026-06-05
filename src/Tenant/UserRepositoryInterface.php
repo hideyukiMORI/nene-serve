@@ -25,7 +25,7 @@ interface UserRepositoryInterface
      *
      * @return list<User>
      */
-    public function listByOrganization(string $organizationId): array;
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array;
 
     /**
      * Cross-tenant lookup — superadmin only. Callers MUST verify
@@ -38,5 +38,5 @@ interface UserRepositoryInterface
      *
      * @return list<User>
      */
-    public function listAll(): array;
+    public function listAll(int $limit, int $offset): array;
 }

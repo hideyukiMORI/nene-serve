@@ -11,7 +11,7 @@ export function usePlacements(): UseQueryResult<Placement[], AppError> {
     queryKey: placementKeys.list(),
     queryFn: async () => {
       const dto = await apiClient.get<PlacementListDto>('/admin/placements')
-      return dto.placements.map(mapPlacementDtoToModel)
+      return dto.items.map(mapPlacementDtoToModel)
     },
   })
 }

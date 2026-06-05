@@ -10,7 +10,7 @@ export function usePricingRules(): UseQueryResult<PricingRule[], AppError> {
     queryKey: pricingRuleKeys.list(),
     queryFn: async () => {
       const dto = await apiClient.get<PricingRuleListDto>('/admin/pricing-rules')
-      return dto.pricing_rules.map(mapPricingRuleDtoToModel)
+      return dto.items.map(mapPricingRuleDtoToModel)
     },
   })
 }

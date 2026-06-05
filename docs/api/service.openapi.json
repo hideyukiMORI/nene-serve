@@ -4,98 +4,386 @@
     "title": "NeNe Serve — Service API",
     "version": "1.0.0",
     "description": "Machine-to-machine surface for sibling services and automation (ADR 0018/0019). Authenticated with an opaque, scoped, short-lived service token; each operation requires a specific scope and is tenant-scoped. The MCP tool catalog maps to THIS document only and is read-first: writes are expressed as plans that require an explicit confirmation token and are audited (api-security §5). Errors are RFC 9457 Problem Details; JSON is snake_case.",
-    "contact": { "name": "See docs/explanation/api-security-spec.md" }
+    "contact": {
+      "name": "See docs/explanation/api-security-spec.md"
+    }
   },
-  "servers": [{ "url": "https://{serviceHost}", "variables": { "serviceHost": { "default": "serve.example" } } }],
-  "security": [{ "serviceToken": [] }],
-  "tags": [{ "name": "placements" }, { "name": "metrics" }, { "name": "delivery-plan" }],
+  "servers": [
+    {
+      "url": "https://{serviceHost}",
+      "variables": {
+        "serviceHost": {
+          "default": "serve.example"
+        }
+      }
+    }
+  ],
+  "security": [
+    {
+      "serviceToken": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "placements"
+    },
+    {
+      "name": "metrics"
+    },
+    {
+      "name": "delivery-plan"
+    }
+  ],
   "paths": {
     "/api/placements": {
       "get": {
-        "operationId": "listServePlacements", "tags": ["placements"],
+        "operationId": "listServePlacements",
+        "tags": [
+          "placements"
+        ],
         "summary": "List the caller's placements (scope read:placements).",
         "responses": {
-          "200": { "description": "Placements.", "content": { "application/json": { "schema": { "type": "array", "items": { "type": "object", "properties": {
-            "id": { "type": "string" }, "public_placement_key": { "type": "string" }, "status": { "type": "string" }
-          } } } } } },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" }
-        }
+          "200": {
+            "description": "Paginated placements.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items",
+                    "limit",
+                    "offset"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "offset": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ]
       }
     },
     "/api/metrics": {
       "get": {
-        "operationId": "getPlacementMetrics", "tags": ["metrics"],
+        "operationId": "getPlacementMetrics",
+        "tags": [
+          "metrics"
+        ],
         "summary": "Placement metrics time-series (scope read:metrics).",
-        "parameters": [{ "$ref": "#/components/parameters/From" }, { "$ref": "#/components/parameters/To" }, { "$ref": "#/components/parameters/PlacementId" }],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/From"
+          },
+          {
+            "$ref": "#/components/parameters/To"
+          },
+          {
+            "$ref": "#/components/parameters/PlacementId"
+          }
+        ],
         "responses": {
-          "200": { "description": "Metrics series.", "content": { "application/json": { "schema": { "type": "object" } } } },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "Metrics series.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
     "/api/metrics/export": {
       "get": {
-        "operationId": "exportMetrics", "tags": ["metrics"],
+        "operationId": "exportMetrics",
+        "tags": [
+          "metrics"
+        ],
         "summary": "Daily metrics as CSV (scope read:metrics).",
-        "parameters": [{ "$ref": "#/components/parameters/From" }, { "$ref": "#/components/parameters/To" }],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/From"
+          },
+          {
+            "$ref": "#/components/parameters/To"
+          }
+        ],
         "responses": {
-          "200": { "description": "CSV export.", "content": { "text/csv": { "schema": { "type": "string" } } } },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "CSV export.",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
     "/api/delivery-plan-changes": {
       "post": {
-        "operationId": "proposeDeliveryPlanChange", "tags": ["delivery-plan"],
+        "operationId": "proposeDeliveryPlanChange",
+        "tags": [
+          "delivery-plan"
+        ],
         "summary": "Propose a placement default-creative change (scope write:delivery_plan). Validates the target creative is approved; records a plan and returns a confirmation token. Nothing changes until apply.",
-        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": {
-          "placement_id": { "type": "string" }, "new_creative_id": { "type": "string" }
-        }, "required": ["placement_id", "new_creative_id"] } } } },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "placement_id": {
+                    "type": "string"
+                  },
+                  "new_creative_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "placement_id",
+                  "new_creative_id"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
-          "201": { "description": "Plan proposed.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ChangePlan" } } } },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" },
-          "422": { "$ref": "#/components/responses/Problem" }
+          "201": {
+            "description": "Plan proposed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangePlan"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
     "/api/delivery-plan-changes/{token}/apply": {
       "post": {
-        "operationId": "applyDeliveryPlanChange", "tags": ["delivery-plan"],
+        "operationId": "applyDeliveryPlanChange",
+        "tags": [
+          "delivery-plan"
+        ],
         "summary": "Apply a proposed change using its confirmation token (scope write:delivery_plan). Re-validates the creative is still approved; applies atomically and audits before/after. Re-applying an already-applied plan is 409.",
-        "parameters": [{ "name": "token", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Confirmation token returned by propose (= plan id)." }],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Confirmation token returned by propose (= plan id)."
+          }
+        ],
         "responses": {
-          "200": { "description": "Applied.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ChangePlan" } } } },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" },
-          "404": { "$ref": "#/components/responses/Problem" },
-          "409": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "Applied.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangePlan"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     }
   },
   "components": {
     "securitySchemes": {
-      "serviceToken": { "type": "http", "scheme": "bearer", "description": "Opaque, short-lived, scoped service token. Scopes: read:placements, read:metrics, write:delivery_plan." }
+      "serviceToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Opaque, short-lived, scoped service token. Scopes: read:placements, read:metrics, write:delivery_plan."
+      }
     },
     "parameters": {
-      "From": { "name": "from", "in": "query", "required": false, "schema": { "type": "string", "format": "date" } },
-      "To": { "name": "to", "in": "query", "required": false, "schema": { "type": "string", "format": "date" } },
-      "PlacementId": { "name": "placement_id", "in": "query", "required": false, "schema": { "type": "string" } }
+      "From": {
+        "name": "from",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "To": {
+        "name": "to",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "PlacementId": {
+        "name": "placement_id",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      }
     },
     "schemas": {
-      "ChangePlan": { "type": "object", "properties": {
-        "plan_id": { "type": "string" }, "confirmation_token": { "type": "string" }, "placement_id": { "type": "string" }, "new_creative_id": { "type": "string" }, "status": { "type": "string", "enum": ["proposed", "applied"] }, "created_at": { "type": "string", "format": "date-time" }
-      }, "required": ["plan_id", "confirmation_token", "status"] },
-      "ProblemDetails": { "type": "object", "description": "RFC 9457 Problem Details.", "properties": {
-        "type": { "type": "string", "format": "uri" }, "title": { "type": "string" }, "status": { "type": "integer" }, "detail": { "type": "string" }
-      }, "required": ["type", "title", "status"] }
+      "ChangePlan": {
+        "type": "object",
+        "properties": {
+          "plan_id": {
+            "type": "string"
+          },
+          "confirmation_token": {
+            "type": "string"
+          },
+          "placement_id": {
+            "type": "string"
+          },
+          "new_creative_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "proposed",
+              "applied"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "plan_id",
+          "confirmation_token",
+          "status"
+        ]
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "description": "RFC 9457 Problem Details.",
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "detail": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status"
+        ]
+      }
     },
     "responses": {
-      "Problem": { "description": "RFC 9457 Problem Details error.", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetails" } } } }
+      "Problem": {
+        "description": "RFC 9457 Problem Details error.",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProblemDetails"
+            }
+          }
+        }
+      }
     }
   }
 }

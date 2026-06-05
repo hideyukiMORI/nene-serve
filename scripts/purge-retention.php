@@ -19,6 +19,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use Nene2\Database\DatabaseConnectionFactoryInterface;
+use Nene2\Database\PdoDatabaseQueryExecutor;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Measurement\PdoEventStore;
 use NeneServe\Retention\PdoLegalHoldRepository;
@@ -38,11 +40,25 @@ $pdo = new PDO(
     [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC],
 );
 
+$query = new PdoDatabaseQueryExecutor(
+    new class ($pdo) implements DatabaseConnectionFactoryInterface {
+        public function __construct(private readonly PDO $pdo)
+        {
+        }
+
+        public function create(): PDO
+        {
+            return $this->pdo;
+        }
+    },
+    $pdo,
+);
+
 $purge = new PurgeRetentionUseCase(
-    new PdoEventStore($pdo),
-    new PdoCreativeRepository($pdo),
-    new PdoLegalHoldRepository($pdo),
-    new PdoAuditLog($pdo),
+    new PdoEventStore($query),
+    new PdoCreativeRepository($query),
+    new PdoLegalHoldRepository($query),
+    new PdoAuditLog($query),
 );
 
 $now = gmdate('c');

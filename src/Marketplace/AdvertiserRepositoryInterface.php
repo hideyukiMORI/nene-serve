@@ -11,7 +11,7 @@ interface AdvertiserRepositoryInterface
     /**
      * @return list<Advertiser>
      */
-    public function listByOrganization(string $organizationId): array;
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array;
 
     public function save(Advertiser $advertiser): void;
 }

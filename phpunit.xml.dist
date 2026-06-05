@@ -6,6 +6,12 @@
          cacheDirectory=".phpunit.cache"
          failOnWarning="true"
          failOnRisky="true">
+    <php>
+        <!-- The NENE2 runtime container builds its PDO eagerly; tests run against
+             an in-memory SQLite database so no server is required. -->
+        <env name="DB_ADAPTER" value="sqlite"/>
+        <env name="DB_NAME" value=":memory:"/>
+    </php>
     <testsuites>
         <testsuite name="unit">
             <directory>tests</directory>

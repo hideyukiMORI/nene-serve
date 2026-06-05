@@ -11,7 +11,7 @@ export function useCreatives(): UseQueryResult<Creative[], AppError> {
     queryKey: creativeKeys.list(),
     queryFn: async () => {
       const dto = await apiClient.get<CreativeListDto>('/admin/creatives')
-      return dto.creatives.map(mapCreativeDtoToModel)
+      return dto.items.map(mapCreativeDtoToModel)
     },
   })
 }
@@ -22,7 +22,7 @@ export function useReviewQueue(): UseQueryResult<Creative[], AppError> {
     queryKey: creativeKeys.reviewQueue(),
     queryFn: async () => {
       const dto = await apiClient.get<CreativeListDto>('/admin/review-queue')
-      return dto.creatives.map(mapCreativeDtoToModel)
+      return dto.items.map(mapCreativeDtoToModel)
     },
   })
 }

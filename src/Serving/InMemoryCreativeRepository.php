@@ -24,12 +24,25 @@ final class InMemoryCreativeRepository implements CreativeRepositoryInterface
         return ($creative !== null && $creative->organizationId === $organizationId) ? $creative : null;
     }
 
-    public function listByOrganization(string $organizationId): array
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array
     {
-        return array_values(array_filter(
+        $matches = array_values(array_filter(
             $this->creatives,
             static fn (Creative $c): bool => $c->organizationId === $organizationId,
         ));
+
+        return array_slice($matches, $offset, $limit);
+    }
+
+    public function listReviewQueue(string $organizationId, int $limit, int $offset): array
+    {
+        $matches = array_values(array_filter(
+            $this->creatives,
+            static fn (Creative $c): bool => $c->organizationId === $organizationId
+                && in_array($c->reviewStatus, [ReviewStatus::Submitted, ReviewStatus::InReview], true),
+        ));
+
+        return array_slice($matches, $offset, $limit);
     }
 
     public function save(Creative $creative): void

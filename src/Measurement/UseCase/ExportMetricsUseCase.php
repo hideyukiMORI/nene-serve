@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace NeneServe\Measurement\UseCase;
 
+use Nene2\Http\RequestScopedHolder;
 use NeneServe\Measurement\CsvMetricsFormatter;
 use NeneServe\Measurement\EventStoreInterface;
 
@@ -12,17 +13,21 @@ use NeneServe\Measurement\EventStoreInterface;
  * — no raw visitor identifiers — so it is safe for the admin and service (and,
  * in marketplace mode, advertiser) consumers (privacy N8).
  */
-final class ExportMetricsUseCase
+final readonly class ExportMetricsUseCase
 {
+    /**
+     * @param RequestScopedHolder<string> $organizationId
+     */
     public function __construct(
-        private readonly EventStoreInterface $events,
+        private EventStoreInterface $events,
+        private RequestScopedHolder $organizationId,
     ) {
     }
 
-    public function csv(string $organizationId, string $fromDate, string $toDate): string
+    public function csv(string $fromDate, string $toDate): string
     {
         return CsvMetricsFormatter::format(
-            $this->events->dailyMetrics($organizationId, $fromDate, $toDate),
+            $this->events->dailyMetrics($this->organizationId->get(), $fromDate, $toDate),
         );
     }
 }

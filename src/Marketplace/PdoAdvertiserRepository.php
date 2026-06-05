@@ -4,49 +4,52 @@ declare(strict_types=1);
 
 namespace NeneServe\Marketplace;
 
-use PDO;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 
-final class PdoAdvertiserRepository implements AdvertiserRepositoryInterface
+final readonly class PdoAdvertiserRepository implements AdvertiserRepositoryInterface
 {
     private const COLUMNS = 'id, organization_id, name, status, invoice_client_id, disabled_at';
 
     public function __construct(
-        private readonly PDO $pdo,
+        private DatabaseQueryExecutorInterface $query,
     ) {
     }
 
     public function findByIdInOrganization(string $id, string $organizationId): ?Advertiser
     {
-        $stmt = $this->pdo->prepare('SELECT ' . self::COLUMNS . ' FROM advertisers WHERE id = ? AND organization_id = ? LIMIT 1');
-        $stmt->execute([$id, $organizationId]);
-        $row = $stmt->fetch();
+        $row = $this->query->fetchOne(
+            'SELECT ' . self::COLUMNS . ' FROM advertisers WHERE id = ? AND organization_id = ? LIMIT 1',
+            [$id, $organizationId],
+        );
 
-        return $row === false ? null : $this->hydrate($row);
+        return $row === null ? null : $this->hydrate($row);
     }
 
-    public function listByOrganization(string $organizationId): array
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array
     {
-        $stmt = $this->pdo->prepare('SELECT ' . self::COLUMNS . ' FROM advertisers WHERE organization_id = ? ORDER BY name');
-        $stmt->execute([$organizationId]);
+        $rows = $this->query->fetchAll(
+            'SELECT ' . self::COLUMNS . ' FROM advertisers WHERE organization_id = ? ORDER BY name LIMIT ? OFFSET ?',
+            [$organizationId, $limit, $offset],
+        );
 
-        return array_map($this->hydrate(...), array_values($stmt->fetchAll()));
+        return array_map($this->hydrate(...), $rows);
     }
 
     public function save(Advertiser $advertiser): void
     {
-        $stmt = $this->pdo->prepare(
+        $this->query->execute(
             'INSERT INTO advertisers (id, organization_id, name, status, invoice_client_id, disabled_at)
              VALUES (?, ?, ?, ?, ?, ?) AS new
              ON DUPLICATE KEY UPDATE name = new.name, status = new.status, invoice_client_id = new.invoice_client_id, disabled_at = new.disabled_at',
+            [
+                $advertiser->id,
+                $advertiser->organizationId,
+                $advertiser->name,
+                $advertiser->status,
+                $advertiser->invoiceClientId,
+                $advertiser->disabledAt,
+            ],
         );
-        $stmt->execute([
-            $advertiser->id,
-            $advertiser->organizationId,
-            $advertiser->name,
-            $advertiser->status,
-            $advertiser->invoiceClientId,
-            $advertiser->disabledAt,
-        ]);
     }
 
     /** @param array<string, mixed> $row */
