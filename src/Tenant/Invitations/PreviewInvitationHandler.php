@@ -29,7 +29,7 @@ final readonly class PreviewInvitationHandler
         $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
         $token = is_array($parameters) && is_string($parameters['token'] ?? null) ? $parameters['token'] : '';
 
-        $user = $this->accept->preview($token);
+        $user = $this->accept->preview(new PreviewInvitationInput($token))->user;
 
         if ($user === null) {
             return $this->problemDetails->create($request, 'invitation-invalid', 'Invitation invalid', 404, 'Invitation is invalid, used, or expired.');

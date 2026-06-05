@@ -8,11 +8,13 @@ use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Tenant\Invitation;
+use NeneServe\Tenant\InvitationRepositoryInterface;
 use NeneServe\Tenant\PdoInvitationRepository;
 use NeneServe\Tenant\PdoUserRepository;
 use NeneServe\Tenant\UseCase\InvitationInvalidException;
 use NeneServe\Tenant\UseCase\UserValidationException;
 use NeneServe\Tenant\User;
+use NeneServe\Tenant\UserRepositoryInterface;
 
 /**
  * Unauthenticated invitation acceptance: validate the single-use, unexpired
@@ -24,34 +26,35 @@ final readonly class AcceptInvitationUseCase implements AcceptInvitationUseCaseI
     private const MIN_PASSWORD_LENGTH = 8;
 
     public function __construct(
-        private DatabaseQueryExecutorInterface $query,
+        private InvitationRepositoryInterface $invitations,
+        private UserRepositoryInterface $users,
         private DatabaseTransactionManagerInterface $transactions,
     ) {
     }
 
-    public function execute(string $rawToken, string $password): User
+    public function execute(AcceptInvitationInput $input): AcceptInvitationOutput
     {
-        if (strlen($password) < self::MIN_PASSWORD_LENGTH) {
+        if (strlen($input->password) < self::MIN_PASSWORD_LENGTH) {
             throw new UserValidationException('Password must be at least 8 characters.');
         }
 
         $now = gmdate('Y-m-d H:i:s');
-        $invitation = (new PdoInvitationRepository($this->query))->findByTokenHash(Invitation::hash($rawToken));
+        $invitation = $this->invitations->findByTokenHash(Invitation::hash($input->rawToken));
 
         if ($invitation === null || !$invitation->isAcceptable($now)) {
             throw new InvitationInvalidException('Invitation is invalid, used, or expired.');
         }
 
-        $user = (new PdoUserRepository($this->query))->findByIdAcrossTenants($invitation->userId);
+        $user = $this->users->findByIdAcrossTenants($invitation->userId);
 
         if ($user === null) {
             throw new InvitationInvalidException('Invitation is invalid.');
         }
 
-        $updated = $user->withPasswordHash(password_hash($password, PASSWORD_DEFAULT));
+        $updated = $user->withPasswordHash(password_hash($input->password, PASSWORD_DEFAULT));
         $accepted = $invitation->accepted($now);
 
-        return $this->transactions->transactional(
+        $stored = $this->transactions->transactional(
             static function (DatabaseQueryExecutorInterface $tx) use ($updated, $accepted, $invitation): User {
                 (new PdoUserRepository($tx))->save($updated);
                 (new PdoInvitationRepository($tx))->save($accepted);
@@ -67,17 +70,19 @@ final readonly class AcceptInvitationUseCase implements AcceptInvitationUseCaseI
                 return $updated;
             },
         );
+
+        return new AcceptInvitationOutput($stored);
     }
 
-    public function preview(string $rawToken): ?User
+    public function preview(PreviewInvitationInput $input): PreviewInvitationOutput
     {
         $now = gmdate('Y-m-d H:i:s');
-        $invitation = (new PdoInvitationRepository($this->query))->findByTokenHash(Invitation::hash($rawToken));
+        $invitation = $this->invitations->findByTokenHash(Invitation::hash($input->rawToken));
 
         if ($invitation === null || !$invitation->isAcceptable($now)) {
-            return null;
+            return new PreviewInvitationOutput(null);
         }
 
-        return (new PdoUserRepository($this->query))->findByIdAcrossTenants($invitation->userId);
+        return new PreviewInvitationOutput($this->users->findByIdAcrossTenants($invitation->userId));
     }
 }

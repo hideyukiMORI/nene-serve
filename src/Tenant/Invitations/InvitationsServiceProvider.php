@@ -11,6 +11,9 @@ use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
+use NeneServe\Tenant\InvitationRepositoryInterface;
+use NeneServe\Tenant\PdoInvitationRepository;
+use NeneServe\Tenant\UserRepositoryInterface;
 use Psr\Container\ContainerInterface;
 
 final readonly class InvitationsServiceProvider implements ServiceProviderInterface
@@ -23,20 +26,37 @@ final readonly class InvitationsServiceProvider implements ServiceProviderInterf
     {
         $builder
             ->set(
-                AcceptInvitationUseCaseInterface::class,
-                static function (ContainerInterface $container): AcceptInvitationUseCaseInterface {
+                InvitationRepositoryInterface::class,
+                static function (ContainerInterface $container): InvitationRepositoryInterface {
                     $query = $container->get(DatabaseQueryExecutorInterface::class);
-                    $transactions = $container->get(DatabaseTransactionManagerInterface::class);
 
                     if (!$query instanceof DatabaseQueryExecutorInterface) {
                         throw new LogicException('Database query executor service is invalid.');
+                    }
+
+                    return new PdoInvitationRepository($query);
+                },
+            )
+            ->set(
+                AcceptInvitationUseCaseInterface::class,
+                static function (ContainerInterface $container): AcceptInvitationUseCaseInterface {
+                    $invitations = $container->get(InvitationRepositoryInterface::class);
+                    $users = $container->get(UserRepositoryInterface::class);
+                    $transactions = $container->get(DatabaseTransactionManagerInterface::class);
+
+                    if (!$invitations instanceof InvitationRepositoryInterface) {
+                        throw new LogicException('Invitation repository service is invalid.');
+                    }
+
+                    if (!$users instanceof UserRepositoryInterface) {
+                        throw new LogicException('User repository service is invalid.');
                     }
 
                     if (!$transactions instanceof DatabaseTransactionManagerInterface) {
                         throw new LogicException('Database transaction manager service is invalid.');
                     }
 
-                    return new AcceptInvitationUseCase($query, $transactions);
+                    return new AcceptInvitationUseCase($invitations, $users, $transactions);
                 },
             )
             ->set(

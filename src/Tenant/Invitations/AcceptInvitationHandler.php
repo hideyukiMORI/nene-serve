@@ -45,7 +45,7 @@ final readonly class AcceptInvitationHandler
             throw new ValidationException($errors);
         }
 
-        $this->accept->execute($token, $password);
+        $this->accept->execute(new AcceptInvitationInput($token, $password));
 
         return $this->response->create(['accepted' => true]);
     }

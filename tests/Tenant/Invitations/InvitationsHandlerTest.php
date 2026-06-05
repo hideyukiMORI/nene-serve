@@ -9,8 +9,12 @@ use Nene2\Http\JsonResponseFactory;
 use Nene2\Routing\Router;
 use Nene2\Validation\ValidationException;
 use NeneServe\Tenant\Invitations\AcceptInvitationHandler;
+use NeneServe\Tenant\Invitations\AcceptInvitationInput;
+use NeneServe\Tenant\Invitations\AcceptInvitationOutput;
 use NeneServe\Tenant\Invitations\AcceptInvitationUseCaseInterface;
 use NeneServe\Tenant\Invitations\PreviewInvitationHandler;
+use NeneServe\Tenant\Invitations\PreviewInvitationInput;
+use NeneServe\Tenant\Invitations\PreviewInvitationOutput;
 use NeneServe\Tenant\Role;
 use NeneServe\Tenant\User;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -66,14 +70,14 @@ final class InvitationsHandlerTest extends TestCase
             {
             }
 
-            public function execute(string $rawToken, string $password): User
+            public function execute(AcceptInvitationInput $input): AcceptInvitationOutput
             {
-                return $this->user ?? throw new \LogicException('not used');
+                return new AcceptInvitationOutput($this->user ?? throw new \LogicException('not used'));
             }
 
-            public function preview(string $rawToken): ?User
+            public function preview(PreviewInvitationInput $input): PreviewInvitationOutput
             {
-                return $this->user;
+                return new PreviewInvitationOutput($this->user);
             }
         };
     }
