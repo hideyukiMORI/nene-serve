@@ -13,6 +13,7 @@ use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use NeneServe\Serving\CreativeRepositoryInterface;
 use NeneServe\Serving\PdoCreativeRepository;
+use NeneServe\Serving\Scan\BundleScannerInterface;
 use Psr\Container\ContainerInterface;
 
 final readonly class CreativesServiceProvider implements ServiceProviderInterface
@@ -69,11 +70,71 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
                 ),
             )
             ->set(
+                CreateCreativeUseCaseInterface::class,
+                static function (ContainerInterface $container): CreateCreativeUseCaseInterface {
+                    $transactions = $container->get(DatabaseTransactionManagerInterface::class);
+                    $scanner = $container->get(BundleScannerInterface::class);
+
+                    if (!$transactions instanceof DatabaseTransactionManagerInterface) {
+                        throw new LogicException('Database transaction manager service is invalid.');
+                    }
+
+                    if (!$scanner instanceof BundleScannerInterface) {
+                        throw new LogicException('Bundle scanner service is invalid.');
+                    }
+
+                    return new CreateCreativeUseCase($transactions, $scanner);
+                },
+            )
+            ->set(
+                ReviseCreativeUseCaseInterface::class,
+                static function (ContainerInterface $container): ReviseCreativeUseCaseInterface {
+                    $query = $container->get(DatabaseQueryExecutorInterface::class);
+                    $transactions = $container->get(DatabaseTransactionManagerInterface::class);
+
+                    if (!$query instanceof DatabaseQueryExecutorInterface) {
+                        throw new LogicException('Database query executor service is invalid.');
+                    }
+
+                    if (!$transactions instanceof DatabaseTransactionManagerInterface) {
+                        throw new LogicException('Database transaction manager service is invalid.');
+                    }
+
+                    return new ReviseCreativeUseCase($query, $transactions);
+                },
+            )
+            ->set(
+                CreateCreativeHandler::class,
+                static function (ContainerInterface $container): CreateCreativeHandler {
+                    $useCase = $container->get(CreateCreativeUseCaseInterface::class);
+
+                    if (!$useCase instanceof CreateCreativeUseCaseInterface) {
+                        throw new LogicException('Create creative use case service is invalid.');
+                    }
+
+                    return new CreateCreativeHandler($useCase, self::json($container), self::problem($container));
+                },
+            )
+            ->set(
+                ReviseCreativeHandler::class,
+                static function (ContainerInterface $container): ReviseCreativeHandler {
+                    $useCase = $container->get(ReviseCreativeUseCaseInterface::class);
+
+                    if (!$useCase instanceof ReviseCreativeUseCaseInterface) {
+                        throw new LogicException('Revise creative use case service is invalid.');
+                    }
+
+                    return new ReviseCreativeHandler($useCase, self::json($container), self::problem($container));
+                },
+            )
+            ->set(
                 self::ROUTE_REGISTRAR,
                 static function (ContainerInterface $container): CreativesRouteRegistrar {
                     $list = $container->get(ListCreativesHandler::class);
                     $get = $container->get(GetCreativeHandler::class);
                     $queue = $container->get(ReviewQueueHandler::class);
+                    $create = $container->get(CreateCreativeHandler::class);
+                    $revise = $container->get(ReviseCreativeHandler::class);
 
                     if (!$list instanceof ListCreativesHandler) {
                         throw new LogicException('List creatives handler service is invalid.');
@@ -87,7 +148,15 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
                         throw new LogicException('Review queue handler service is invalid.');
                     }
 
-                    return new CreativesRouteRegistrar($list, $get, $queue);
+                    if (!$create instanceof CreateCreativeHandler) {
+                        throw new LogicException('Create creative handler service is invalid.');
+                    }
+
+                    if (!$revise instanceof ReviseCreativeHandler) {
+                        throw new LogicException('Revise creative handler service is invalid.');
+                    }
+
+                    return new CreativesRouteRegistrar($list, $get, $queue, $create, $revise);
                 },
             )
             ->set(

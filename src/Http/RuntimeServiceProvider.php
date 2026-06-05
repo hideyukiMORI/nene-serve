@@ -32,6 +32,9 @@ use NeneServe\Mail\MailerFactoryInterface;
 use NeneServe\Mail\SmtpMailerFactory;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\PdoEventStore;
+use NeneServe\Serving\Scan\BundleScannerInterface;
+use NeneServe\Serving\Scan\ClamAvScanner;
+use NeneServe\Serving\Scan\StubBundleScanner;
 use NeneServe\Support\Crypto;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
 use NeneServe\Tenant\Auth\CapabilityMiddleware;
@@ -142,6 +145,20 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                     }
 
                     return new PdoEventStore($query);
+                },
+            )
+            ->set(
+                BundleScannerInterface::class,
+                static function (ContainerInterface $container): BundleScannerInterface {
+                    $host = getenv('CLAMAV_HOST');
+
+                    if (is_string($host) && $host !== '') {
+                        $port = getenv('CLAMAV_PORT');
+
+                        return new ClamAvScanner($host, is_string($port) && $port !== '' ? (int) $port : 3310);
+                    }
+
+                    return new StubBundleScanner();
                 },
             )
             ->set(Crypto::class, static fn (ContainerInterface $container): Crypto => new Crypto())
