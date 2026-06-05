@@ -25,11 +25,21 @@ final readonly class PdoCreativeRepository implements CreativeRepositoryInterfac
         return $row === null ? null : $this->hydrate($row);
     }
 
-    public function listByOrganization(string $organizationId): array
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array
     {
         $rows = $this->query->fetchAll(
-            'SELECT ' . self::COLUMNS . ' FROM creatives WHERE organization_id = ? ORDER BY id',
-            [$organizationId],
+            'SELECT ' . self::COLUMNS . ' FROM creatives WHERE organization_id = ? ORDER BY id LIMIT ? OFFSET ?',
+            [$organizationId, $limit, $offset],
+        );
+
+        return array_map($this->hydrate(...), $rows);
+    }
+
+    public function listReviewQueue(string $organizationId, int $limit, int $offset): array
+    {
+        $rows = $this->query->fetchAll(
+            'SELECT ' . self::COLUMNS . " FROM creatives WHERE organization_id = ? AND review_status IN ('submitted', 'in_review') ORDER BY id LIMIT ? OFFSET ?",
+            [$organizationId, $limit, $offset],
         );
 
         return array_map($this->hydrate(...), $rows);

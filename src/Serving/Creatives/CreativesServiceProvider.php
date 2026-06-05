@@ -11,6 +11,8 @@ use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
+use Nene2\Http\RequestScopedHolder;
+use NeneServe\Http\RuntimeServiceProvider;
 use NeneServe\Serving\CreativeRepositoryInterface;
 use NeneServe\Serving\PdoCreativeRepository;
 use NeneServe\Serving\Scan\BundleScannerInterface;
@@ -46,28 +48,52 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
                 },
             )
             ->set(
+                ListCreativesUseCaseInterface::class,
+                static fn (ContainerInterface $c): ListCreativesUseCaseInterface => new ListCreativesUseCase(self::creatives($c), self::orgId($c)),
+            )
+            ->set(
+                GetCreativeByIdUseCaseInterface::class,
+                static fn (ContainerInterface $c): GetCreativeByIdUseCaseInterface => new GetCreativeByIdUseCase(self::creatives($c), self::orgId($c)),
+            )
+            ->set(
+                ReviewQueueUseCaseInterface::class,
+                static fn (ContainerInterface $c): ReviewQueueUseCaseInterface => new ReviewQueueUseCase(self::creatives($c), self::orgId($c)),
+            )
+            ->set(
                 ListCreativesHandler::class,
-                static fn (ContainerInterface $c): ListCreativesHandler => new ListCreativesHandler(
-                    self::creatives($c),
-                    self::json($c),
-                    self::problem($c),
-                ),
+                static function (ContainerInterface $c): ListCreativesHandler {
+                    $useCase = $c->get(ListCreativesUseCaseInterface::class);
+
+                    if (!$useCase instanceof ListCreativesUseCaseInterface) {
+                        throw new LogicException('List creatives use case service is invalid.');
+                    }
+
+                    return new ListCreativesHandler($useCase, self::json($c));
+                },
             )
             ->set(
                 GetCreativeHandler::class,
-                static fn (ContainerInterface $c): GetCreativeHandler => new GetCreativeHandler(
-                    self::creatives($c),
-                    self::json($c),
-                    self::problem($c),
-                ),
+                static function (ContainerInterface $c): GetCreativeHandler {
+                    $useCase = $c->get(GetCreativeByIdUseCaseInterface::class);
+
+                    if (!$useCase instanceof GetCreativeByIdUseCaseInterface) {
+                        throw new LogicException('Get creative use case service is invalid.');
+                    }
+
+                    return new GetCreativeHandler($useCase, self::json($c));
+                },
             )
             ->set(
                 ReviewQueueHandler::class,
-                static fn (ContainerInterface $c): ReviewQueueHandler => new ReviewQueueHandler(
-                    self::creatives($c),
-                    self::json($c),
-                    self::problem($c),
-                ),
+                static function (ContainerInterface $c): ReviewQueueHandler {
+                    $useCase = $c->get(ReviewQueueUseCaseInterface::class);
+
+                    if (!$useCase instanceof ReviewQueueUseCaseInterface) {
+                        throw new LogicException('Review queue use case service is invalid.');
+                    }
+
+                    return new ReviewQueueHandler($useCase, self::json($c));
+                },
             )
             ->set(
                 CreateCreativeUseCaseInterface::class,
@@ -204,6 +230,18 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
                 self::EXCEPTION_HANDLER_SCAN,
                 static fn (ContainerInterface $c): CreativeScanFailedExceptionHandler => new CreativeScanFailedExceptionHandler(self::problem($c)),
             );
+    }
+
+    /** @return RequestScopedHolder<string> */
+    private static function orgId(ContainerInterface $container): RequestScopedHolder
+    {
+        $orgId = $container->get(RuntimeServiceProvider::ORG_ID_HOLDER);
+
+        if (!$orgId instanceof RequestScopedHolder) {
+            throw new LogicException('Organization id holder service is invalid.');
+        }
+
+        return $orgId;
     }
 
     private static function creatives(ContainerInterface $container): CreativeRepositoryInterface
