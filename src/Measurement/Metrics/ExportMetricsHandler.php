@@ -43,7 +43,7 @@ final readonly class ExportMetricsHandler
             throw new ValidationException([new ValidationError('from', 'from/to must be YYYY-MM-DD dates.', 'invalid')]);
         }
 
-        $csv = $this->export->csv($context->organizationId, $range[0], $range[1]);
+        $csv = $this->export->csv($range[0], $range[1]);
 
         return $this->responseFactory->createResponse(200)
             ->withHeader('Content-Type', 'text/csv; charset=utf-8')

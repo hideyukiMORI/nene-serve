@@ -56,9 +56,9 @@ final readonly class GetMetricsHandler
                 );
             }
 
-            return $this->response->create($this->metrics->sensitiveReport($context, $range[0], $range[1]));
+            return $this->response->create($this->metrics->sensitiveReport($context->userId, $range[0], $range[1]));
         }
 
-        return $this->response->create($this->metrics->report($context->organizationId, $range[0], $range[1]));
+        return $this->response->create($this->metrics->report($range[0], $range[1]));
     }
 }

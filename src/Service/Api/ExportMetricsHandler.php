@@ -42,7 +42,7 @@ final readonly class ExportMetricsHandler
             return $this->problemDetails->create($request, 'validation-failed', 'Validation failed', 422, 'from/to must be YYYY-MM-DD dates.');
         }
 
-        $csv = $this->export->csv($context->organizationId, $range[0], $range[1]);
+        $csv = $this->export->csv($range[0], $range[1]);
 
         return $this->responseFactory->createResponse(200)
             ->withHeader('Content-Type', 'text/csv; charset=utf-8')

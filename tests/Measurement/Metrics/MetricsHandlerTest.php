@@ -7,6 +7,7 @@ namespace NeneServe\Tests\Measurement\Metrics;
 use Nene2\Database\DatabaseTransactionManagerInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
+use Nene2\Http\RequestScopedHolder;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\Metrics\ExportMetricsHandler;
 use NeneServe\Measurement\Metrics\GetMetricsHandler;
@@ -53,7 +54,7 @@ final class MetricsHandlerTest extends TestCase
     {
         $psr17 = new Psr17Factory();
         $handler = new ExportMetricsHandler(
-            new ExportMetricsUseCase($this->events()),
+            new ExportMetricsUseCase($this->events(), $this->orgId()),
             $psr17,
             $psr17,
             new ProblemDetailsResponseFactory($psr17, $psr17),
@@ -76,7 +77,7 @@ final class MetricsHandlerTest extends TestCase
     {
         $psr17 = new Psr17Factory();
         $handler = new GetMetricsHandler(
-            new GetMetricsUseCase($this->events(), $this->transactions()),
+            new GetMetricsUseCase($this->events(), $this->transactions(), $this->orgId()),
             new JsonResponseFactory($psr17, $psr17),
             new ProblemDetailsResponseFactory($psr17, $psr17),
         );
@@ -88,6 +89,16 @@ final class MetricsHandlerTest extends TestCase
         }
 
         return $handler->handle($request);
+    }
+
+    /** @return RequestScopedHolder<string> */
+    private function orgId(): RequestScopedHolder
+    {
+        /** @var RequestScopedHolder<string> $holder */
+        $holder = new RequestScopedHolder();
+        $holder->set('org-acme');
+
+        return $holder;
     }
 
     private function transactions(): DatabaseTransactionManagerInterface

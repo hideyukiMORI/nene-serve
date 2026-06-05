@@ -40,6 +40,6 @@ final readonly class GetMetricsHandler
             return $this->problemDetails->create($request, 'validation-failed', 'Validation failed', 422, 'from/to must be YYYY-MM-DD dates.');
         }
 
-        return $this->response->create($this->metrics->report($context->organizationId, $range[0], $range[1]));
+        return $this->response->create($this->metrics->report($range[0], $range[1]));
     }
 }

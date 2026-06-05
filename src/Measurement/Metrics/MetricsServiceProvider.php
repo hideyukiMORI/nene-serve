@@ -10,6 +10,8 @@ use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
+use Nene2\Http\RequestScopedHolder;
+use NeneServe\Http\RuntimeServiceProvider;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\UseCase\ExportMetricsUseCase;
 use Psr\Container\ContainerInterface;
@@ -28,6 +30,7 @@ final readonly class MetricsServiceProvider implements ServiceProviderInterface
                 static function (ContainerInterface $container): GetMetricsUseCase {
                     $events = $container->get(EventStoreInterface::class);
                     $transactions = $container->get(DatabaseTransactionManagerInterface::class);
+                    $organizationId = $container->get(RuntimeServiceProvider::ORG_ID_HOLDER);
 
                     if (!$events instanceof EventStoreInterface) {
                         throw new LogicException('Event store service is invalid.');
@@ -37,19 +40,28 @@ final readonly class MetricsServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Database transaction manager service is invalid.');
                     }
 
-                    return new GetMetricsUseCase($events, $transactions);
+                    if (!$organizationId instanceof RequestScopedHolder) {
+                        throw new LogicException('Organization id holder service is invalid.');
+                    }
+
+                    return new GetMetricsUseCase($events, $transactions, $organizationId);
                 },
             )
             ->set(
                 ExportMetricsUseCase::class,
                 static function (ContainerInterface $container): ExportMetricsUseCase {
                     $events = $container->get(EventStoreInterface::class);
+                    $organizationId = $container->get(RuntimeServiceProvider::ORG_ID_HOLDER);
 
                     if (!$events instanceof EventStoreInterface) {
                         throw new LogicException('Event store service is invalid.');
                     }
 
-                    return new ExportMetricsUseCase($events);
+                    if (!$organizationId instanceof RequestScopedHolder) {
+                        throw new LogicException('Organization id holder service is invalid.');
+                    }
+
+                    return new ExportMetricsUseCase($events, $organizationId);
                 },
             )
             ->set(

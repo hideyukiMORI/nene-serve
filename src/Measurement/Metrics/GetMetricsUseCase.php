@@ -6,9 +6,9 @@ namespace NeneServe\Measurement\Metrics;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Measurement\EventStoreInterface;
-use NeneServe\Tenant\AuthContext;
 
 /**
  * JSON daily time-series for one tenant (measurement-spec reporting): per
@@ -21,17 +21,23 @@ use NeneServe\Tenant\AuthContext;
  */
 final readonly class GetMetricsUseCase
 {
+    /**
+     * @param RequestScopedHolder<string> $organizationId
+     */
     public function __construct(
         private EventStoreInterface $events,
         private DatabaseTransactionManagerInterface $transactions,
+        private RequestScopedHolder $organizationId,
     ) {
     }
 
     /**
      * @return array{from: string, to: string, rows: list<array<string, mixed>>, fill: list<array<string, mixed>>, conversions: list<array<string, mixed>>}
      */
-    public function report(string $organizationId, string $fromDate, string $toDate): array
+    public function report(string $fromDate, string $toDate): array
     {
+        $organizationId = $this->organizationId->get();
+
         $rows = array_map(
             static fn ($r): array => [
                 'date' => $r->date,
@@ -71,16 +77,17 @@ final readonly class GetMetricsUseCase
      *
      * @return array{from: string, to: string, rows: list<array<string, mixed>>, fill: list<array<string, mixed>>, conversions: list<array<string, mixed>>, sensitive: list<array<string, mixed>>}
      */
-    public function sensitiveReport(AuthContext $actor, string $fromDate, string $toDate): array
+    public function sensitiveReport(string $actorUserId, string $fromDate, string $toDate): array
     {
-        $report = $this->report($actor->organizationId, $fromDate, $toDate);
-        $sensitive = $this->events->visitorBreakdown($actor->organizationId, $fromDate, $toDate);
+        $organizationId = $this->organizationId->get();
+        $report = $this->report($fromDate, $toDate);
+        $sensitive = $this->events->visitorBreakdown($organizationId, $fromDate, $toDate);
 
         $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($actor, $fromDate, $toDate, $sensitive): void {
+            static function (DatabaseQueryExecutorInterface $tx) use ($organizationId, $actorUserId, $fromDate, $toDate, $sensitive): void {
                 (new PdoAuditLog($tx))->record(
-                    $actor->organizationId,
-                    $actor->userId,
+                    $organizationId,
+                    $actorUserId,
                     'metrics.read_sensitive',
                     'metrics',
                     $fromDate . '..' . $toDate,
