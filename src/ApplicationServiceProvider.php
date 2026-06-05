@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace NeneServe;
 
+use LogicException;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
+use NeneServe\Health\HealthRouteRegistrar;
+use NeneServe\Health\HealthServiceProvider;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -25,12 +28,20 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
 
     public function register(ContainerBuilder $builder): void
     {
+        $builder->addProvider(new HealthServiceProvider());
+
         $builder
             ->set(
                 self::ROUTE_REGISTRARS,
                 static function (ContainerInterface $container): array {
+                    $health = $container->get(HealthServiceProvider::ROUTE_REGISTRAR);
+
+                    if (!$health instanceof HealthRouteRegistrar) {
+                        throw new LogicException('Health route registrar service is invalid.');
+                    }
+
                     /** @var list<callable(\Nene2\Routing\Router): void> $registrars */
-                    $registrars = [];
+                    $registrars = [$health];
 
                     return $registrars;
                 },
