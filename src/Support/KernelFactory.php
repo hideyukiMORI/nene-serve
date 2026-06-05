@@ -125,7 +125,7 @@ final class KernelFactory
             invoiceClient: self::invoiceClient($read),
             legalHolds: new PdoLegalHoldRepository($query),
             records: self::recordsClient($read),
-            dealOpportunities: new PdoDealOpportunityRepository($pdo),
+            dealOpportunities: new PdoDealOpportunityRepository($query),
             dealClient: self::dealClient($read),
             changePlans: new PdoChangePlanRepository($pdo),
             smtpSettings: new PdoSmtpSettingsRepository($query),

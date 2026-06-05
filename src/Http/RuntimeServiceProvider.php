@@ -38,6 +38,9 @@ use NeneServe\Serving\Scan\StubBundleScanner;
 use NeneServe\Support\Crypto;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
 use NeneServe\Tenant\Auth\CapabilityMiddleware;
+use NeneServe\Upstream\Deal\DealClientInterface;
+use NeneServe\Upstream\Deal\FakeDealClient;
+use NeneServe\Upstream\Deal\HttpDealClient;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
@@ -159,6 +162,19 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                     }
 
                     return new StubBundleScanner();
+                },
+            )
+            ->set(
+                DealClientInterface::class,
+                static function (ContainerInterface $container): DealClientInterface {
+                    $base = getenv('NENE_DEAL_API_BASE_URL');
+                    $token = getenv('NENE_DEAL_SERVICE_TOKEN');
+
+                    if (is_string($base) && $base !== '' && is_string($token) && $token !== '') {
+                        return new HttpDealClient($base, $token);
+                    }
+
+                    return new FakeDealClient();
                 },
             )
             ->set(Crypto::class, static fn (ContainerInterface $container): Crypto => new Crypto())

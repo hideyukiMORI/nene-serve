@@ -20,6 +20,10 @@ use NeneServe\Marketplace\Billing\BillingPeriodNotFoundExceptionHandler;
 use NeneServe\Marketplace\Billing\BillingRouteRegistrar;
 use NeneServe\Marketplace\Billing\BillingServiceProvider;
 use NeneServe\Marketplace\Billing\InvalidPeriodTransitionExceptionHandler;
+use NeneServe\Marketplace\Deal\CampaignNotFoundExceptionHandler;
+use NeneServe\Marketplace\Deal\DealHandoffFailedExceptionHandler;
+use NeneServe\Marketplace\Deal\DealRouteRegistrar;
+use NeneServe\Marketplace\Deal\DealServiceProvider;
 use NeneServe\Measurement\Dsr\DsrRouteRegistrar;
 use NeneServe\Measurement\Dsr\DsrServiceProvider;
 use NeneServe\Measurement\Metrics\MetricsRouteRegistrar;
@@ -80,7 +84,8 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
             ->addProvider(new InvitationsServiceProvider())
             ->addProvider(new LegalHoldsServiceProvider())
             ->addProvider(new DsrServiceProvider())
-            ->addProvider(new BillingServiceProvider());
+            ->addProvider(new BillingServiceProvider())
+            ->addProvider(new DealServiceProvider());
 
         $builder
             ->set(
@@ -100,6 +105,7 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                     $legalHolds = $container->get(LegalHoldsServiceProvider::ROUTE_REGISTRAR);
                     $dsr = $container->get(DsrServiceProvider::ROUTE_REGISTRAR);
                     $billing = $container->get(BillingServiceProvider::ROUTE_REGISTRAR);
+                    $deal = $container->get(DealServiceProvider::ROUTE_REGISTRAR);
 
                     if (!$health instanceof HealthRouteRegistrar) {
                         throw new LogicException('Health route registrar service is invalid.');
@@ -157,8 +163,12 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Billing route registrar service is invalid.');
                     }
 
+                    if (!$deal instanceof DealRouteRegistrar) {
+                        throw new LogicException('Deal route registrar service is invalid.');
+                    }
+
                     /** @var list<callable(\Nene2\Routing\Router): void> $registrars */
-                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements, $creatives, $creativeReview, $marketplace, $invitations, $legalHolds, $dsr, $billing];
+                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements, $creatives, $creativeReview, $marketplace, $invitations, $legalHolds, $dsr, $billing, $deal];
 
                     return $registrars;
                 },
@@ -235,6 +245,17 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Invalid period transition exception handler service is invalid.');
                     }
 
+                    $dealCampaignNotFound = $container->get(DealServiceProvider::EXCEPTION_HANDLER_NOT_FOUND);
+                    $dealHandoffFailed = $container->get(DealServiceProvider::EXCEPTION_HANDLER_FAILED);
+
+                    if (!$dealCampaignNotFound instanceof CampaignNotFoundExceptionHandler) {
+                        throw new LogicException('Deal campaign not found exception handler service is invalid.');
+                    }
+
+                    if (!$dealHandoffFailed instanceof DealHandoffFailedExceptionHandler) {
+                        throw new LogicException('Deal handoff failed exception handler service is invalid.');
+                    }
+
                     /** @var list<DomainExceptionHandlerInterface> $handlers */
                     $handlers = [
                         $authenticationFailed,
@@ -250,6 +271,8 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         $legalHold,
                         $billingNotFound,
                         $periodTransition,
+                        $dealCampaignNotFound,
+                        $dealHandoffFailed,
                     ];
 
                     return $handlers;

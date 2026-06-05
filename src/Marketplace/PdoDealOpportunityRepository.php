@@ -4,43 +4,44 @@ declare(strict_types=1);
 
 namespace NeneServe\Marketplace;
 
-use PDO;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 
-final class PdoDealOpportunityRepository implements DealOpportunityRepositoryInterface
+final readonly class PdoDealOpportunityRepository implements DealOpportunityRepositoryInterface
 {
     private const COLUMNS = 'id, organization_id, campaign_id, external_reference, amount_cents, status, opportunity_id, created_at';
 
     public function __construct(
-        private readonly PDO $pdo,
+        private DatabaseQueryExecutorInterface $query,
     ) {
     }
 
     public function findByExternalReference(string $organizationId, string $externalReference): ?DealOpportunity
     {
-        $stmt = $this->pdo->prepare('SELECT ' . self::COLUMNS . ' FROM deal_opportunities WHERE organization_id = ? AND external_reference = ? LIMIT 1');
-        $stmt->execute([$organizationId, $externalReference]);
-        $row = $stmt->fetch();
+        $row = $this->query->fetchOne(
+            'SELECT ' . self::COLUMNS . ' FROM deal_opportunities WHERE organization_id = ? AND external_reference = ? LIMIT 1',
+            [$organizationId, $externalReference],
+        );
 
-        return $row === false ? null : $this->hydrate($row);
+        return $row === null ? null : $this->hydrate($row);
     }
 
     public function save(DealOpportunity $opportunity): void
     {
-        $stmt = $this->pdo->prepare(
+        $this->query->execute(
             'INSERT INTO deal_opportunities (id, organization_id, campaign_id, external_reference, amount_cents, status, opportunity_id, created_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?) AS new
              ON DUPLICATE KEY UPDATE campaign_id = new.campaign_id, external_reference = new.external_reference, amount_cents = new.amount_cents, status = new.status, opportunity_id = new.opportunity_id',
+            [
+                $opportunity->id,
+                $opportunity->organizationId,
+                $opportunity->campaignId,
+                $opportunity->externalReference,
+                $opportunity->amountCents,
+                $opportunity->status,
+                $opportunity->opportunityId,
+                $opportunity->createdAt,
+            ],
         );
-        $stmt->execute([
-            $opportunity->id,
-            $opportunity->organizationId,
-            $opportunity->campaignId,
-            $opportunity->externalReference,
-            $opportunity->amountCents,
-            $opportunity->status,
-            $opportunity->opportunityId,
-            $opportunity->createdAt,
-        ]);
     }
 
     /** @param array<string, mixed> $row */
