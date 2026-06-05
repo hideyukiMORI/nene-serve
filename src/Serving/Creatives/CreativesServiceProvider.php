@@ -9,17 +9,16 @@ use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
-use Nene2\Error\ProblemDetailsResponseFactory;
-use Nene2\Http\JsonResponseFactory;
-use Nene2\Http\RequestScopedHolder;
-use NeneServe\Http\RuntimeServiceProvider;
 use NeneServe\Serving\CreativeRepositoryInterface;
 use NeneServe\Serving\PdoCreativeRepository;
 use NeneServe\Serving\Scan\BundleScannerInterface;
+use NeneServe\Support\ServiceProviderHelpers;
 use Psr\Container\ContainerInterface;
 
 final readonly class CreativesServiceProvider implements ServiceProviderInterface
 {
+    use ServiceProviderHelpers;
+
     public const string ROUTE_REGISTRAR = 'nene-serve.route_registrar.creatives';
 
     public const string REVIEW_ROUTE_REGISTRAR = 'nene-serve.route_registrar.creative_review';
@@ -138,7 +137,7 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
                         throw new LogicException('Create creative use case service is invalid.');
                     }
 
-                    return new CreateCreativeHandler($useCase, self::json($container), self::problem($container));
+                    return new CreateCreativeHandler($useCase, self::json($container));
                 },
             )
             ->set(
@@ -150,7 +149,7 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
                         throw new LogicException('Revise creative use case service is invalid.');
                     }
 
-                    return new ReviseCreativeHandler($useCase, self::json($container), self::problem($container));
+                    return new ReviseCreativeHandler($useCase, self::json($container));
                 },
             )
             ->set(
@@ -211,7 +210,7 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
                         throw new LogicException('Transition creative use case service is invalid.');
                     }
 
-                    return new CreativeReviewRouteRegistrar($useCase, self::json($container), self::problem($container));
+                    return new CreativeReviewRouteRegistrar($useCase, self::json($container));
                 },
             )
             ->set(
@@ -232,18 +231,6 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
             );
     }
 
-    /** @return RequestScopedHolder<string> */
-    private static function orgId(ContainerInterface $container): RequestScopedHolder
-    {
-        $orgId = $container->get(RuntimeServiceProvider::ORG_ID_HOLDER);
-
-        if (!$orgId instanceof RequestScopedHolder) {
-            throw new LogicException('Organization id holder service is invalid.');
-        }
-
-        return $orgId;
-    }
-
     private static function creatives(ContainerInterface $container): CreativeRepositoryInterface
     {
         $creatives = $container->get(CreativeRepositoryInterface::class);
@@ -253,27 +240,5 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
         }
 
         return $creatives;
-    }
-
-    private static function json(ContainerInterface $container): JsonResponseFactory
-    {
-        $json = $container->get(JsonResponseFactory::class);
-
-        if (!$json instanceof JsonResponseFactory) {
-            throw new LogicException('JSON response factory service is invalid.');
-        }
-
-        return $json;
-    }
-
-    private static function problem(ContainerInterface $container): ProblemDetailsResponseFactory
-    {
-        $problem = $container->get(ProblemDetailsResponseFactory::class);
-
-        if (!$problem instanceof ProblemDetailsResponseFactory) {
-            throw new LogicException('Problem details response factory service is invalid.');
-        }
-
-        return $problem;
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Measurement\Dsr;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonRequestBodyParser;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Validation\ValidationError;
@@ -23,17 +22,12 @@ final readonly class DataSubjectRequestHandler
     public function __construct(
         private DataSubjectRequestUseCaseInterface $dsr,
         private JsonResponseFactory $response,
-        private ProblemDetailsResponseFactory $problemDetails,
     ) {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $context = AuthContextResolver::fromRequest($request);
-
-        if ($context === null) {
-            return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
-        }
+        $context = AuthContextResolver::require($request);
 
         $body = JsonRequestBodyParser::parse($request);
         $kind = $body['kind'] ?? null;

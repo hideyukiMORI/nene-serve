@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Measurement\Metrics;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Validation\ValidationError;
 use Nene2\Validation\ValidationException;
 use NeneServe\Measurement\UseCase\ExportMetricsUseCase;
@@ -25,17 +24,12 @@ final readonly class ExportMetricsHandler
         private ExportMetricsUseCase $export,
         private ResponseFactoryInterface $responseFactory,
         private StreamFactoryInterface $streamFactory,
-        private ProblemDetailsResponseFactory $problemDetails,
     ) {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $context = AuthContextResolver::fromRequest($request);
-
-        if ($context === null) {
-            return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
-        }
+        $context = AuthContextResolver::require($request);
 
         $range = MetricsRange::fromRequest($request);
 

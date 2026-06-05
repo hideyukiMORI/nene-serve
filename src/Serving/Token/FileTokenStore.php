@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\Token;
 
+use Nene2\Http\SecureTokenHelper;
+
 /**
  * File-backed token store so the serve → click flow survives across separate
  * HTTP requests on a single-server dev boot (the in-memory store is per-request).
@@ -168,6 +170,6 @@ final class FileTokenStore implements TokenStoreInterface
 
     private static function random(): string
     {
-        return bin2hex(random_bytes(16));
+        return SecureTokenHelper::generate(16);
     }
 }

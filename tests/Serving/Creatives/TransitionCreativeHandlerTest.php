@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Tests\Serving\Creatives;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Routing\Router;
 use NeneServe\Serving\Creative;
@@ -17,6 +16,7 @@ use NeneServe\Serving\Review\ReviewAction;
 use NeneServe\Serving\ReviewStatus;
 use NeneServe\Serving\UseCase\InvalidReviewTransitionException;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
+use NeneServe\Tenant\Auth\AuthContextRequiredException;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -64,7 +64,8 @@ final class TransitionCreativeHandlerTest extends TestCase
             }
         };
 
-        self::assertSame(401, $this->handle($useCase, ReviewAction::Approve, null)->getStatusCode());
+        $this->expectException(AuthContextRequiredException::class);
+        $this->handle($useCase, ReviewAction::Approve, null);
     }
 
     /**
@@ -77,7 +78,6 @@ final class TransitionCreativeHandlerTest extends TestCase
             $action,
             $useCase,
             new JsonResponseFactory($psr17, $psr17),
-            new ProblemDetailsResponseFactory($psr17, $psr17),
         );
 
         $request = $psr17->createServerRequest('POST', '/admin/creatives/cr-1/approve')

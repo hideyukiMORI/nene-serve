@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Marketplace\Billing;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonRequestBodyParser;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Routing\Router;
@@ -20,20 +19,14 @@ final readonly class OpenBillingPeriodHandler
     public function __construct(
         private OpenBillingPeriodUseCaseInterface $open,
         private JsonResponseFactory $response,
-        private ProblemDetailsResponseFactory $problemDetails,
     ) {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $context = AuthContextResolver::fromRequest($request);
+        $context = AuthContextResolver::require($request);
 
-        if ($context === null) {
-            return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
-        }
-
-        $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
-        $campaignId = is_array($parameters) && is_string($parameters['id'] ?? null) ? $parameters['id'] : '';
+        $campaignId = Router::param($request, 'id') ?? '';
 
         $body = JsonRequestBodyParser::parse($request);
         $start = isset($body['period_start']) && is_string($body['period_start']) ? $body['period_start'] : '';

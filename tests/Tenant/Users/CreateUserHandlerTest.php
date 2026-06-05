@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Tests\Tenant\Users;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Validation\ValidationException;
 use NeneServe\Mail\MailerFactoryInterface;
@@ -15,6 +14,7 @@ use NeneServe\Settings\SmtpSettingsRecord;
 use NeneServe\Settings\SmtpSettingsRepositoryInterface;
 use NeneServe\Support\Crypto;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
+use NeneServe\Tenant\Auth\AuthContextRequiredException;
 use NeneServe\Tenant\Role;
 use NeneServe\Tenant\UseCase\InvitedUser;
 use NeneServe\Tenant\UseCase\UserValidationException;
@@ -65,9 +65,8 @@ final class CreateUserHandlerTest extends TestCase
 
     public function testRejectsRequestWithoutClaims(): void
     {
-        $response = $this->handle($this->useCaseReturningInvite(), '{"email":"new@acme.test","role":"editor"}', null);
-
-        self::assertSame(401, $response->getStatusCode());
+        $this->expectException(AuthContextRequiredException::class);
+        $this->handle($this->useCaseReturningInvite(), '{"email":"new@acme.test","role":"editor"}', null);
     }
 
     /**
@@ -81,7 +80,6 @@ final class CreateUserHandlerTest extends TestCase
             new SmtpConfigResolver($this->settingsRepo(), new Crypto()),
             $this->mailerFactory(),
             new JsonResponseFactory($psr17, $psr17),
-            new ProblemDetailsResponseFactory($psr17, $psr17),
             'http://localhost:5189',
         );
 

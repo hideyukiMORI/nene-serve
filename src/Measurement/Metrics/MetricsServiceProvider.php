@@ -92,7 +92,6 @@ final readonly class MetricsServiceProvider implements ServiceProviderInterface
                     $export = $container->get(ExportMetricsUseCase::class);
                     $responseFactory = $container->get(ResponseFactoryInterface::class);
                     $streamFactory = $container->get(StreamFactoryInterface::class);
-                    $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
 
                     if (!$export instanceof ExportMetricsUseCase) {
                         throw new LogicException('Export metrics use case service is invalid.');
@@ -106,11 +105,7 @@ final readonly class MetricsServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Stream factory service is invalid.');
                     }
 
-                    if (!$problemDetails instanceof ProblemDetailsResponseFactory) {
-                        throw new LogicException('Problem details response factory service is invalid.');
-                    }
-
-                    return new ExportMetricsHandler($export, $responseFactory, $streamFactory, $problemDetails);
+                    return new ExportMetricsHandler($export, $responseFactory, $streamFactory);
                 },
             )
             ->set(

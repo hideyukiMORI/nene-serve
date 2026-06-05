@@ -15,6 +15,17 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class AuthContextResolver
 {
+    /**
+     * Same as {@see self::fromRequest()} but raises {@see AuthContextRequiredException}
+     * (→ 401) instead of returning null, so admin handlers can resolve the
+     * principal in one line without a defensive null check.
+     */
+    public static function require(ServerRequestInterface $request): AuthContext
+    {
+        return self::fromRequest($request)
+            ?? throw new AuthContextRequiredException('Authentication is required.');
+    }
+
     public static function fromRequest(ServerRequestInterface $request): ?AuthContext
     {
         $claims = $request->getAttribute(AdminAuthMiddleware::CLAIMS_ATTRIBUTE);

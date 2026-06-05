@@ -11,6 +11,7 @@ use NeneServe\Tenant\Account\GetCurrentUserInput;
 use NeneServe\Tenant\Account\GetCurrentUserOutput;
 use NeneServe\Tenant\Account\GetCurrentUserUseCaseInterface;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
+use NeneServe\Tenant\Auth\AuthContextRequiredException;
 use NeneServe\Tenant\Role;
 use NeneServe\Tenant\User;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -39,9 +40,8 @@ final class CurrentUserHandlerTest extends TestCase
 
     public function testRejectsRequestWithoutClaims(): void
     {
-        $response = $this->handle($this->useCaseReturning(null), null);
-
-        self::assertSame(401, $response->getStatusCode());
+        $this->expectException(AuthContextRequiredException::class);
+        $this->handle($this->useCaseReturning(null), null);
     }
 
     /**

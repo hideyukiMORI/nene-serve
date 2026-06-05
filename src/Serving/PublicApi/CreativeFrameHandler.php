@@ -37,8 +37,7 @@ final readonly class CreativeFrameHandler
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
-        $token = is_array($parameters) && is_string($parameters['frame_token'] ?? null) ? $parameters['frame_token'] : '';
+        $token = Router::param($request, 'frame_token') ?? '';
 
         $target = $this->tokens->resolveFrameToken($token);
 

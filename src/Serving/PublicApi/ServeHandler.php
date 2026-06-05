@@ -33,8 +33,7 @@ final readonly class ServeHandler
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
-        $key = is_array($parameters) && is_string($parameters['public_placement_key'] ?? null) ? $parameters['public_placement_key'] : '';
+        $key = Router::param($request, 'public_placement_key') ?? '';
 
         $origin = $request->getHeaderLine('Origin');
         $origin = $origin === '' ? null : $origin;

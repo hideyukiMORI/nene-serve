@@ -5,16 +5,14 @@ declare(strict_types=1);
 namespace NeneServe\Serving\PublicApi;
 
 use LogicException;
-use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
-use Nene2\Error\ProblemDetailsResponseFactory;
-use Nene2\Http\JsonResponseFactory;
 use NeneServe\Marketplace\UseCase\GetCampaignSpendUseCase;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Serving\Frequency\FrequencyCapStoreInterface;
 use NeneServe\Serving\Token\TokenStoreInterface;
 use NeneServe\Storage\StorageInterface;
+use NeneServe\Support\ServiceProviderHelpers;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
@@ -22,6 +20,8 @@ use Psr\Http\Message\StreamFactoryInterface;
 /** Wires the untrusted public serve surface `/public/*`. */
 final readonly class PublicServiceProvider implements ServiceProviderInterface
 {
+    use ServiceProviderHelpers;
+
     public const string ROUTE_REGISTRAR = 'nene-serve.route_registrar.public';
 
     private const int DEFAULT_CLICK_TOKEN_TTL = 900;
@@ -188,17 +188,6 @@ final readonly class PublicServiceProvider implements ServiceProviderInterface
         return is_string($ttl) && ctype_digit($ttl) ? (int) $ttl : self::DEFAULT_CLICK_TOKEN_TTL;
     }
 
-    private static function query(ContainerInterface $container): DatabaseQueryExecutorInterface
-    {
-        $query = $container->get(DatabaseQueryExecutorInterface::class);
-
-        if (!$query instanceof DatabaseQueryExecutorInterface) {
-            throw new LogicException('Database query executor service is invalid.');
-        }
-
-        return $query;
-    }
-
     private static function tokens(ContainerInterface $container): TokenStoreInterface
     {
         $tokens = $container->get(TokenStoreInterface::class);
@@ -230,28 +219,6 @@ final readonly class PublicServiceProvider implements ServiceProviderInterface
         }
 
         return $events;
-    }
-
-    private static function json(ContainerInterface $container): JsonResponseFactory
-    {
-        $json = $container->get(JsonResponseFactory::class);
-
-        if (!$json instanceof JsonResponseFactory) {
-            throw new LogicException('JSON response factory service is invalid.');
-        }
-
-        return $json;
-    }
-
-    private static function problem(ContainerInterface $container): ProblemDetailsResponseFactory
-    {
-        $problem = $container->get(ProblemDetailsResponseFactory::class);
-
-        if (!$problem instanceof ProblemDetailsResponseFactory) {
-            throw new LogicException('Problem details response factory service is invalid.');
-        }
-
-        return $problem;
     }
 
     private static function responseFactory(ContainerInterface $container): ResponseFactoryInterface

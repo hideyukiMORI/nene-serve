@@ -5,12 +5,8 @@ declare(strict_types=1);
 namespace NeneServe\Service\Api;
 
 use LogicException;
-use Nene2\Database\DatabaseQueryExecutorInterface;
-use Nene2\Database\DatabaseTransactionManagerInterface;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
-use Nene2\Error\ProblemDetailsResponseFactory;
-use Nene2\Http\JsonResponseFactory;
 use NeneServe\Mcp\Api\ApplyChangePlanUseCase;
 use NeneServe\Mcp\Api\ApplyChangePlanUseCaseInterface;
 use NeneServe\Mcp\Api\ProposePlacementChangeUseCase;
@@ -18,6 +14,7 @@ use NeneServe\Mcp\Api\ProposePlacementChangeUseCaseInterface;
 use NeneServe\Measurement\Metrics\GetMetricsUseCase;
 use NeneServe\Measurement\UseCase\ExportMetricsUseCase;
 use NeneServe\Serving\Placements\ListPlacementsUseCaseInterface;
+use NeneServe\Support\ServiceProviderHelpers;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
@@ -25,6 +22,8 @@ use Psr\Http\Message\StreamFactoryInterface;
 /** Wires the service surface `/api/*` (scoped service-token auth, api-security §5). */
 final readonly class ServiceApiServiceProvider implements ServiceProviderInterface
 {
+    use ServiceProviderHelpers;
+
     public const string ROUTE_REGISTRAR = 'nene-serve.route_registrar.service';
 
     public const string EXCEPTION_HANDLER_MCP_VALIDATION = 'nene-serve.exception_handler.mcp_validation';
@@ -148,50 +147,6 @@ final readonly class ServiceApiServiceProvider implements ServiceProviderInterfa
                     return new ServiceRouteRegistrar($list, $getMetrics, $exportMetrics, $propose, $apply);
                 },
             );
-    }
-
-    private static function query(ContainerInterface $container): DatabaseQueryExecutorInterface
-    {
-        $query = $container->get(DatabaseQueryExecutorInterface::class);
-
-        if (!$query instanceof DatabaseQueryExecutorInterface) {
-            throw new LogicException('Database query executor service is invalid.');
-        }
-
-        return $query;
-    }
-
-    private static function transactions(ContainerInterface $container): DatabaseTransactionManagerInterface
-    {
-        $transactions = $container->get(DatabaseTransactionManagerInterface::class);
-
-        if (!$transactions instanceof DatabaseTransactionManagerInterface) {
-            throw new LogicException('Database transaction manager service is invalid.');
-        }
-
-        return $transactions;
-    }
-
-    private static function json(ContainerInterface $container): JsonResponseFactory
-    {
-        $json = $container->get(JsonResponseFactory::class);
-
-        if (!$json instanceof JsonResponseFactory) {
-            throw new LogicException('JSON response factory service is invalid.');
-        }
-
-        return $json;
-    }
-
-    private static function problem(ContainerInterface $container): ProblemDetailsResponseFactory
-    {
-        $problem = $container->get(ProblemDetailsResponseFactory::class);
-
-        if (!$problem instanceof ProblemDetailsResponseFactory) {
-            throw new LogicException('Problem details response factory service is invalid.');
-        }
-
-        return $problem;
     }
 
     private static function responseFactory(ContainerInterface $container): ResponseFactoryInterface

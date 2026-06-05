@@ -12,6 +12,7 @@ use NeneServe\Assets\Admin\AssetsRouteRegistrar;
 use NeneServe\Assets\Admin\AssetsServiceProvider;
 use NeneServe\Assets\Admin\AssetValidationExceptionHandler;
 use NeneServe\Assets\Admin\RecordsUnavailableExceptionHandler;
+use NeneServe\Auth\AuthContextRequiredExceptionHandler;
 use NeneServe\Auth\AuthenticationFailedExceptionHandler;
 use NeneServe\Auth\AuthRouteRegistrar;
 use NeneServe\Auth\AuthServiceProvider;
@@ -211,12 +212,17 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                 self::EXCEPTION_HANDLERS,
                 static function (ContainerInterface $container): array {
                     $authenticationFailed = $container->get(AuthServiceProvider::EXCEPTION_HANDLER);
+                    $authContextRequired = $container->get(AuthServiceProvider::EXCEPTION_HANDLER_CONTEXT_REQUIRED);
                     $userValidation = $container->get(UsersServiceProvider::EXCEPTION_HANDLER);
                     $placementNotFound = $container->get(PlacementsServiceProvider::EXCEPTION_HANDLER_NOT_FOUND);
                     $placementValidation = $container->get(PlacementsServiceProvider::EXCEPTION_HANDLER_VALIDATION);
 
                     if (!$authenticationFailed instanceof AuthenticationFailedExceptionHandler) {
                         throw new LogicException('Authentication failed exception handler service is invalid.');
+                    }
+
+                    if (!$authContextRequired instanceof AuthContextRequiredExceptionHandler) {
+                        throw new LogicException('Auth context required exception handler service is invalid.');
                     }
 
                     if (!$userValidation instanceof UserValidationExceptionHandler) {
@@ -347,6 +353,7 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                     /** @var list<DomainExceptionHandlerInterface> $handlers */
                     $handlers = [
                         $authenticationFailed,
+                        $authContextRequired,
                         $userValidation,
                         $placementNotFound,
                         $placementValidation,

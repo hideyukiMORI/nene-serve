@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Tests\Marketplace;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Routing\Router;
 use Nene2\Validation\ValidationException;
@@ -41,7 +40,7 @@ final class OpenBillingPeriodHandlerTest extends TestCase
     private function handle(string $json): ResponseInterface
     {
         $psr17 = new Psr17Factory();
-        $handler = new OpenBillingPeriodHandler($this->useCase(), new JsonResponseFactory($psr17, $psr17), new ProblemDetailsResponseFactory($psr17, $psr17));
+        $handler = new OpenBillingPeriodHandler($this->useCase(), new JsonResponseFactory($psr17, $psr17));
 
         $request = $psr17->createServerRequest('POST', '/admin/campaigns/cmp-1/billing-periods')
             ->withHeader('Content-Type', 'application/json')

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\Placements;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Routing\Router;
 use NeneServe\Tenant\Auth\AuthContextResolver;
@@ -20,20 +19,14 @@ final readonly class ArchivePlacementHandler
     public function __construct(
         private ArchivePlacementUseCaseInterface $archive,
         private JsonResponseFactory $response,
-        private ProblemDetailsResponseFactory $problemDetails,
     ) {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $context = AuthContextResolver::fromRequest($request);
+        $context = AuthContextResolver::require($request);
 
-        if ($context === null) {
-            return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
-        }
-
-        $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
-        $id = is_array($parameters) && is_string($parameters['id'] ?? null) ? $parameters['id'] : '';
+        $id = Router::param($request, 'id') ?? '';
 
         $output = $this->archive->execute(new ArchivePlacementInput($context->userId, $id));
 

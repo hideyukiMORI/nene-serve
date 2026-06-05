@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Tenant\Users;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Http\PaginationQueryParser;
 use Nene2\Http\PaginationResponse;
@@ -23,17 +22,12 @@ final readonly class ListUsersHandler
     public function __construct(
         private ListUsersUseCaseInterface $listUsers,
         private JsonResponseFactory $response,
-        private ProblemDetailsResponseFactory $problemDetails,
     ) {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $context = AuthContextResolver::fromRequest($request);
-
-        if ($context === null) {
-            return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
-        }
+        $context = AuthContextResolver::require($request);
 
         $pagination = PaginationQueryParser::parse($request);
 

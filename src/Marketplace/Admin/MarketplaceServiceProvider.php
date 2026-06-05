@@ -5,14 +5,9 @@ declare(strict_types=1);
 namespace NeneServe\Marketplace\Admin;
 
 use LogicException;
-use Nene2\Database\DatabaseQueryExecutorInterface;
-use Nene2\Database\DatabaseTransactionManagerInterface;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
-use Nene2\Error\ProblemDetailsResponseFactory;
-use Nene2\Http\JsonResponseFactory;
 use Nene2\Http\RequestScopedHolder;
-use NeneServe\Http\RuntimeServiceProvider;
 use NeneServe\Marketplace\AdvertiserRepositoryInterface;
 use NeneServe\Marketplace\CampaignRepositoryInterface;
 use NeneServe\Marketplace\PdoAdvertiserRepository;
@@ -22,10 +17,13 @@ use NeneServe\Marketplace\PricingRuleRepositoryInterface;
 use NeneServe\Marketplace\UseCase\GetCampaignSpendUseCase;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Serving\CreativeRepositoryInterface;
+use NeneServe\Support\ServiceProviderHelpers;
 use Psr\Container\ContainerInterface;
 
 final readonly class MarketplaceServiceProvider implements ServiceProviderInterface
 {
+    use ServiceProviderHelpers;
+
     public const string ROUTE_REGISTRAR = 'nene-serve.route_registrar.marketplace';
 
     public const string EXCEPTION_HANDLER = 'nene-serve.exception_handler.marketplace_validation';
@@ -159,7 +157,7 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Create advertiser use case service is invalid.');
                     }
 
-                    return new CreateAdvertiserHandler($useCase, self::json($c), self::problem($c));
+                    return new CreateAdvertiserHandler($useCase, self::json($c));
                 },
             )
             ->set(
@@ -171,7 +169,7 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Create pricing rule use case service is invalid.');
                     }
 
-                    return new CreatePricingRuleHandler($useCase, self::json($c), self::problem($c));
+                    return new CreatePricingRuleHandler($useCase, self::json($c));
                 },
             )
             ->set(
@@ -183,7 +181,7 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Create campaign use case service is invalid.');
                     }
 
-                    return new CreateCampaignHandler($useCase, self::json($c), self::problem($c));
+                    return new CreateCampaignHandler($useCase, self::json($c));
                 },
             )
             ->set(
@@ -295,58 +293,4 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
     }
 
     /** @return RequestScopedHolder<string> */
-    private static function orgId(ContainerInterface $container): RequestScopedHolder
-    {
-        $orgId = $container->get(RuntimeServiceProvider::ORG_ID_HOLDER);
-
-        if (!$orgId instanceof RequestScopedHolder) {
-            throw new LogicException('Organization id holder service is invalid.');
-        }
-
-        return $orgId;
-    }
-
-    private static function transactions(ContainerInterface $container): DatabaseTransactionManagerInterface
-    {
-        $transactions = $container->get(DatabaseTransactionManagerInterface::class);
-
-        if (!$transactions instanceof DatabaseTransactionManagerInterface) {
-            throw new LogicException('Database transaction manager service is invalid.');
-        }
-
-        return $transactions;
-    }
-
-    private static function query(ContainerInterface $container): DatabaseQueryExecutorInterface
-    {
-        $query = $container->get(DatabaseQueryExecutorInterface::class);
-
-        if (!$query instanceof DatabaseQueryExecutorInterface) {
-            throw new LogicException('Database query executor service is invalid.');
-        }
-
-        return $query;
-    }
-
-    private static function json(ContainerInterface $container): JsonResponseFactory
-    {
-        $json = $container->get(JsonResponseFactory::class);
-
-        if (!$json instanceof JsonResponseFactory) {
-            throw new LogicException('JSON response factory service is invalid.');
-        }
-
-        return $json;
-    }
-
-    private static function problem(ContainerInterface $container): ProblemDetailsResponseFactory
-    {
-        $problem = $container->get(ProblemDetailsResponseFactory::class);
-
-        if (!$problem instanceof ProblemDetailsResponseFactory) {
-            throw new LogicException('Problem details response factory service is invalid.');
-        }
-
-        return $problem;
-    }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Marketplace\Admin;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonRequestBodyParser;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Validation\ValidationError;
@@ -19,17 +18,12 @@ final readonly class CreateCampaignHandler
     public function __construct(
         private CreateCampaignUseCaseInterface $createCampaign,
         private JsonResponseFactory $response,
-        private ProblemDetailsResponseFactory $problemDetails,
     ) {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $context = AuthContextResolver::fromRequest($request);
-
-        if ($context === null) {
-            return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
-        }
+        $context = AuthContextResolver::require($request);
 
         $body = JsonRequestBodyParser::parse($request);
 

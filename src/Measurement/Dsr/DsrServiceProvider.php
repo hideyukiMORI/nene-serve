@@ -7,7 +7,6 @@ namespace NeneServe\Measurement\Dsr;
 use LogicException;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\AuditLogInterface;
@@ -49,8 +48,6 @@ final readonly class DsrServiceProvider implements ServiceProviderInterface
                 static function (ContainerInterface $container): DataSubjectRequestHandler {
                     $useCase = $container->get(DataSubjectRequestUseCaseInterface::class);
                     $response = $container->get(JsonResponseFactory::class);
-                    $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
-
                     if (!$useCase instanceof DataSubjectRequestUseCaseInterface) {
                         throw new LogicException('Data subject request use case service is invalid.');
                     }
@@ -59,11 +56,7 @@ final readonly class DsrServiceProvider implements ServiceProviderInterface
                         throw new LogicException('JSON response factory service is invalid.');
                     }
 
-                    if (!$problemDetails instanceof ProblemDetailsResponseFactory) {
-                        throw new LogicException('Problem details response factory service is invalid.');
-                    }
-
-                    return new DataSubjectRequestHandler($useCase, $response, $problemDetails);
+                    return new DataSubjectRequestHandler($useCase, $response);
                 },
             )
             ->set(

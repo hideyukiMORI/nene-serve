@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Tenant\Users;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonRequestBodyParser;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Validation\ValidationError;
@@ -31,18 +30,13 @@ final readonly class CreateUserHandler
         private SmtpConfigResolver $smtp,
         private MailerFactoryInterface $mailerFactory,
         private JsonResponseFactory $response,
-        private ProblemDetailsResponseFactory $problemDetails,
         private string $appBaseUrl,
     ) {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $context = AuthContextResolver::fromRequest($request);
-
-        if ($context === null) {
-            return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
-        }
+        $context = AuthContextResolver::require($request);
 
         $body = JsonRequestBodyParser::parse($request);
 

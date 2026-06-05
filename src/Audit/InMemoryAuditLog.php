@@ -48,18 +48,6 @@ final class InMemoryAuditLog implements AuditLogInterface
         $this->headByOrg[$organizationId] = $hash;
     }
 
-    public function forSubject(string $organizationId, string $subjectType, string $subjectId): array
-    {
-        $matches = array_filter(
-            $this->events,
-            static fn (AuditEvent $e): bool => $e->organizationId === $organizationId
-                && $e->subjectType === $subjectType
-                && $e->subjectId === $subjectId,
-        );
-
-        return array_reverse(array_values($matches));
-    }
-
     public function allForOrganization(string $organizationId): array
     {
         return array_values(array_filter(

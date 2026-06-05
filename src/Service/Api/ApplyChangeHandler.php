@@ -34,8 +34,7 @@ final readonly class ApplyChangeHandler
             return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'A service token is required.');
         }
 
-        $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
-        $token = is_array($parameters) && is_string($parameters['token'] ?? null) ? $parameters['token'] : '';
+        $token = Router::param($request, 'token') ?? '';
 
         $plan = $this->apply->execute($context, $token);
 

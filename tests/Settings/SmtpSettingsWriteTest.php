@@ -6,7 +6,6 @@ namespace NeneServe\Tests\Settings;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Http\RequestScopedHolder;
 use Nene2\Validation\ValidationException;
@@ -84,7 +83,7 @@ final class SmtpSettingsWriteTest extends TestCase
     {
         $psr17 = new Psr17Factory();
         $useCase = new UpdateSmtpSettingsUseCase($settings, new Crypto(), $this->transactions(), $this->orgId());
-        $handler = new UpdateSmtpSettingsHandler($useCase, new JsonResponseFactory($psr17, $psr17), new ProblemDetailsResponseFactory($psr17, $psr17));
+        $handler = new UpdateSmtpSettingsHandler($useCase, new JsonResponseFactory($psr17, $psr17));
 
         $request = $psr17->createServerRequest('PUT', '/admin/settings/smtp')
             ->withHeader('Content-Type', 'application/json')
@@ -98,7 +97,7 @@ final class SmtpSettingsWriteTest extends TestCase
     {
         $psr17 = new Psr17Factory();
         $useCase = new TestSmtpSettingsUseCase($settings, new Crypto(), $mailerFactory, $this->users(), $this->transactions(), $this->orgId());
-        $handler = new TestSmtpSettingsHandler($useCase, new JsonResponseFactory($psr17, $psr17), new ProblemDetailsResponseFactory($psr17, $psr17));
+        $handler = new TestSmtpSettingsHandler($useCase, new JsonResponseFactory($psr17, $psr17));
 
         $request = $psr17->createServerRequest('POST', '/admin/settings/smtp/test')
             ->withAttribute(AdminAuthMiddleware::CLAIMS_ATTRIBUTE, self::CLAIMS);

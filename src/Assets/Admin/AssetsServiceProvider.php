@@ -5,19 +5,19 @@ declare(strict_types=1);
 namespace NeneServe\Assets\Admin;
 
 use LogicException;
-use Nene2\Database\DatabaseTransactionManagerInterface;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
-use Nene2\Error\ProblemDetailsResponseFactory;
-use Nene2\Http\JsonResponseFactory;
 use Nene2\Http\RequestScopedHolder;
 use NeneServe\Http\RuntimeServiceProvider;
 use NeneServe\Storage\StorageInterface;
+use NeneServe\Support\ServiceProviderHelpers;
 use NeneServe\Upstream\Records\RecordsClientInterface;
 use Psr\Container\ContainerInterface;
 
 final readonly class AssetsServiceProvider implements ServiceProviderInterface
 {
+    use ServiceProviderHelpers;
+
     public const string ROUTE_REGISTRAR = 'nene-serve.route_registrar.assets';
 
     public const string EXCEPTION_HANDLER_VALIDATION = 'nene-serve.exception_handler.asset_validation';
@@ -65,7 +65,7 @@ final readonly class AssetsServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Upload asset use case service is invalid.');
                     }
 
-                    return new UploadAssetHandler($useCase, self::json($c), self::problem($c));
+                    return new UploadAssetHandler($useCase, self::json($c));
                 },
             )
             ->set(
@@ -105,38 +105,5 @@ final readonly class AssetsServiceProvider implements ServiceProviderInterface
                     return new AssetsRouteRegistrar($upload, $records);
                 },
             );
-    }
-
-    private static function transactions(ContainerInterface $container): DatabaseTransactionManagerInterface
-    {
-        $transactions = $container->get(DatabaseTransactionManagerInterface::class);
-
-        if (!$transactions instanceof DatabaseTransactionManagerInterface) {
-            throw new LogicException('Database transaction manager service is invalid.');
-        }
-
-        return $transactions;
-    }
-
-    private static function json(ContainerInterface $container): JsonResponseFactory
-    {
-        $json = $container->get(JsonResponseFactory::class);
-
-        if (!$json instanceof JsonResponseFactory) {
-            throw new LogicException('JSON response factory service is invalid.');
-        }
-
-        return $json;
-    }
-
-    private static function problem(ContainerInterface $container): ProblemDetailsResponseFactory
-    {
-        $problem = $container->get(ProblemDetailsResponseFactory::class);
-
-        if (!$problem instanceof ProblemDetailsResponseFactory) {
-            throw new LogicException('Problem details response factory service is invalid.');
-        }
-
-        return $problem;
     }
 }

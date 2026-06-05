@@ -24,8 +24,7 @@ final readonly class GetCampaignHandler
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
-        $id = is_array($parameters) && is_string($parameters['id'] ?? null) ? $parameters['id'] : '';
+        $id = Router::param($request, 'id') ?? '';
 
         $output = $this->useCase->execute(new GetCampaignInput($id));
 
