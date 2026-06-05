@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace NeneServe\Http;
 
 use LogicException;
+use Nene2\Auth\LocalBearerTokenVerifier;
+use Nene2\Auth\TokenIssuerInterface;
+use Nene2\Auth\TokenVerifierInterface;
 use Nene2\Config\AppConfig;
 use Nene2\Config\ConfigLoader;
 use Nene2\Database\DatabaseConnectionFactoryInterface;
@@ -23,6 +26,8 @@ use Nene2\Http\RuntimeApplicationFactory;
 use Nene2\Log\MonologLoggerFactory;
 use Nene2\Log\RequestIdHolder;
 use NeneServe\ApplicationServiceProvider;
+use NeneServe\Tenant\Auth\AdminAuthMiddleware;
+use NeneServe\Tenant\Auth\CapabilityMiddleware;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
@@ -188,6 +193,71 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                 },
             )
             ->set(
+                LocalBearerTokenVerifier::class,
+                static function (ContainerInterface $container): LocalBearerTokenVerifier {
+                    $config = $container->get(AppConfig::class);
+
+                    if (!$config instanceof AppConfig) {
+                        throw new LogicException('Application config service is invalid.');
+                    }
+
+                    return new LocalBearerTokenVerifier($config->localJwtSecret ?? 'nene-serve-dev-secret');
+                },
+            )
+            ->set(
+                TokenVerifierInterface::class,
+                static function (ContainerInterface $container): TokenVerifierInterface {
+                    $verifier = $container->get(LocalBearerTokenVerifier::class);
+
+                    if (!$verifier instanceof TokenVerifierInterface) {
+                        throw new LogicException('LocalBearerTokenVerifier service is invalid.');
+                    }
+
+                    return $verifier;
+                },
+            )
+            ->set(
+                TokenIssuerInterface::class,
+                static function (ContainerInterface $container): TokenIssuerInterface {
+                    $issuer = $container->get(LocalBearerTokenVerifier::class);
+
+                    if (!$issuer instanceof TokenIssuerInterface) {
+                        throw new LogicException('LocalBearerTokenVerifier service is invalid.');
+                    }
+
+                    return $issuer;
+                },
+            )
+            ->set(
+                AdminAuthMiddleware::class,
+                static function (ContainerInterface $container): AdminAuthMiddleware {
+                    $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
+                    $verifier = $container->get(TokenVerifierInterface::class);
+
+                    if (!$problemDetails instanceof ProblemDetailsResponseFactory) {
+                        throw new LogicException('Problem details response factory service is invalid.');
+                    }
+
+                    if (!$verifier instanceof TokenVerifierInterface) {
+                        throw new LogicException('Token verifier service is invalid.');
+                    }
+
+                    return new AdminAuthMiddleware($problemDetails, $verifier);
+                },
+            )
+            ->set(
+                CapabilityMiddleware::class,
+                static function (ContainerInterface $container): CapabilityMiddleware {
+                    $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
+
+                    if (!$problemDetails instanceof ProblemDetailsResponseFactory) {
+                        throw new LogicException('Problem details response factory service is invalid.');
+                    }
+
+                    return new CapabilityMiddleware($problemDetails);
+                },
+            )
+            ->set(
                 RuntimeApplicationFactory::class,
                 static function (ContainerInterface $container): RuntimeApplicationFactory {
                     $responseFactory = $container->get(ResponseFactoryInterface::class);
@@ -195,6 +265,8 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                     $logger = $container->get(LoggerInterface::class);
                     $config = $container->get(AppConfig::class);
                     $requestIdHolder = $container->get(RequestIdHolder::class);
+                    $adminAuth = $container->get(AdminAuthMiddleware::class);
+                    $capability = $container->get(CapabilityMiddleware::class);
                     $exceptionHandlers = $container->get(ApplicationServiceProvider::EXCEPTION_HANDLERS);
                     $routeRegistrars = $container->get(ApplicationServiceProvider::ROUTE_REGISTRARS);
 
@@ -218,6 +290,14 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                         throw new LogicException('RequestIdHolder service is invalid.');
                     }
 
+                    if (!$adminAuth instanceof AdminAuthMiddleware) {
+                        throw new LogicException('Admin auth middleware service is invalid.');
+                    }
+
+                    if (!$capability instanceof CapabilityMiddleware) {
+                        throw new LogicException('Capability middleware service is invalid.');
+                    }
+
                     if (!is_array($exceptionHandlers) || !array_is_list($exceptionHandlers)) {
                         throw new LogicException('Exception handlers service is invalid.');
                     }
@@ -237,6 +317,7 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                         domainExceptionHandlers: $exceptionHandlers,
                         requestIdHolder: $requestIdHolder,
                         routeRegistrars: $routeRegistrars,
+                        authMiddleware: [$adminAuth, $capability],
                         debug: $config->debug,
                         requestMaxBodyBytes: 10 * 1024 * 1024,
                         problemDetailsBaseUrl: $config->problemDetailsBaseUrl,
