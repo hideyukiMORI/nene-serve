@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace NeneServe\Tests\Api;
 
-use NeneServe\Http\Kernel;
-use NeneServe\Http\Router;
+use Nene2\Routing\Router;
+use NeneServe\ApplicationServiceProvider;
+use NeneServe\Http\RuntimeContainerFactory;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
 
@@ -14,8 +15,8 @@ use ReflectionProperty;
  * surfaces (ADR 0018). This test keeps the contract from drifting away from the
  * implementation: it asserts the three specs are well-formed OpenAPI 3.1 and that
  * the set of documented {method, path} pairs is EXACTLY the set of routes the
- * Kernel actually registers — every documented operation is routed, and every
- * route is documented.
+ * NENE2 runtime actually registers — every documented operation is routed, and
+ * every route is documented.
  */
 final class OpenApiContractTest extends TestCase
 {
@@ -36,43 +37,33 @@ final class OpenApiContractTest extends TestCase
         return $decoded;
     }
 
-    /**
-     * Replicate Router::add() exactly so a documented path produces the same
-     * regex string the live router stores for it.
-     */
-    private function toRouteRegex(string $pattern): string
-    {
-        $regex = preg_replace_callback(
-            '#\{([a-z_]+)\}#',
-            static fn (array $m): string => '(?P<' . $m[1] . '>[^/]+)',
-            $pattern,
-        );
-
-        return '#^' . $regex . '$#';
-    }
-
-    /** @return list<string> "METHOD <regex>" for every route the Kernel registers. */
+    /** @return list<string> "METHOD /path/{param}" for every route the NENE2 runtime registers. */
     private function registeredRoutes(): array
     {
-        $kernel = new Kernel();
-        $routerProp = new ReflectionProperty(Kernel::class, 'router');
-        $router = $routerProp->getValue($kernel);
-        self::assertInstanceOf(Router::class, $router);
+        $container = (new RuntimeContainerFactory(dirname(__DIR__, 2)))->create();
+        $registrars = $container->get(ApplicationServiceProvider::ROUTE_REGISTRARS);
+        self::assertIsArray($registrars);
+
+        $router = new Router();
+        foreach ($registrars as $registrar) {
+            self::assertIsCallable($registrar);
+            $registrar($router);
+        }
 
         $routesProp = new ReflectionProperty(Router::class, 'routes');
-        /** @var list<array{method: string, regex: string}> $routes */
+        /** @var list<array{method: string, path: string}> $routes */
         $routes = $routesProp->getValue($router);
 
         $out = [];
         foreach ($routes as $route) {
-            $out[] = $route['method'] . ' ' . $route['regex'];
+            $out[] = $route['method'] . ' ' . $route['path'];
         }
         sort($out);
 
         return $out;
     }
 
-    /** @return list<string> "METHOD <regex>" for every documented operation across all specs. */
+    /** @return list<string> "METHOD /path/{param}" for every documented operation across all specs. */
     private function documentedRoutes(): array
     {
         $out = [];
@@ -81,7 +72,7 @@ final class OpenApiContractTest extends TestCase
             $paths = $this->spec($name)['paths'];
             foreach ($paths as $pattern => $operations) {
                 foreach (array_keys($operations) as $method) {
-                    $out[] = strtoupper((string) $method) . ' ' . $this->toRouteRegex((string) $pattern);
+                    $out[] = strtoupper((string) $method) . ' ' . (string) $pattern;
                 }
             }
         }
@@ -140,19 +131,19 @@ final class OpenApiContractTest extends TestCase
         }
     }
 
-    public function testEveryDocumentedOperationIsRoutedByTheKernel(): void
+    public function testEveryDocumentedOperationIsRouted(): void
     {
         $registered = $this->registeredRoutes();
         foreach ($this->documentedRoutes() as $documented) {
             self::assertContains(
                 $documented,
                 $registered,
-                "Documented operation is not routed by the Kernel: $documented",
+                "Documented operation is not routed: $documented",
             );
         }
     }
 
-    public function testEveryKernelRouteIsDocumented(): void
+    public function testEveryRegisteredRouteIsDocumented(): void
     {
         $documented = $this->documentedRoutes();
         foreach ($this->registeredRoutes() as $registered) {
