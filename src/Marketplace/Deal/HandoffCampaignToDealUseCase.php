@@ -6,14 +6,15 @@ namespace NeneServe\Marketplace\Deal;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\PdoAuditLog;
+use NeneServe\Marketplace\AdvertiserRepositoryInterface;
+use NeneServe\Marketplace\CampaignRepositoryInterface;
 use NeneServe\Marketplace\DealOpportunity;
-use NeneServe\Marketplace\PdoAdvertiserRepository;
-use NeneServe\Marketplace\PdoCampaignRepository;
+use NeneServe\Marketplace\DealOpportunityRepositoryInterface;
 use NeneServe\Marketplace\PdoDealOpportunityRepository;
 use NeneServe\Marketplace\UseCase\CampaignNotFoundException;
 use NeneServe\Marketplace\UseCase\DealHandoffFailedException;
-use NeneServe\Tenant\AuthContext;
 use NeneServe\Upstream\Deal\DealClientException;
 use NeneServe\Upstream\Deal\DealClientInterface;
 
@@ -25,35 +26,43 @@ use NeneServe\Upstream\Deal\DealClientInterface;
  */
 final readonly class HandoffCampaignToDealUseCase implements HandoffCampaignToDealUseCaseInterface
 {
+    /**
+     * @param RequestScopedHolder<string> $organizationId
+     */
     public function __construct(
-        private DatabaseQueryExecutorInterface $query,
+        private CampaignRepositoryInterface $campaigns,
+        private AdvertiserRepositoryInterface $advertisers,
+        private DealOpportunityRepositoryInterface $opportunities,
         private DatabaseTransactionManagerInterface $transactions,
         private DealClientInterface $deal,
+        private RequestScopedHolder $organizationId,
     ) {
     }
 
-    public function execute(AuthContext $actor, string $campaignId): DealOpportunity
+    public function execute(HandoffCampaignToDealInput $input): HandoffCampaignToDealOutput
     {
-        $campaign = (new PdoCampaignRepository($this->query))->findByIdInOrganization($campaignId, $actor->organizationId);
+        $organizationId = $this->organizationId->get();
+
+        $campaign = $this->campaigns->findByIdInOrganization($input->campaignId, $organizationId);
 
         if ($campaign === null) {
             throw new CampaignNotFoundException();
         }
 
-        $externalReference = sprintf('deal:%s:%s', $actor->organizationId, $campaign->id);
+        $externalReference = sprintf('deal:%s:%s', $organizationId, $campaign->id);
 
-        $existing = (new PdoDealOpportunityRepository($this->query))->findByExternalReference($actor->organizationId, $externalReference);
+        $existing = $this->opportunities->findByExternalReference($organizationId, $externalReference);
 
         if ($existing !== null && $existing->status === 'sent') {
-            return $existing; // idempotent: no duplicate opportunity
+            return new HandoffCampaignToDealOutput($existing); // idempotent: no duplicate opportunity
         }
 
-        $advertiser = (new PdoAdvertiserRepository($this->query))->findByIdInOrganization($campaign->advertiserId, $actor->organizationId);
+        $advertiser = $this->advertisers->findByIdInOrganization($campaign->advertiserId, $organizationId);
         $advertiserName = $advertiser !== null ? $advertiser->name : $campaign->advertiserId;
 
         $pending = new DealOpportunity(
             'do-' . bin2hex(random_bytes(8)),
-            $actor->organizationId,
+            $organizationId,
             $campaign->id,
             $externalReference,
             $campaign->budgetCents,
@@ -67,11 +76,11 @@ final readonly class HandoffCampaignToDealUseCase implements HandoffCampaignToDe
         } catch (DealClientException $e) {
             $failed = $pending->withResult('failed', null);
             $this->transactions->transactional(
-                static function (DatabaseQueryExecutorInterface $tx) use ($failed, $actor): void {
+                static function (DatabaseQueryExecutorInterface $tx) use ($failed, $input, $organizationId): void {
                     (new PdoDealOpportunityRepository($tx))->save($failed);
                     (new PdoAuditLog($tx))->record(
-                        $actor->organizationId,
-                        $actor->userId,
+                        $organizationId,
+                        $input->actorUserId,
                         'deal.opportunity_failed',
                         'campaign',
                         $failed->campaignId,
@@ -85,12 +94,12 @@ final readonly class HandoffCampaignToDealUseCase implements HandoffCampaignToDe
 
         $sent = $pending->withResult('sent', $result->opportunityId);
 
-        return $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($sent, $actor): DealOpportunity {
+        $stored = $this->transactions->transactional(
+            static function (DatabaseQueryExecutorInterface $tx) use ($sent, $input, $organizationId): DealOpportunity {
                 (new PdoDealOpportunityRepository($tx))->save($sent);
                 (new PdoAuditLog($tx))->record(
-                    $actor->organizationId,
-                    $actor->userId,
+                    $organizationId,
+                    $input->actorUserId,
                     'deal.opportunity_sent',
                     'campaign',
                     $sent->campaignId,
@@ -100,5 +109,7 @@ final readonly class HandoffCampaignToDealUseCase implements HandoffCampaignToDe
                 return $sent;
             },
         );
+
+        return new HandoffCampaignToDealOutput($stored);
     }
 }

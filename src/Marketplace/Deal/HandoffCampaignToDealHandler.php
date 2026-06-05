@@ -36,7 +36,7 @@ final readonly class HandoffCampaignToDealHandler
         $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
         $id = is_array($parameters) && is_string($parameters['id'] ?? null) ? $parameters['id'] : '';
 
-        $opportunity = $this->handoff->execute($context, $id);
+        $opportunity = $this->handoff->execute(new HandoffCampaignToDealInput($context->userId, $id))->opportunity;
 
         return $this->response->create($opportunity->toArray());
     }

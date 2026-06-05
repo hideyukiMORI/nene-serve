@@ -11,6 +11,12 @@ use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
+use Nene2\Http\RequestScopedHolder;
+use NeneServe\Http\RuntimeServiceProvider;
+use NeneServe\Marketplace\AdvertiserRepositoryInterface;
+use NeneServe\Marketplace\CampaignRepositoryInterface;
+use NeneServe\Marketplace\DealOpportunityRepositoryInterface;
+use NeneServe\Marketplace\PdoDealOpportunityRepository;
 use NeneServe\Upstream\Deal\DealClientInterface;
 use Psr\Container\ContainerInterface;
 
@@ -26,14 +32,37 @@ final readonly class DealServiceProvider implements ServiceProviderInterface
     {
         $builder
             ->set(
-                HandoffCampaignToDealUseCaseInterface::class,
-                static function (ContainerInterface $c): HandoffCampaignToDealUseCaseInterface {
+                DealOpportunityRepositoryInterface::class,
+                static function (ContainerInterface $c): DealOpportunityRepositoryInterface {
                     $query = $c->get(DatabaseQueryExecutorInterface::class);
-                    $transactions = $c->get(DatabaseTransactionManagerInterface::class);
-                    $deal = $c->get(DealClientInterface::class);
 
                     if (!$query instanceof DatabaseQueryExecutorInterface) {
                         throw new LogicException('Database query executor service is invalid.');
+                    }
+
+                    return new PdoDealOpportunityRepository($query);
+                },
+            )
+            ->set(
+                HandoffCampaignToDealUseCaseInterface::class,
+                static function (ContainerInterface $c): HandoffCampaignToDealUseCaseInterface {
+                    $campaigns = $c->get(CampaignRepositoryInterface::class);
+                    $advertisers = $c->get(AdvertiserRepositoryInterface::class);
+                    $opportunities = $c->get(DealOpportunityRepositoryInterface::class);
+                    $transactions = $c->get(DatabaseTransactionManagerInterface::class);
+                    $deal = $c->get(DealClientInterface::class);
+                    $organizationId = $c->get(RuntimeServiceProvider::ORG_ID_HOLDER);
+
+                    if (!$campaigns instanceof CampaignRepositoryInterface) {
+                        throw new LogicException('Campaign repository service is invalid.');
+                    }
+
+                    if (!$advertisers instanceof AdvertiserRepositoryInterface) {
+                        throw new LogicException('Advertiser repository service is invalid.');
+                    }
+
+                    if (!$opportunities instanceof DealOpportunityRepositoryInterface) {
+                        throw new LogicException('Deal opportunity repository service is invalid.');
                     }
 
                     if (!$transactions instanceof DatabaseTransactionManagerInterface) {
@@ -44,7 +73,11 @@ final readonly class DealServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Deal client service is invalid.');
                     }
 
-                    return new HandoffCampaignToDealUseCase($query, $transactions, $deal);
+                    if (!$organizationId instanceof RequestScopedHolder) {
+                        throw new LogicException('Organization id holder service is invalid.');
+                    }
+
+                    return new HandoffCampaignToDealUseCase($campaigns, $advertisers, $opportunities, $transactions, $deal, $organizationId);
                 },
             )
             ->set(
