@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace NeneServe\Tests\Settings;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use NeneServe\Settings\GetSmtpSettingsHandler;
+use NeneServe\Settings\GetSmtpSettingsOutput;
+use NeneServe\Settings\GetSmtpSettingsUseCaseInterface;
 use NeneServe\Settings\SmtpSettingsRecord;
-use NeneServe\Settings\SmtpSettingsRepositoryInterface;
-use NeneServe\Tenant\Auth\AdminAuthMiddleware;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -20,7 +19,7 @@ final class GetSmtpSettingsHandlerTest extends TestCase
     {
         $record = new SmtpSettingsRecord('org-acme', 'mail.acme.test', 587, 'mailer', 'cipher', 'no-reply@acme.test', 'Acme', 'starttls');
 
-        $response = $this->handle($this->repositoryReturning($record), ['org' => 'org-acme', 'role' => 'org_admin', 'sub' => 'u-1']);
+        $response = $this->handle($this->useCaseReturning($record));
 
         self::assertSame(200, $response->getStatusCode());
 
@@ -35,7 +34,7 @@ final class GetSmtpSettingsHandlerTest extends TestCase
 
     public function testReturnsUnconfiguredDefaultsWhenAbsent(): void
     {
-        $response = $this->handle($this->repositoryReturning(null), ['org' => 'org-acme', 'role' => 'org_admin', 'sub' => 'u-1']);
+        $response = $this->handle($this->useCaseReturning(null));
 
         self::assertSame(200, $response->getStatusCode());
 
@@ -44,38 +43,24 @@ final class GetSmtpSettingsHandlerTest extends TestCase
         self::assertFalse($body['configured']);
     }
 
-    /**
-     * @param array<string, mixed> $claims
-     */
-    private function handle(SmtpSettingsRepositoryInterface $settings, array $claims): ResponseInterface
+    private function handle(GetSmtpSettingsUseCaseInterface $useCase): ResponseInterface
     {
         $psr17 = new Psr17Factory();
-        $handler = new GetSmtpSettingsHandler(
-            $settings,
-            new JsonResponseFactory($psr17, $psr17),
-            new ProblemDetailsResponseFactory($psr17, $psr17),
-        );
+        $handler = new GetSmtpSettingsHandler($useCase, new JsonResponseFactory($psr17, $psr17));
 
-        $request = $psr17->createServerRequest('GET', '/admin/settings/smtp')
-            ->withAttribute(AdminAuthMiddleware::CLAIMS_ATTRIBUTE, $claims);
-
-        return $handler->handle($request);
+        return $handler->handle($psr17->createServerRequest('GET', '/admin/settings/smtp'));
     }
 
-    private function repositoryReturning(?SmtpSettingsRecord $record): SmtpSettingsRepositoryInterface
+    private function useCaseReturning(?SmtpSettingsRecord $record): GetSmtpSettingsUseCaseInterface
     {
-        return new class ($record) implements SmtpSettingsRepositoryInterface {
+        return new class ($record) implements GetSmtpSettingsUseCaseInterface {
             public function __construct(private readonly ?SmtpSettingsRecord $record)
             {
             }
 
-            public function find(string $organizationId): ?SmtpSettingsRecord
+            public function execute(): GetSmtpSettingsOutput
             {
-                return $this->record;
-            }
-
-            public function save(SmtpSettingsRecord $record): void
-            {
+                return new GetSmtpSettingsOutput($this->record);
             }
         };
     }

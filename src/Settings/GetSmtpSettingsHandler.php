@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace NeneServe\Settings;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
-use NeneServe\Tenant\Auth\AuthContextResolver;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -18,21 +16,14 @@ use Psr\Http\Message\ServerRequestInterface;
 final readonly class GetSmtpSettingsHandler
 {
     public function __construct(
-        private SmtpSettingsRepositoryInterface $settings,
+        private GetSmtpSettingsUseCaseInterface $useCase,
         private JsonResponseFactory $response,
-        private ProblemDetailsResponseFactory $problemDetails,
     ) {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $context = AuthContextResolver::fromRequest($request);
-
-        if ($context === null) {
-            return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
-        }
-
-        $record = $this->settings->find($context->organizationId);
+        $record = $this->useCase->execute()->record;
 
         if ($record === null) {
             return $this->response->create([

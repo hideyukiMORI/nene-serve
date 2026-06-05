@@ -10,7 +10,9 @@ use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
+use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\AuditLogInterface;
+use NeneServe\Http\RuntimeServiceProvider;
 use NeneServe\Mail\MailerFactoryInterface;
 use NeneServe\Support\Crypto;
 use NeneServe\Tenant\UserRepositoryInterface;
@@ -36,25 +38,37 @@ final readonly class SettingsServiceProvider implements ServiceProviderInterface
                 },
             )
             ->set(
-                GetSmtpSettingsHandler::class,
-                static function (ContainerInterface $container): GetSmtpSettingsHandler {
+                GetSmtpSettingsUseCaseInterface::class,
+                static function (ContainerInterface $container): GetSmtpSettingsUseCaseInterface {
                     $settings = $container->get(SmtpSettingsRepositoryInterface::class);
-                    $response = $container->get(JsonResponseFactory::class);
-                    $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
+                    $organizationId = $container->get(RuntimeServiceProvider::ORG_ID_HOLDER);
 
                     if (!$settings instanceof SmtpSettingsRepositoryInterface) {
                         throw new LogicException('SMTP settings repository service is invalid.');
+                    }
+
+                    if (!$organizationId instanceof RequestScopedHolder) {
+                        throw new LogicException('Organization id holder service is invalid.');
+                    }
+
+                    return new GetSmtpSettingsUseCase($settings, $organizationId);
+                },
+            )
+            ->set(
+                GetSmtpSettingsHandler::class,
+                static function (ContainerInterface $container): GetSmtpSettingsHandler {
+                    $useCase = $container->get(GetSmtpSettingsUseCaseInterface::class);
+                    $response = $container->get(JsonResponseFactory::class);
+
+                    if (!$useCase instanceof GetSmtpSettingsUseCaseInterface) {
+                        throw new LogicException('Get SMTP settings use case service is invalid.');
                     }
 
                     if (!$response instanceof JsonResponseFactory) {
                         throw new LogicException('JSON response factory service is invalid.');
                     }
 
-                    if (!$problemDetails instanceof ProblemDetailsResponseFactory) {
-                        throw new LogicException('Problem details response factory service is invalid.');
-                    }
-
-                    return new GetSmtpSettingsHandler($settings, $response, $problemDetails);
+                    return new GetSmtpSettingsHandler($useCase, $response);
                 },
             )
             ->set(
