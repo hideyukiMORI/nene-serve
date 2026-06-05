@@ -58,6 +58,10 @@ final class CapabilityResolver
             return Capability::ManageCreatives;
         }
 
+        if (str_starts_with($path, '/admin/assets') || str_starts_with($path, '/admin/records-assets')) {
+            return Capability::ManageCreatives;
+        }
+
         if (
             str_starts_with($path, '/admin/advertisers')
             || str_starts_with($path, '/admin/pricing-rules')

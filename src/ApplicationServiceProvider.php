@@ -8,6 +8,10 @@ use LogicException;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\DomainExceptionHandlerInterface;
+use NeneServe\Assets\Admin\AssetsRouteRegistrar;
+use NeneServe\Assets\Admin\AssetsServiceProvider;
+use NeneServe\Assets\Admin\AssetValidationExceptionHandler;
+use NeneServe\Assets\Admin\RecordsUnavailableExceptionHandler;
 use NeneServe\Auth\AuthenticationFailedExceptionHandler;
 use NeneServe\Auth\AuthRouteRegistrar;
 use NeneServe\Auth\AuthServiceProvider;
@@ -87,7 +91,8 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
             ->addProvider(new LegalHoldsServiceProvider())
             ->addProvider(new DsrServiceProvider())
             ->addProvider(new BillingServiceProvider())
-            ->addProvider(new DealServiceProvider());
+            ->addProvider(new DealServiceProvider())
+            ->addProvider(new AssetsServiceProvider());
 
         $builder
             ->set(
@@ -108,6 +113,7 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                     $dsr = $container->get(DsrServiceProvider::ROUTE_REGISTRAR);
                     $billing = $container->get(BillingServiceProvider::ROUTE_REGISTRAR);
                     $deal = $container->get(DealServiceProvider::ROUTE_REGISTRAR);
+                    $assets = $container->get(AssetsServiceProvider::ROUTE_REGISTRAR);
 
                     if (!$health instanceof HealthRouteRegistrar) {
                         throw new LogicException('Health route registrar service is invalid.');
@@ -169,8 +175,12 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Deal route registrar service is invalid.');
                     }
 
+                    if (!$assets instanceof AssetsRouteRegistrar) {
+                        throw new LogicException('Assets route registrar service is invalid.');
+                    }
+
                     /** @var list<callable(\Nene2\Routing\Router): void> $registrars */
-                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements, $creatives, $creativeReview, $marketplace, $invitations, $legalHolds, $dsr, $billing, $deal];
+                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements, $creatives, $creativeReview, $marketplace, $invitations, $legalHolds, $dsr, $billing, $deal, $assets];
 
                     return $registrars;
                 },
@@ -269,6 +279,17 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Deal handoff failed exception handler service is invalid.');
                     }
 
+                    $assetValidation = $container->get(AssetsServiceProvider::EXCEPTION_HANDLER_VALIDATION);
+                    $recordsUnavailable = $container->get(AssetsServiceProvider::EXCEPTION_HANDLER_RECORDS);
+
+                    if (!$assetValidation instanceof AssetValidationExceptionHandler) {
+                        throw new LogicException('Asset validation exception handler service is invalid.');
+                    }
+
+                    if (!$recordsUnavailable instanceof RecordsUnavailableExceptionHandler) {
+                        throw new LogicException('Records unavailable exception handler service is invalid.');
+                    }
+
                     /** @var list<DomainExceptionHandlerInterface> $handlers */
                     $handlers = [
                         $authenticationFailed,
@@ -288,6 +309,8 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         $invoiceHandoffFailed,
                         $dealCampaignNotFound,
                         $dealHandoffFailed,
+                        $assetValidation,
+                        $recordsUnavailable,
                     ];
 
                     return $handlers;

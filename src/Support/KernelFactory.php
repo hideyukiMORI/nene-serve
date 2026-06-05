@@ -130,7 +130,7 @@ final class KernelFactory
             changePlans: new PdoChangePlanRepository($pdo),
             smtpSettings: new PdoSmtpSettingsRepository($query),
             invitations: new PdoInvitationRepository($query),
-            assets: new PdoAssetRepository($pdo),
+            assets: new PdoAssetRepository($query),
             storage: new LocalStorage($storageDir . '/uploads'),
             scanner: self::scanner($read),
         );

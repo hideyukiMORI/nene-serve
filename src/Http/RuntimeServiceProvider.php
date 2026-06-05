@@ -38,12 +38,17 @@ use NeneServe\Measurement\PdoEventStore;
 use NeneServe\Serving\Scan\BundleScannerInterface;
 use NeneServe\Serving\Scan\ClamAvScanner;
 use NeneServe\Serving\Scan\StubBundleScanner;
+use NeneServe\Storage\LocalStorage;
+use NeneServe\Storage\StorageInterface;
 use NeneServe\Support\Crypto;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
 use NeneServe\Tenant\Auth\CapabilityMiddleware;
 use NeneServe\Upstream\Deal\DealClientInterface;
 use NeneServe\Upstream\Deal\FakeDealClient;
 use NeneServe\Upstream\Deal\HttpDealClient;
+use NeneServe\Upstream\Records\FakeRecordsClient;
+use NeneServe\Upstream\Records\HttpRecordsClient;
+use NeneServe\Upstream\Records\RecordsClientInterface;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
@@ -191,6 +196,31 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                     }
 
                     return new FakeInvoiceClient();
+                },
+            )
+            ->set(
+                RecordsClientInterface::class,
+                static function (ContainerInterface $container): RecordsClientInterface {
+                    $base = getenv('NENE_RECORDS_API_BASE_URL');
+                    $token = getenv('NENE_RECORDS_SERVICE_TOKEN');
+
+                    if (is_string($base) && $base !== '' && is_string($token) && $token !== '') {
+                        return new HttpRecordsClient($base, $token);
+                    }
+
+                    return new FakeRecordsClient();
+                },
+            )
+            ->set(
+                StorageInterface::class,
+                static function (ContainerInterface $container): StorageInterface {
+                    $projectRoot = $container->get(self::PROJECT_ROOT);
+
+                    if (!is_string($projectRoot) || $projectRoot === '') {
+                        throw new LogicException('Project root service is invalid.');
+                    }
+
+                    return new LocalStorage($projectRoot . '/var/uploads');
                 },
             )
             ->set(Crypto::class, static fn (ContainerInterface $container): Crypto => new Crypto())
