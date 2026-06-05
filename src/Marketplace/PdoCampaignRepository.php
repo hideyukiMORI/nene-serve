@@ -4,53 +4,56 @@ declare(strict_types=1);
 
 namespace NeneServe\Marketplace;
 
-use PDO;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 
-final class PdoCampaignRepository implements CampaignRepositoryInterface
+final readonly class PdoCampaignRepository implements CampaignRepositoryInterface
 {
     private const COLUMNS = 'id, organization_id, advertiser_id, name, pricing_rule_id, budget_cents, status, funding_status, pause_on_budget_exhausted, archived_at';
 
     public function __construct(
-        private readonly PDO $pdo,
+        private DatabaseQueryExecutorInterface $query,
     ) {
     }
 
     public function findByIdInOrganization(string $id, string $organizationId): ?Campaign
     {
-        $stmt = $this->pdo->prepare('SELECT ' . self::COLUMNS . ' FROM campaigns WHERE id = ? AND organization_id = ? LIMIT 1');
-        $stmt->execute([$id, $organizationId]);
-        $row = $stmt->fetch();
+        $row = $this->query->fetchOne(
+            'SELECT ' . self::COLUMNS . ' FROM campaigns WHERE id = ? AND organization_id = ? LIMIT 1',
+            [$id, $organizationId],
+        );
 
-        return $row === false ? null : $this->hydrate($row);
+        return $row === null ? null : $this->hydrate($row);
     }
 
     public function listByOrganization(string $organizationId): array
     {
-        $stmt = $this->pdo->prepare('SELECT ' . self::COLUMNS . ' FROM campaigns WHERE organization_id = ? ORDER BY name');
-        $stmt->execute([$organizationId]);
+        $rows = $this->query->fetchAll(
+            'SELECT ' . self::COLUMNS . ' FROM campaigns WHERE organization_id = ? ORDER BY name',
+            [$organizationId],
+        );
 
-        return array_map($this->hydrate(...), array_values($stmt->fetchAll()));
+        return array_map($this->hydrate(...), $rows);
     }
 
     public function save(Campaign $campaign): void
     {
-        $stmt = $this->pdo->prepare(
+        $this->query->execute(
             'INSERT INTO campaigns (id, organization_id, advertiser_id, name, pricing_rule_id, budget_cents, status, funding_status, pause_on_budget_exhausted, archived_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) AS new
              ON DUPLICATE KEY UPDATE advertiser_id = new.advertiser_id, name = new.name, pricing_rule_id = new.pricing_rule_id, budget_cents = new.budget_cents, status = new.status, funding_status = new.funding_status, pause_on_budget_exhausted = new.pause_on_budget_exhausted, archived_at = new.archived_at',
+            [
+                $campaign->id,
+                $campaign->organizationId,
+                $campaign->advertiserId,
+                $campaign->name,
+                $campaign->pricingRuleId,
+                $campaign->budgetCents,
+                $campaign->status,
+                $campaign->fundingStatus->value,
+                $campaign->pauseOnBudgetExhausted ? 1 : 0,
+                $campaign->archivedAt,
+            ],
         );
-        $stmt->execute([
-            $campaign->id,
-            $campaign->organizationId,
-            $campaign->advertiserId,
-            $campaign->name,
-            $campaign->pricingRuleId,
-            $campaign->budgetCents,
-            $campaign->status,
-            $campaign->fundingStatus->value,
-            $campaign->pauseOnBudgetExhausted ? 1 : 0,
-            $campaign->archivedAt,
-        ]);
     }
 
     /** @param array<string, mixed> $row */
