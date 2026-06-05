@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace NeneServe\Upstream\Deal;
 
+use NeneServe\Support\HttpStatusLine;
+
 /**
  * Production Deal client: POSTs a net opportunity to the Deal `/api/*` surface
  * with a scoped service token + an `Idempotency-Key` of the external_reference
@@ -50,7 +52,7 @@ final class HttpDealClient implements DealClientInterface
         }
 
         /** @var list<string> $http_response_header populated by the http wrapper */
-        $status = self::statusCode($http_response_header);
+        $status = HttpStatusLine::statusCode($http_response_header);
         if ($status < 200 || $status >= 300) {
             throw new DealClientException('Deal handoff returned HTTP ' . $status . '.');
         }
@@ -67,14 +69,4 @@ final class HttpDealClient implements DealClientInterface
     }
 
     /** @param list<string> $headers */
-    private static function statusCode(array $headers): int
-    {
-        foreach ($headers as $header) {
-            if (preg_match('#^HTTP/\S+\s+(\d{3})#', $header, $m) === 1) {
-                return (int) $m[1];
-            }
-        }
-
-        return 0;
-    }
 }

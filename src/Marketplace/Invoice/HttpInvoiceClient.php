@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace NeneServe\Marketplace\Invoice;
 
+use NeneServe\Support\HttpStatusLine;
+
 /**
  * Production Invoice client (handoff contract, ADR 0002): POSTs a **net** charge
  * to the Invoice `/api/*` surface with a scoped service token and an
@@ -54,7 +56,7 @@ final class HttpInvoiceClient implements InvoiceClientInterface
         }
 
         /** @var list<string> $http_response_header populated by the http wrapper */
-        $status = self::statusCode($http_response_header);
+        $status = HttpStatusLine::statusCode($http_response_header);
         if ($status < 200 || $status >= 300) {
             throw new InvoiceClientException('Invoice handoff returned HTTP ' . $status . '.');
         }
@@ -71,14 +73,4 @@ final class HttpInvoiceClient implements InvoiceClientInterface
     }
 
     /** @param list<string> $headers */
-    private static function statusCode(array $headers): int
-    {
-        foreach ($headers as $header) {
-            if (preg_match('#^HTTP/\S+\s+(\d{3})#', $header, $m) === 1) {
-                return (int) $m[1];
-            }
-        }
-
-        return 0;
-    }
 }
