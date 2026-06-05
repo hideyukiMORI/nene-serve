@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace NeneServe\Support;
 
+use Nene2\Database\DatabaseConnectionFactoryInterface;
+use Nene2\Database\PdoDatabaseQueryExecutor;
 use NeneServe\Assets\PdoAssetRepository;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Http\Kernel;
@@ -86,9 +88,26 @@ final class KernelFactory
      */
     public static function database(PDO $pdo, string $storageDir, callable $read): Kernel
     {
+        // Repositories ported to the NENE2 query executor (Phase 2) are wired with
+        // an executor bound to this same connection so the transaction manager
+        // still wraps their writes; not-yet-ported repos keep the raw PDO.
+        $query = new PdoDatabaseQueryExecutor(
+            new class ($pdo) implements DatabaseConnectionFactoryInterface {
+                public function __construct(private readonly PDO $pdo)
+                {
+                }
+
+                public function create(): PDO
+                {
+                    return $this->pdo;
+                }
+            },
+            $pdo,
+        );
+
         return new Kernel(
-            users: new PdoUserRepository($pdo),
-            organizations: new PdoOrganizationRepository($pdo),
+            users: new PdoUserRepository($query),
+            organizations: new PdoOrganizationRepository($query),
             placements: new PdoPlacementRepository($pdo),
             creatives: new PdoCreativeRepository($pdo),
             tokens: new FileTokenStore($storageDir . '/tokens.json'),

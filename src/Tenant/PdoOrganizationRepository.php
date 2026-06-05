@@ -4,40 +4,34 @@ declare(strict_types=1);
 
 namespace NeneServe\Tenant;
 
-use PDO;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 
-final class PdoOrganizationRepository implements OrganizationRepositoryInterface
+final readonly class PdoOrganizationRepository implements OrganizationRepositoryInterface
 {
     private const COLUMNS = 'id, slug, name, default_locale, status';
 
     public function __construct(
-        private readonly PDO $pdo,
+        private DatabaseQueryExecutorInterface $query,
     ) {
     }
 
     public function findById(string $id): ?Organization
     {
-        $stmt = $this->pdo->prepare('SELECT ' . self::COLUMNS . ' FROM organizations WHERE id = ? LIMIT 1');
-        $stmt->execute([$id]);
+        $row = $this->query->fetchOne('SELECT ' . self::COLUMNS . ' FROM organizations WHERE id = ? LIMIT 1', [$id]);
 
-        return $this->hydrate($stmt->fetch());
+        return $row === null ? null : $this->hydrate($row);
     }
 
     public function findBySlug(string $slug): ?Organization
     {
-        $stmt = $this->pdo->prepare('SELECT ' . self::COLUMNS . ' FROM organizations WHERE slug = ? LIMIT 1');
-        $stmt->execute([$slug]);
+        $row = $this->query->fetchOne('SELECT ' . self::COLUMNS . ' FROM organizations WHERE slug = ? LIMIT 1', [$slug]);
 
-        return $this->hydrate($stmt->fetch());
+        return $row === null ? null : $this->hydrate($row);
     }
 
-    /** @param array<string, mixed>|false $row */
-    private function hydrate(array|false $row): ?Organization
+    /** @param array<string, mixed> $row */
+    private function hydrate(array $row): Organization
     {
-        if ($row === false) {
-            return null;
-        }
-
         return new Organization(
             (string) $row['id'],
             (string) $row['slug'],

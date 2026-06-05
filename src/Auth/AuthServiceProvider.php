@@ -6,6 +6,7 @@ namespace NeneServe\Auth;
 
 use LogicException;
 use Nene2\Auth\TokenIssuerInterface;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
@@ -14,7 +15,6 @@ use NeneServe\Tenant\OrganizationRepositoryInterface;
 use NeneServe\Tenant\PdoOrganizationRepository;
 use NeneServe\Tenant\PdoUserRepository;
 use NeneServe\Tenant\UserRepositoryInterface;
-use PDO;
 use Psr\Container\ContainerInterface;
 
 final readonly class AuthServiceProvider implements ServiceProviderInterface
@@ -29,25 +29,25 @@ final readonly class AuthServiceProvider implements ServiceProviderInterface
             ->set(
                 OrganizationRepositoryInterface::class,
                 static function (ContainerInterface $container): OrganizationRepositoryInterface {
-                    $pdo = $container->get(PDO::class);
+                    $query = $container->get(DatabaseQueryExecutorInterface::class);
 
-                    if (!$pdo instanceof PDO) {
-                        throw new LogicException('PDO service is invalid.');
+                    if (!$query instanceof DatabaseQueryExecutorInterface) {
+                        throw new LogicException('Database query executor service is invalid.');
                     }
 
-                    return new PdoOrganizationRepository($pdo);
+                    return new PdoOrganizationRepository($query);
                 },
             )
             ->set(
                 UserRepositoryInterface::class,
                 static function (ContainerInterface $container): UserRepositoryInterface {
-                    $pdo = $container->get(PDO::class);
+                    $query = $container->get(DatabaseQueryExecutorInterface::class);
 
-                    if (!$pdo instanceof PDO) {
-                        throw new LogicException('PDO service is invalid.');
+                    if (!$query instanceof DatabaseQueryExecutorInterface) {
+                        throw new LogicException('Database query executor service is invalid.');
                     }
 
-                    return new PdoUserRepository($pdo);
+                    return new PdoUserRepository($query);
                 },
             )
             ->set(
