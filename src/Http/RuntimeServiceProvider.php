@@ -26,6 +26,11 @@ use Nene2\Http\RuntimeApplicationFactory;
 use Nene2\Log\MonologLoggerFactory;
 use Nene2\Log\RequestIdHolder;
 use NeneServe\ApplicationServiceProvider;
+use NeneServe\Audit\AuditLogInterface;
+use NeneServe\Audit\PdoAuditLog;
+use NeneServe\Mail\MailerFactoryInterface;
+use NeneServe\Mail\SmtpMailerFactory;
+use NeneServe\Support\Crypto;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
 use NeneServe\Tenant\Auth\CapabilityMiddleware;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -112,6 +117,23 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
 
                     return new PdoDatabaseTransactionManager($connectionFactory);
                 },
+            )
+            ->set(
+                AuditLogInterface::class,
+                static function (ContainerInterface $container): AuditLogInterface {
+                    $query = $container->get(DatabaseQueryExecutorInterface::class);
+
+                    if (!$query instanceof DatabaseQueryExecutorInterface) {
+                        throw new LogicException('Database query executor service is invalid.');
+                    }
+
+                    return new PdoAuditLog($query);
+                },
+            )
+            ->set(Crypto::class, static fn (ContainerInterface $container): Crypto => new Crypto())
+            ->set(
+                MailerFactoryInterface::class,
+                static fn (ContainerInterface $container): MailerFactoryInterface => new SmtpMailerFactory(),
             )
             ->set(Psr17Factory::class, static fn (ContainerInterface $container): Psr17Factory => new Psr17Factory())
             ->set(
