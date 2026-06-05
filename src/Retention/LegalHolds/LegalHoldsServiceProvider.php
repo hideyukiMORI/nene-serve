@@ -11,6 +11,10 @@ use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
+use Nene2\Http\RequestScopedHolder;
+use NeneServe\Http\RuntimeServiceProvider;
+use NeneServe\Retention\LegalHoldRepositoryInterface;
+use NeneServe\Retention\PdoLegalHoldRepository;
 use Psr\Container\ContainerInterface;
 
 final readonly class LegalHoldsServiceProvider implements ServiceProviderInterface
@@ -23,20 +27,37 @@ final readonly class LegalHoldsServiceProvider implements ServiceProviderInterfa
     {
         $builder
             ->set(
-                LegalHoldUseCaseInterface::class,
-                static function (ContainerInterface $container): LegalHoldUseCaseInterface {
+                LegalHoldRepositoryInterface::class,
+                static function (ContainerInterface $container): LegalHoldRepositoryInterface {
                     $query = $container->get(DatabaseQueryExecutorInterface::class);
-                    $transactions = $container->get(DatabaseTransactionManagerInterface::class);
 
                     if (!$query instanceof DatabaseQueryExecutorInterface) {
                         throw new LogicException('Database query executor service is invalid.');
+                    }
+
+                    return new PdoLegalHoldRepository($query);
+                },
+            )
+            ->set(
+                LegalHoldUseCaseInterface::class,
+                static function (ContainerInterface $container): LegalHoldUseCaseInterface {
+                    $holds = $container->get(LegalHoldRepositoryInterface::class);
+                    $transactions = $container->get(DatabaseTransactionManagerInterface::class);
+                    $organizationId = $container->get(RuntimeServiceProvider::ORG_ID_HOLDER);
+
+                    if (!$holds instanceof LegalHoldRepositoryInterface) {
+                        throw new LogicException('Legal hold repository service is invalid.');
                     }
 
                     if (!$transactions instanceof DatabaseTransactionManagerInterface) {
                         throw new LogicException('Database transaction manager service is invalid.');
                     }
 
-                    return new LegalHoldUseCase($query, $transactions);
+                    if (!$organizationId instanceof RequestScopedHolder) {
+                        throw new LogicException('Organization id holder service is invalid.');
+                    }
+
+                    return new LegalHoldUseCase($holds, $transactions, $organizationId);
                 },
             )
             ->set(

@@ -42,7 +42,7 @@ final readonly class PlaceLegalHoldHandler
             throw new ValidationException([new ValidationError('reason', 'A reason is required.', 'required')]);
         }
 
-        $hold = $this->legalHolds->place($context, $reason);
+        $hold = $this->legalHolds->place(new PlaceLegalHoldInput($context->userId, $reason))->hold;
 
         return $this->response->create($hold->toArray(), 201);
     }

@@ -6,11 +6,12 @@ namespace NeneServe\Retention\LegalHolds;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Retention\LegalHold;
+use NeneServe\Retention\LegalHoldRepositoryInterface;
 use NeneServe\Retention\PdoLegalHoldRepository;
 use NeneServe\Retention\UseCase\LegalHoldException;
-use NeneServe\Tenant\AuthContext;
 
 /**
  * Places / releases legal holds. While any hold is active, retention purges are
@@ -19,31 +20,35 @@ use NeneServe\Tenant\AuthContext;
  */
 final readonly class LegalHoldUseCase implements LegalHoldUseCaseInterface
 {
+    /**
+     * @param RequestScopedHolder<string> $organizationId
+     */
     public function __construct(
-        private DatabaseQueryExecutorInterface $query,
+        private LegalHoldRepositoryInterface $holds,
         private DatabaseTransactionManagerInterface $transactions,
+        private RequestScopedHolder $organizationId,
     ) {
     }
 
-    public function place(AuthContext $actor, string $reason): LegalHold
+    public function place(PlaceLegalHoldInput $input): PlaceLegalHoldOutput
     {
-        if (trim($reason) === '') {
+        if (trim($input->reason) === '') {
             throw new LegalHoldException('reason is required.');
         }
 
         $hold = new LegalHold(
             'lh-' . bin2hex(random_bytes(8)),
-            $actor->organizationId,
-            trim($reason),
+            $this->organizationId->get(),
+            trim($input->reason),
             gmdate('c'),
         );
 
-        return $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($hold, $actor): LegalHold {
+        $stored = $this->transactions->transactional(
+            static function (DatabaseQueryExecutorInterface $tx) use ($hold, $input): LegalHold {
                 (new PdoLegalHoldRepository($tx))->save($hold);
                 (new PdoAuditLog($tx))->record(
-                    $actor->organizationId,
-                    $actor->userId,
+                    $hold->organizationId,
+                    $input->actorUserId,
                     'legal_hold.placed',
                     'legal_hold',
                     $hold->id,
@@ -53,11 +58,13 @@ final readonly class LegalHoldUseCase implements LegalHoldUseCaseInterface
                 return $hold;
             },
         );
+
+        return new PlaceLegalHoldOutput($stored);
     }
 
-    public function release(AuthContext $actor, string $holdId): LegalHold
+    public function release(ReleaseLegalHoldInput $input): ReleaseLegalHoldOutput
     {
-        $hold = (new PdoLegalHoldRepository($this->query))->findByIdInOrganization($holdId, $actor->organizationId);
+        $hold = $this->holds->findByIdInOrganization($input->holdId, $this->organizationId->get());
 
         if ($hold === null) {
             throw new LegalHoldException('Unknown legal hold.');
@@ -69,12 +76,12 @@ final readonly class LegalHoldUseCase implements LegalHoldUseCaseInterface
 
         $released = $hold->release(gmdate('c'));
 
-        return $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($released, $actor): LegalHold {
+        $stored = $this->transactions->transactional(
+            static function (DatabaseQueryExecutorInterface $tx) use ($released, $input): LegalHold {
                 (new PdoLegalHoldRepository($tx))->save($released);
                 (new PdoAuditLog($tx))->record(
-                    $actor->organizationId,
-                    $actor->userId,
+                    $released->organizationId,
+                    $input->actorUserId,
                     'legal_hold.released',
                     'legal_hold',
                     $released->id,
@@ -84,5 +91,7 @@ final readonly class LegalHoldUseCase implements LegalHoldUseCaseInterface
                 return $released;
             },
         );
+
+        return new ReleaseLegalHoldOutput($stored);
     }
 }

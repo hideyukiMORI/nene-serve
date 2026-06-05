@@ -35,7 +35,7 @@ final readonly class ReleaseLegalHoldHandler
         $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
         $id = is_array($parameters) && is_string($parameters['id'] ?? null) ? $parameters['id'] : '';
 
-        $hold = $this->legalHolds->release($context, $id);
+        $hold = $this->legalHolds->release(new ReleaseLegalHoldInput($context->userId, $id))->hold;
 
         return $this->response->create($hold->toArray());
     }

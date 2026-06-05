@@ -10,8 +10,11 @@ use Nene2\Validation\ValidationException;
 use NeneServe\Retention\LegalHold;
 use NeneServe\Retention\LegalHolds\LegalHoldUseCaseInterface;
 use NeneServe\Retention\LegalHolds\PlaceLegalHoldHandler;
+use NeneServe\Retention\LegalHolds\PlaceLegalHoldInput;
+use NeneServe\Retention\LegalHolds\PlaceLegalHoldOutput;
+use NeneServe\Retention\LegalHolds\ReleaseLegalHoldInput;
+use NeneServe\Retention\LegalHolds\ReleaseLegalHoldOutput;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
-use NeneServe\Tenant\AuthContext;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -52,12 +55,12 @@ final class LegalHoldsHandlerTest extends TestCase
     private function useCase(): LegalHoldUseCaseInterface
     {
         return new class () implements LegalHoldUseCaseInterface {
-            public function place(AuthContext $actor, string $reason): LegalHold
+            public function place(PlaceLegalHoldInput $input): PlaceLegalHoldOutput
             {
-                return new LegalHold('lh-1', $actor->organizationId, $reason, gmdate('c'));
+                return new PlaceLegalHoldOutput(new LegalHold('lh-1', 'org-acme', $input->reason, gmdate('c')));
             }
 
-            public function release(AuthContext $actor, string $holdId): LegalHold
+            public function release(ReleaseLegalHoldInput $input): ReleaseLegalHoldOutput
             {
                 throw new \LogicException('not used');
             }
