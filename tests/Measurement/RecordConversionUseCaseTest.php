@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace NeneServe\Tests\Measurement;
 
 use NeneServe\Measurement\InMemoryEventStore;
-use NeneServe\Measurement\UseCase\RecordConversionUseCase;
 use NeneServe\Serving\InMemoryPlacementRepository;
 use NeneServe\Serving\Placement;
+use NeneServe\Serving\PublicApi\RecordConversionUseCase;
 use NeneServe\Serving\UseCase\PlacementNotFoundException;
 use PHPUnit\Framework\TestCase;
 

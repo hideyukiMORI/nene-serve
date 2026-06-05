@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\PublicApi;
 
-use Nene2\Database\DatabaseQueryExecutorInterface;
 use NeneServe\Measurement\ConversionEvent;
 use NeneServe\Measurement\EventStoreInterface;
-use NeneServe\Serving\PdoPlacementRepository;
+use NeneServe\Serving\PlacementRepositoryInterface;
 use NeneServe\Serving\UseCase\PlacementNotFoundException;
 use NeneServe\Support\Id;
 
@@ -19,14 +18,14 @@ use NeneServe\Support\Id;
 final readonly class RecordConversionUseCase implements RecordConversionUseCaseInterface
 {
     public function __construct(
-        private DatabaseQueryExecutorInterface $query,
+        private PlacementRepositoryInterface $placements,
         private EventStoreInterface $events,
     ) {
     }
 
     public function execute(string $publicPlacementKey, ?string $creativeId = null, ?string $countryCode = null): void
     {
-        $placement = (new PdoPlacementRepository($this->query))->findByPublicKey($publicPlacementKey);
+        $placement = $this->placements->findByPublicKey($publicPlacementKey);
 
         if ($placement === null) {
             throw new PlacementNotFoundException();

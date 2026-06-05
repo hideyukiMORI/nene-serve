@@ -6,9 +6,12 @@ namespace NeneServe\Serving\PublicApi;
 
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
+use NeneServe\Marketplace\CampaignRepositoryInterface;
 use NeneServe\Marketplace\UseCase\GetCampaignSpendUseCase;
 use NeneServe\Measurement\EventStoreInterface;
+use NeneServe\Serving\CreativeRepositoryInterface;
 use NeneServe\Serving\Frequency\FrequencyCapStoreInterface;
+use NeneServe\Serving\PlacementRepositoryInterface;
 use NeneServe\Serving\Token\TokenStoreInterface;
 use NeneServe\Storage\StorageInterface;
 use NeneServe\Support\ServiceProviderHelpers;
@@ -31,7 +34,9 @@ final readonly class PublicServiceProvider implements ServiceProviderInterface
             ->set(
                 ServeCreativeUseCaseInterface::class,
                 static fn (ContainerInterface $c): ServeCreativeUseCaseInterface => new ServeCreativeUseCase(
-                    self::query($c),
+                    self::service($c, PlacementRepositoryInterface::class),
+                    self::service($c, CreativeRepositoryInterface::class),
+                    self::service($c, CampaignRepositoryInterface::class),
                     self::service($c, TokenStoreInterface::class),
                     self::service($c, FrequencyCapStoreInterface::class),
                     self::service($c, EventStoreInterface::class),
@@ -42,7 +47,7 @@ final readonly class PublicServiceProvider implements ServiceProviderInterface
             ->set(
                 RecordImpressionUseCaseInterface::class,
                 static fn (ContainerInterface $c): RecordImpressionUseCaseInterface => new RecordImpressionUseCase(
-                    self::query($c),
+                    self::service($c, PlacementRepositoryInterface::class),
                     self::service($c, TokenStoreInterface::class),
                     self::service($c, EventStoreInterface::class),
                     self::service($c, FrequencyCapStoreInterface::class),
@@ -51,7 +56,7 @@ final readonly class PublicServiceProvider implements ServiceProviderInterface
             ->set(
                 RecordClickUseCaseInterface::class,
                 static fn (ContainerInterface $c): RecordClickUseCaseInterface => new RecordClickUseCase(
-                    self::query($c),
+                    self::service($c, PlacementRepositoryInterface::class),
                     self::service($c, TokenStoreInterface::class),
                     self::service($c, EventStoreInterface::class),
                 ),
@@ -59,7 +64,7 @@ final readonly class PublicServiceProvider implements ServiceProviderInterface
             ->set(
                 RecordConversionUseCaseInterface::class,
                 static fn (ContainerInterface $c): RecordConversionUseCaseInterface => new RecordConversionUseCase(
-                    self::query($c),
+                    self::service($c, PlacementRepositoryInterface::class),
                     self::service($c, EventStoreInterface::class),
                 ),
             )

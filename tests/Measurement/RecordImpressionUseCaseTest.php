@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace NeneServe\Tests\Measurement;
 
 use NeneServe\Measurement\InMemoryEventStore;
-use NeneServe\Measurement\UseCase\RecordImpressionUseCase;
 use NeneServe\Measurement\VisitorBucket;
 use NeneServe\Serving\Frequency\FileFrequencyCapStore;
 use NeneServe\Serving\InMemoryPlacementRepository;
 use NeneServe\Serving\Placement;
+use NeneServe\Serving\PublicApi\RecordImpressionUseCase;
 use NeneServe\Serving\Token\FileTokenStore;
 use PHPUnit\Framework\TestCase;
 
@@ -52,9 +52,9 @@ final class RecordImpressionUseCaseTest extends TestCase
     private function useCase(Placement $placement): RecordImpressionUseCase
     {
         return new RecordImpressionUseCase(
+            new InMemoryPlacementRepository([$placement]),
             $this->tokens,
             $this->events,
-            new InMemoryPlacementRepository([$placement]),
             $this->frequencyCaps,
         );
     }

@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\PublicApi;
 
-use Nene2\Database\DatabaseQueryExecutorInterface;
 use NeneServe\Measurement\ClickEvent;
 use NeneServe\Measurement\EventStoreInterface;
-use NeneServe\Serving\PdoPlacementRepository;
+use NeneServe\Serving\PlacementRepositoryInterface;
 use NeneServe\Serving\Token\ClickRedirect;
 use NeneServe\Serving\Token\TokenStoreInterface;
 use NeneServe\Support\Id;
@@ -21,7 +20,7 @@ use NeneServe\Support\Id;
 final readonly class RecordClickUseCase implements RecordClickUseCaseInterface
 {
     public function __construct(
-        private DatabaseQueryExecutorInterface $query,
+        private PlacementRepositoryInterface $placements,
         private TokenStoreInterface $tokens,
         private EventStoreInterface $events,
     ) {
@@ -35,7 +34,7 @@ final readonly class RecordClickUseCase implements RecordClickUseCaseInterface
             return null;
         }
 
-        $placement = (new PdoPlacementRepository($this->query))->findByIdInOrganization($redirect->placementId, $redirect->organizationId);
+        $placement = $this->placements->findByIdInOrganization($redirect->placementId, $redirect->organizationId);
 
         if ($placement !== null && $placement->measurementEnabled) {
             $this->events->recordClick(new ClickEvent(

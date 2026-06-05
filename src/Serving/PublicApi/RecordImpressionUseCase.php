@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\PublicApi;
 
-use Nene2\Database\DatabaseQueryExecutorInterface;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\ImpressionEvent;
 use NeneServe\Measurement\PageUrl;
 use NeneServe\Measurement\VisitorBucket;
 use NeneServe\Serving\Frequency\FrequencyCapStoreInterface;
-use NeneServe\Serving\PdoPlacementRepository;
+use NeneServe\Serving\PlacementRepositoryInterface;
 use NeneServe\Serving\Token\TokenStoreInterface;
 use NeneServe\Support\Id;
 
@@ -24,7 +23,7 @@ use NeneServe\Support\Id;
 final readonly class RecordImpressionUseCase implements RecordImpressionUseCaseInterface
 {
     public function __construct(
-        private DatabaseQueryExecutorInterface $query,
+        private PlacementRepositoryInterface $placements,
         private TokenStoreInterface $tokens,
         private EventStoreInterface $events,
         private FrequencyCapStoreInterface $frequencyCaps,
@@ -45,7 +44,7 @@ final readonly class RecordImpressionUseCase implements RecordImpressionUseCaseI
             return; // unknown token, or replay — never double count
         }
 
-        $placement = (new PdoPlacementRepository($this->query))->findByIdInOrganization($record->placementId, $record->organizationId);
+        $placement = $this->placements->findByIdInOrganization($record->placementId, $record->organizationId);
 
         if ($placement === null || !$placement->measurementEnabled) {
             return; // opt-out: served without a tracking beacon
