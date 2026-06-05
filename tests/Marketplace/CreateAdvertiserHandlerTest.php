@@ -8,10 +8,11 @@ use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Validation\ValidationException;
 use NeneServe\Marketplace\Admin\CreateAdvertiserHandler;
+use NeneServe\Marketplace\Admin\CreateAdvertiserInput;
+use NeneServe\Marketplace\Admin\CreateAdvertiserOutput;
 use NeneServe\Marketplace\Admin\CreateAdvertiserUseCaseInterface;
 use NeneServe\Marketplace\Advertiser;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
-use NeneServe\Tenant\AuthContext;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -56,9 +57,9 @@ final class CreateAdvertiserHandlerTest extends TestCase
     private function useCase(): CreateAdvertiserUseCaseInterface
     {
         return new class () implements CreateAdvertiserUseCaseInterface {
-            public function execute(AuthContext $actor, string $name, ?string $invoiceClientId = null): Advertiser
+            public function execute(CreateAdvertiserInput $input): CreateAdvertiserOutput
             {
-                return new Advertiser('adv-1', $actor->organizationId, $name, 'active', $invoiceClientId);
+                return new CreateAdvertiserOutput(new Advertiser('adv-1', 'org-acme', $input->name, 'active', $input->invoiceClientId));
             }
         };
     }

@@ -41,8 +41,8 @@ final readonly class CreateAdvertiserHandler
 
         $invoiceClientId = isset($body['invoice_client_id']) && is_string($body['invoice_client_id']) ? $body['invoice_client_id'] : null;
 
-        $advertiser = $this->createAdvertiser->execute($context, $name, $invoiceClientId);
+        $output = $this->createAdvertiser->execute(new CreateAdvertiserInput($context->userId, $name, $invoiceClientId));
 
-        return $this->response->create($advertiser->toArray(), 201);
+        return $this->response->create($output->advertiser->toArray(), 201);
     }
 }

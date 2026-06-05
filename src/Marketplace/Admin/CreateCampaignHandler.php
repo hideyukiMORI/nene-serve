@@ -65,8 +65,10 @@ final readonly class CreateCampaignHandler
         $status = isset($body['status']) && is_string($body['status']) ? $body['status'] : 'draft';
         $fundingStatus = isset($body['funding_status']) && is_string($body['funding_status']) ? $body['funding_status'] : 'unfunded';
 
-        $campaign = $this->createCampaign->execute($context, $advertiserId, $name, $pricingRuleId, $budgetCents, $pause, $status, $fundingStatus);
+        $output = $this->createCampaign->execute(
+            new CreateCampaignInput($context->userId, $advertiserId, $name, $pricingRuleId, $budgetCents, $pause, $status, $fundingStatus),
+        );
 
-        return $this->response->create($campaign->toArray(), 201);
+        return $this->response->create($output->campaign->toArray(), 201);
     }
 }

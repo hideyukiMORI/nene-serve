@@ -56,8 +56,8 @@ final readonly class CreatePricingRuleHandler
         }
 
         /** @var int $rateCents */
-        $rule = $this->createPricingRule->execute($context, $name, $model, $rateCents);
+        $output = $this->createPricingRule->execute(new CreatePricingRuleInput($context->userId, $name, $model, $rateCents));
 
-        return $this->response->create($rule->toArray(), 201);
+        return $this->response->create($output->pricingRule->toArray(), 201);
     }
 }

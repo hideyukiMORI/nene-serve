@@ -119,15 +119,36 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
             )
             ->set(
                 CreateAdvertiserUseCaseInterface::class,
-                static fn (ContainerInterface $c): CreateAdvertiserUseCaseInterface => new CreateAdvertiserUseCase(self::transactions($c)),
+                static fn (ContainerInterface $c): CreateAdvertiserUseCaseInterface => new CreateAdvertiserUseCase(self::transactions($c), self::orgId($c)),
             )
             ->set(
                 CreatePricingRuleUseCaseInterface::class,
-                static fn (ContainerInterface $c): CreatePricingRuleUseCaseInterface => new CreatePricingRuleUseCase(self::query($c), self::transactions($c)),
+                static function (ContainerInterface $c): CreatePricingRuleUseCaseInterface {
+                    $rules = $c->get(PricingRuleRepositoryInterface::class);
+
+                    if (!$rules instanceof PricingRuleRepositoryInterface) {
+                        throw new LogicException('Pricing rule repository service is invalid.');
+                    }
+
+                    return new CreatePricingRuleUseCase($rules, self::transactions($c), self::orgId($c));
+                },
             )
             ->set(
                 CreateCampaignUseCaseInterface::class,
-                static fn (ContainerInterface $c): CreateCampaignUseCaseInterface => new CreateCampaignUseCase(self::query($c), self::transactions($c)),
+                static function (ContainerInterface $c): CreateCampaignUseCaseInterface {
+                    $advertisers = $c->get(AdvertiserRepositoryInterface::class);
+                    $rules = $c->get(PricingRuleRepositoryInterface::class);
+
+                    if (!$advertisers instanceof AdvertiserRepositoryInterface) {
+                        throw new LogicException('Advertiser repository service is invalid.');
+                    }
+
+                    if (!$rules instanceof PricingRuleRepositoryInterface) {
+                        throw new LogicException('Pricing rule repository service is invalid.');
+                    }
+
+                    return new CreateCampaignUseCase($advertisers, $rules, self::transactions($c), self::orgId($c));
+                },
             )
             ->set(
                 CreateAdvertiserHandler::class,

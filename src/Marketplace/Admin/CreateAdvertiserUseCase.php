@@ -6,39 +6,43 @@ namespace NeneServe\Marketplace\Admin;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Marketplace\Advertiser;
 use NeneServe\Marketplace\PdoAdvertiserRepository;
 use NeneServe\Marketplace\UseCase\MarketplaceValidationException;
-use NeneServe\Tenant\AuthContext;
 
 final readonly class CreateAdvertiserUseCase implements CreateAdvertiserUseCaseInterface
 {
+    /**
+     * @param RequestScopedHolder<string> $organizationId
+     */
     public function __construct(
         private DatabaseTransactionManagerInterface $transactions,
+        private RequestScopedHolder $organizationId,
     ) {
     }
 
-    public function execute(AuthContext $actor, string $name, ?string $invoiceClientId = null): Advertiser
+    public function execute(CreateAdvertiserInput $input): CreateAdvertiserOutput
     {
-        if (trim($name) === '') {
+        if (trim($input->name) === '') {
             throw new MarketplaceValidationException('name is required.');
         }
 
         $advertiser = new Advertiser(
             'adv-' . bin2hex(random_bytes(8)),
-            $actor->organizationId,
-            trim($name),
+            $this->organizationId->get(),
+            trim($input->name),
             'active',
-            $invoiceClientId,
+            $input->invoiceClientId,
         );
 
-        return $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($advertiser, $actor): Advertiser {
+        $stored = $this->transactions->transactional(
+            static function (DatabaseQueryExecutorInterface $tx) use ($advertiser, $input): Advertiser {
                 (new PdoAdvertiserRepository($tx))->save($advertiser);
                 (new PdoAuditLog($tx))->record(
-                    $actor->organizationId,
-                    $actor->userId,
+                    $advertiser->organizationId,
+                    $input->actorUserId,
                     'advertiser.created',
                     'advertiser',
                     $advertiser->id,
@@ -48,5 +52,7 @@ final readonly class CreateAdvertiserUseCase implements CreateAdvertiserUseCaseI
                 return $advertiser;
             },
         );
+
+        return new CreateAdvertiserOutput($stored);
     }
 }
