@@ -113,7 +113,7 @@ final class KernelFactory
             tokens: new FileTokenStore($storageDir . '/tokens.json'),
             serviceTokens: new PdoServiceTokenRepository($pdo),
             audit: new PdoAuditLog($query),
-            events: new PdoEventStore($pdo),
+            events: new PdoEventStore($query),
             frequencyCaps: new FileFrequencyCapStore($storageDir . '/frequency.json'),
             tx: new PdoTransactionManager($pdo),
             advertisers: new PdoAdvertiserRepository($pdo),

@@ -55,7 +55,7 @@ $query = new PdoDatabaseQueryExecutor(
 );
 
 $purge = new PurgeRetentionUseCase(
-    new PdoEventStore($pdo),
+    new PdoEventStore($query),
     new PdoCreativeRepository($pdo),
     new PdoLegalHoldRepository($pdo),
     new PdoAuditLog($query),

@@ -30,6 +30,8 @@ use NeneServe\Audit\AuditLogInterface;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Mail\MailerFactoryInterface;
 use NeneServe\Mail\SmtpMailerFactory;
+use NeneServe\Measurement\EventStoreInterface;
+use NeneServe\Measurement\PdoEventStore;
 use NeneServe\Support\Crypto;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
 use NeneServe\Tenant\Auth\CapabilityMiddleware;
@@ -128,6 +130,18 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                     }
 
                     return new PdoAuditLog($query);
+                },
+            )
+            ->set(
+                EventStoreInterface::class,
+                static function (ContainerInterface $container): EventStoreInterface {
+                    $query = $container->get(DatabaseQueryExecutorInterface::class);
+
+                    if (!$query instanceof DatabaseQueryExecutorInterface) {
+                        throw new LogicException('Database query executor service is invalid.');
+                    }
+
+                    return new PdoEventStore($query);
                 },
             )
             ->set(Crypto::class, static fn (ContainerInterface $container): Crypto => new Crypto())

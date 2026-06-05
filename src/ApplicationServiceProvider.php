@@ -13,6 +13,8 @@ use NeneServe\Auth\AuthRouteRegistrar;
 use NeneServe\Auth\AuthServiceProvider;
 use NeneServe\Health\HealthRouteRegistrar;
 use NeneServe\Health\HealthServiceProvider;
+use NeneServe\Measurement\Metrics\MetricsRouteRegistrar;
+use NeneServe\Measurement\Metrics\MetricsServiceProvider;
 use NeneServe\Settings\SettingsRouteRegistrar;
 use NeneServe\Settings\SettingsServiceProvider;
 use NeneServe\Tenant\Account\AccountRouteRegistrar;
@@ -44,7 +46,8 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
             ->addProvider(new AuthServiceProvider())
             ->addProvider(new AccountServiceProvider())
             ->addProvider(new SettingsServiceProvider())
-            ->addProvider(new UsersServiceProvider());
+            ->addProvider(new UsersServiceProvider())
+            ->addProvider(new MetricsServiceProvider());
 
         $builder
             ->set(
@@ -55,6 +58,7 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                     $account = $container->get(AccountServiceProvider::ROUTE_REGISTRAR);
                     $settings = $container->get(SettingsServiceProvider::ROUTE_REGISTRAR);
                     $users = $container->get(UsersServiceProvider::ROUTE_REGISTRAR);
+                    $metrics = $container->get(MetricsServiceProvider::ROUTE_REGISTRAR);
 
                     if (!$health instanceof HealthRouteRegistrar) {
                         throw new LogicException('Health route registrar service is invalid.');
@@ -76,8 +80,12 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Users route registrar service is invalid.');
                     }
 
+                    if (!$metrics instanceof MetricsRouteRegistrar) {
+                        throw new LogicException('Metrics route registrar service is invalid.');
+                    }
+
                     /** @var list<callable(\Nene2\Routing\Router): void> $registrars */
-                    $registrars = [$health, $auth, $account, $settings, $users];
+                    $registrars = [$health, $auth, $account, $settings, $users, $metrics];
 
                     return $registrars;
                 },
