@@ -7,6 +7,7 @@ namespace NeneServe\Tenant\Auth;
 use Nene2\Auth\TokenVerificationException;
 use Nene2\Auth\TokenVerifierInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
+use Nene2\Http\RequestScopedHolder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -22,9 +23,14 @@ final readonly class AdminAuthMiddleware implements MiddlewareInterface
 {
     public const string CLAIMS_ATTRIBUTE = 'nene-serve.auth.claims';
 
+    /**
+     * @param RequestScopedHolder<string> $organizationId carries the authenticated
+     *        tenant for downstream admin use-cases (set here, read in the use-case).
+     */
     public function __construct(
         private ProblemDetailsResponseFactory $problemDetails,
         private TokenVerifierInterface $verifier,
+        private RequestScopedHolder $organizationId,
     ) {
     }
 
@@ -44,6 +50,12 @@ final readonly class AdminAuthMiddleware implements MiddlewareInterface
             $claims = $this->verifier->verify(substr($authorization, 7));
         } catch (TokenVerificationException $e) {
             return $this->unauthorized($request, $e->getMessage());
+        }
+
+        $organizationId = $claims['org'] ?? null;
+
+        if (is_string($organizationId) && $organizationId !== '') {
+            $this->organizationId->set($organizationId);
         }
 
         return $handler->handle($request->withAttribute(self::CLAIMS_ATTRIBUTE, $claims));

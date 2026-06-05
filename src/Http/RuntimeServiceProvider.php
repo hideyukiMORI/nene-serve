@@ -21,6 +21,7 @@ use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\DomainExceptionHandlerInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
+use Nene2\Http\RequestScopedHolder;
 use Nene2\Http\ResponseEmitter;
 use Nene2\Http\RuntimeApplicationFactory;
 use Nene2\Log\MonologLoggerFactory;
@@ -80,11 +81,23 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
 {
     public const string PROJECT_ROOT = 'nene-serve.project_root';
 
+    /**
+     * Shared {@see RequestScopedHolder}<string> carrying the authenticated tenant
+     * for the admin and service surfaces: the auth middleware writes it, admin/
+     * service use-cases read it. (The public surface derives its tenant from the
+     * placement key, so it never reads this holder.)
+     */
+    public const string ORG_ID_HOLDER = 'nene-serve.org_id_holder';
+
     public function register(ContainerBuilder $builder): void
     {
         $builder->addProvider(new ApplicationServiceProvider());
 
         $builder
+            ->set(
+                self::ORG_ID_HOLDER,
+                static fn (ContainerInterface $container): RequestScopedHolder => new RequestScopedHolder(),
+            )
             ->set(
                 ConfigLoader::class,
                 static function (ContainerInterface $container): ConfigLoader {
@@ -383,6 +396,7 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                 static function (ContainerInterface $container): AdminAuthMiddleware {
                     $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
                     $verifier = $container->get(TokenVerifierInterface::class);
+                    $organizationId = $container->get(self::ORG_ID_HOLDER);
 
                     if (!$problemDetails instanceof ProblemDetailsResponseFactory) {
                         throw new LogicException('Problem details response factory service is invalid.');
@@ -392,7 +406,11 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Token verifier service is invalid.');
                     }
 
-                    return new AdminAuthMiddleware($problemDetails, $verifier);
+                    if (!$organizationId instanceof RequestScopedHolder) {
+                        throw new LogicException('Organization id holder service is invalid.');
+                    }
+
+                    return new AdminAuthMiddleware($problemDetails, $verifier, $organizationId);
                 },
             )
             ->set(
@@ -424,6 +442,7 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                 static function (ContainerInterface $container): ServiceAuthMiddleware {
                     $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
                     $tokens = $container->get(ServiceTokenRepositoryInterface::class);
+                    $organizationId = $container->get(self::ORG_ID_HOLDER);
 
                     if (!$problemDetails instanceof ProblemDetailsResponseFactory) {
                         throw new LogicException('Problem details response factory service is invalid.');
@@ -433,7 +452,11 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Service token repository service is invalid.');
                     }
 
-                    return new ServiceAuthMiddleware($problemDetails, $tokens);
+                    if (!$organizationId instanceof RequestScopedHolder) {
+                        throw new LogicException('Organization id holder service is invalid.');
+                    }
+
+                    return new ServiceAuthMiddleware($problemDetails, $tokens, $organizationId);
                 },
             )
             ->set(

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Service\Auth;
 
 use Nene2\Error\ProblemDetailsResponseFactory;
+use Nene2\Http\RequestScopedHolder;
 use NeneServe\Service\ServiceTokenRepositoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -22,9 +23,14 @@ final readonly class ServiceAuthMiddleware implements MiddlewareInterface
 {
     public const string CONTEXT_ATTRIBUTE = 'nene-serve.service.context';
 
+    /**
+     * @param RequestScopedHolder<string> $organizationId carries the token's tenant
+     *        for downstream service use-cases (set here, read in the use-case).
+     */
     public function __construct(
         private ProblemDetailsResponseFactory $problemDetails,
         private ServiceTokenRepositoryInterface $tokens,
+        private RequestScopedHolder $organizationId,
     ) {
     }
 
@@ -48,7 +54,10 @@ final readonly class ServiceAuthMiddleware implements MiddlewareInterface
             return $this->unauthorized($request, 'The service token is invalid or inactive.');
         }
 
-        return $handler->handle($request->withAttribute(self::CONTEXT_ATTRIBUTE, $token->context()));
+        $context = $token->context();
+        $this->organizationId->set($context->organizationId);
+
+        return $handler->handle($request->withAttribute(self::CONTEXT_ATTRIBUTE, $context));
     }
 
     private function unauthorized(ServerRequestInterface $request, string $detail): ResponseInterface
