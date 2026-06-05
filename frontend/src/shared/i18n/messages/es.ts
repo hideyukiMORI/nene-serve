@@ -4,7 +4,35 @@ import type { MessageCatalog } from './en'
 export const es: MessageCatalog = {
   'app.title': 'NeNe Serve',
   'app.subtitle': 'Publicación de anuncios y analítica',
+  'nav.home': 'Inicio',
   'nav.placements': 'Ubicaciones',
+  'nav.group.prepare': 'Preparar',
+
+  'home.greeting': 'Te damos la bienvenida a NeNe Serve',
+  'home.lead':
+    'Publica anuncios en sitios que tú controlas: registra un creativo, consigue su aprobación, inserta una línea y observa los resultados. Este es el recorrido.',
+  'home.setup.title': 'Primeros pasos',
+  'home.setup.subtitle': 'Completa el ciclo una vez y tu primer anuncio se publicará.',
+  'home.setup.progress': '{{done}} de {{total}} pasos completados',
+  'home.setup.resume': 'Reanudar configuración',
+  'home.step.doThis': 'Hazlo',
+  'home.step.done': 'Hecho',
+  'home.steps.smtp.title': 'Configurar el correo saliente',
+  'home.steps.smtp.desc': 'Añade SMTP para poder enviar invitaciones y correos de prueba.',
+  'home.steps.invite.title': 'Invita a tu equipo',
+  'home.steps.invite.desc':
+    'Añade a un compañero para que otra persona pueda aprobar tu trabajo (doble revisión).',
+  'home.steps.placement.title': 'Crear una ubicación',
+  'home.steps.placement.desc': 'Define un espacio publicitario y obtén su clave de inserción.',
+  'home.steps.creative.title': 'Subir un creativo',
+  'home.steps.creative.desc': 'Añade el contenido del anuncio y envíalo a revisión.',
+  'home.steps.approve.title': 'Aprobar el creativo',
+  'home.steps.approve.desc':
+    'Un segundo revisor lo aprueba: solo se publican los creativos aprobados.',
+  'home.steps.embed.title': 'Insertar en tu sitio',
+  'home.steps.embed.desc': 'Pega una línea de serve.js donde deba aparecer el anuncio.',
+  'home.steps.measure.title': 'Consulta tus resultados',
+  'home.steps.measure.desc': 'Las impresiones y los clics se agregan en Métricas.',
 
   'shell.theme': 'Tema',
   'shell.themeLight': 'Claro',

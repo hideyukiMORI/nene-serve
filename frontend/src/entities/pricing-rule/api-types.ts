@@ -1,3 +1,5 @@
+import type { Paginated } from '@/shared/api/pagination'
+
 export interface PricingRuleDto {
   id: string
   name: string
@@ -8,6 +10,4 @@ export interface PricingRuleDto {
   created_at: string
 }
 
-export interface PricingRuleListDto {
-  pricing_rules: PricingRuleDto[]
-}
+export type PricingRuleListDto = Paginated<PricingRuleDto>

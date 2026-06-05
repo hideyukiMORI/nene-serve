@@ -10,7 +10,8 @@ describe('ReviewPage', () => {
     await waitFor(() => {
       expect(screen.getByText('cr-acme-pending')).toBeInTheDocument()
     })
-    expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument()
+    // The queue holds several items, so there are multiple Approve buttons.
+    expect(screen.getAllByRole('button', { name: 'Approve' })[0]).toBeInTheDocument()
   })
 
   it('runs a review action without error', async () => {
@@ -19,10 +20,10 @@ describe('ReviewPage', () => {
     await waitFor(() => {
       expect(screen.getByText('cr-acme-pending')).toBeInTheDocument()
     })
-    await user.click(screen.getByRole('button', { name: 'Approve' }))
+    await user.click(screen.getAllByRole('button', { name: 'Approve' })[0] as HTMLElement)
     // The row stays rendered; the mutation resolves and invalidates the query.
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Approve' })).toBeEnabled()
+      expect(screen.getAllByRole('button', { name: 'Approve' })[0]).toBeEnabled()
     })
   })
 })

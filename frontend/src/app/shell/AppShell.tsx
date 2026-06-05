@@ -4,6 +4,7 @@ import { useCurrentUser } from '@/entities/auth'
 import { useTranslation, type MessageKey } from '@/shared/i18n'
 import {
   IconBoard,
+  IconHome,
   IconInvoice,
   IconLogo,
   IconSettings,
@@ -25,9 +26,13 @@ interface NavGroup {
 
 const NAV: NavGroup[] = [
   {
+    label: 'nav.group.prepare',
+    items: [{ to: '/', label: 'nav.home', Icon: IconHome }],
+  },
+  {
     label: 'nav.group.build',
     items: [
-      { to: '/', label: 'nav.placements', Icon: IconBoard },
+      { to: '/placements', label: 'nav.placements', Icon: IconBoard },
       { to: '/creatives', label: 'nav.creatives', Icon: IconStages },
     ],
   },

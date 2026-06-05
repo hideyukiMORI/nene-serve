@@ -4,7 +4,39 @@ import type { MessageCatalog } from './en'
 export const de: MessageCatalog = {
   'app.title': 'NeNe Serve',
   'app.subtitle': 'Anzeigenauslieferung & Analyse',
+  'nav.home': 'Start',
   'nav.placements': 'Platzierungen',
+  'nav.group.prepare': 'Vorbereiten',
+
+  'home.greeting': 'Willkommen bei NeNe Serve',
+  'home.lead':
+    'Schalten Sie Anzeigen auf Websites, die Sie selbst kontrollieren – Creative registrieren, freigeben lassen, eine Zeile einbetten und die Ergebnisse verfolgen. Hier ist der Weg.',
+  'home.setup.title': 'Erste Schritte',
+  'home.setup.subtitle': 'Durchlaufen Sie den Ablauf einmal, und Ihre erste Anzeige geht live.',
+  'home.setup.progress': '{{done}} von {{total}} Schritten abgeschlossen',
+  'home.setup.resume': 'Einrichtung fortsetzen',
+  'home.step.doThis': 'Jetzt erledigen',
+  'home.step.done': 'Fertig',
+  'home.steps.smtp.title': 'Ausgehende E-Mail einrichten',
+  'home.steps.smtp.desc':
+    'SMTP hinzufügen, damit Einladungen und Testmails versendet werden können.',
+  'home.steps.invite.title': 'Team einladen',
+  'home.steps.invite.desc':
+    'Fügen Sie eine Kollegin oder einen Kollegen hinzu, damit jemand anderes Ihre Arbeit freigeben kann (Vier-Augen-Prinzip).',
+  'home.steps.placement.title': 'Platzierung erstellen',
+  'home.steps.placement.desc':
+    'Definieren Sie einen Anzeigenplatz und erhalten Sie den Einbettungsschlüssel.',
+  'home.steps.creative.title': 'Creative hochladen',
+  'home.steps.creative.desc':
+    'Fügen Sie den Anzeigeninhalt hinzu und reichen Sie ihn zur Prüfung ein.',
+  'home.steps.approve.title': 'Creative freigeben',
+  'home.steps.approve.desc':
+    'Eine zweite Person gibt es frei – nur freigegebene Creatives werden ausgeliefert.',
+  'home.steps.embed.title': 'Auf Ihrer Website einbetten',
+  'home.steps.embed.desc':
+    'Fügen Sie eine serve.js-Zeile dort ein, wo die Anzeige erscheinen soll.',
+  'home.steps.measure.title': 'Ergebnisse ansehen',
+  'home.steps.measure.desc': 'Impressionen und Klicks werden in den Metriken zusammengefasst.',
 
   'shell.theme': 'Design',
   'shell.themeLight': 'Hell',

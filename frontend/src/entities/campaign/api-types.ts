@@ -1,3 +1,5 @@
+import type { Paginated } from '@/shared/api/pagination'
+
 export interface CampaignDto {
   id: string
   advertiser_id: string
@@ -10,6 +12,4 @@ export interface CampaignDto {
   pause_on_budget_exhausted: boolean
 }
 
-export interface CampaignListDto {
-  campaigns: CampaignDto[]
-}
+export type CampaignListDto = Paginated<CampaignDto>

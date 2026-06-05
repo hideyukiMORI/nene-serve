@@ -1,3 +1,5 @@
+import type { Paginated } from '@/shared/api/pagination'
+
 /** Wire shapes for the admin placements endpoint (snake_case, as served). */
 export interface PlacementDto {
   id: string
@@ -7,6 +9,4 @@ export interface PlacementDto {
   archived_at?: string | null
 }
 
-export interface PlacementListDto {
-  placements: PlacementDto[]
-}
+export type PlacementListDto = Paginated<PlacementDto>

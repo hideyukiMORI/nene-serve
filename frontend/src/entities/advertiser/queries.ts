@@ -10,7 +10,7 @@ export function useAdvertisers(): UseQueryResult<Advertiser[], AppError> {
     queryKey: advertiserKeys.list(),
     queryFn: async () => {
       const dto = await apiClient.get<AdvertiserListDto>('/admin/advertisers')
-      return dto.advertisers.map(mapAdvertiserDtoToModel)
+      return dto.items.map(mapAdvertiserDtoToModel)
     },
   })
 }

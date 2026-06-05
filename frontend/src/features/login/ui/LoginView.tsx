@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { LangToggle, ThemeToggle } from '@/app/shell/Toggles'
 import type { LoginInput } from '@/entities/auth'
 import { useTranslation } from '@/shared/i18n'
-import { IconLogo } from '@/shared/ui/icons'
+import { IconArrowRight, IconLock, IconMail, IconStore } from '@/shared/ui/icons'
 import { AuthShell } from '@/shared/ui'
 
 export interface LoginViewProps {
@@ -49,12 +49,12 @@ export function LoginView({ pending, errorMessage, onSubmit }: LoginViewProps) {
         }}
         className="stack g5"
       >
-        <div className="between">
+        <div className="auth-head">
           <div className="stack g1">
             <h1 className="t-h1">{t('login.title')}</h1>
             <span className="t-cap muted">{t('login.subtitle')}</span>
           </div>
-          <div className="row g2">
+          <div className="auth-controls row g2">
             <ThemeToggle />
             <LangToggle />
           </div>
@@ -65,39 +65,54 @@ export function LoginView({ pending, errorMessage, onSubmit }: LoginViewProps) {
         <div className="stack g4">
           <div className="field">
             <label htmlFor="login-organization">{t('login.organization')}</label>
-            <input
-              id="login-organization"
-              className="input"
-              type="text"
-              placeholder="acme"
-              {...register('organization')}
-            />
+            <div className="input-wrap">
+              <span className="pre-icon">
+                <IconStore />
+              </span>
+              <input
+                id="login-organization"
+                className="input"
+                type="text"
+                placeholder="acme"
+                {...register('organization')}
+              />
+            </div>
             {errors.organization?.message !== undefined ? (
               <span className="field-msg err">{errors.organization.message}</span>
             ) : null}
           </div>
           <div className="field">
             <label htmlFor="login-email">{t('login.email')}</label>
-            <input
-              id="login-email"
-              className="input"
-              type="email"
-              placeholder="admin@acme.test"
-              {...register('email')}
-            />
+            <div className="input-wrap">
+              <span className="pre-icon">
+                <IconMail />
+              </span>
+              <input
+                id="login-email"
+                className="input"
+                type="email"
+                placeholder="admin@acme.test"
+                {...register('email')}
+              />
+            </div>
             {errors.email?.message !== undefined ? (
               <span className="field-msg err">{errors.email.message}</span>
             ) : null}
           </div>
           <div className="field">
             <label htmlFor="login-password">{t('login.password')}</label>
-            <input
-              id="login-password"
-              className="input"
-              type="password"
-              placeholder="••••••••"
-              {...register('password')}
-            />
+            <div className="input-wrap">
+              <span className="pre-icon">
+                <IconLock />
+              </span>
+              <input
+                id="login-password"
+                className="input"
+                type="password"
+                placeholder="••••••••"
+                {...register('password')}
+              />
+            </div>
             {errors.password?.message !== undefined ? (
               <span className="field-msg err">{errors.password.message}</span>
             ) : null}
@@ -106,9 +121,10 @@ export function LoginView({ pending, errorMessage, onSubmit }: LoginViewProps) {
 
         <button className="btn btn-primary btn-lg btn-block" type="submit" disabled={pending}>
           {t('login.submit')}
+          <IconArrowRight />
         </button>
-        <div className="row g1 faint t-tiny" style={{ justifyContent: 'center' }}>
-          <IconLogo />
+        <div className="row g1 faint t-tiny auth-foot">
+          <IconLock />
           <span>{t('login.secure')}</span>
         </div>
       </form>

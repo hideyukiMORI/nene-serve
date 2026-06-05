@@ -1,3 +1,5 @@
+import type { Paginated } from '@/shared/api/pagination'
+
 export interface UserDto {
   id: string
   organization_id: string
@@ -5,9 +7,7 @@ export interface UserDto {
   role: string
 }
 
-export interface UserListDto {
-  users: UserDto[]
-}
+export type UserListDto = Paginated<UserDto>
 
 export interface InviteUserResultDto {
   id: string

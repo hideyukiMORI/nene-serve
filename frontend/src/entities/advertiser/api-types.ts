@@ -1,3 +1,5 @@
+import type { Paginated } from '@/shared/api/pagination'
+
 export interface AdvertiserDto {
   id: string
   name: string
@@ -5,6 +7,4 @@ export interface AdvertiserDto {
   invoice_client_id?: string | null
 }
 
-export interface AdvertiserListDto {
-  advertisers: AdvertiserDto[]
-}
+export type AdvertiserListDto = Paginated<AdvertiserDto>

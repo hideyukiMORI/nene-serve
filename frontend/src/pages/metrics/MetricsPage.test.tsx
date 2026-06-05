@@ -1,10 +1,16 @@
 import { screen, waitFor } from '@testing-library/react'
+import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
+import { makeMetricsReportDto } from '@tests/factories/metrics'
+import { mswServer } from '@tests/msw/server'
 import { renderWithProviders } from '@tests/render/render-with-providers'
 import { MetricsPage } from './MetricsPage'
 
 describe('MetricsPage', () => {
   it('renders KPI totals and the daily rows', async () => {
+    // Pin the endpoint to the deterministic two-day fixture so the aggregate
+    // assertions stay independent of the richer dev-mock dataset.
+    mswServer.use(http.get('/admin/metrics', () => HttpResponse.json(makeMetricsReportDto())))
     renderWithProviders(<MetricsPage />)
 
     // Overall CTR = 130 / 3000 = 4.33% (toFixed → locale-independent).

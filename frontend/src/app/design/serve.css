@@ -1,119 +1,129 @@
 /* ============================================================
-   NeNe Serve — "Control Room" design system
-   Token-driven. Light + dark. New Serve-specific identity.
+   NeNe Serve — design system v3
+   Editorial / Ink. Warm monochrome paper, Mincho headings,
+   charcoal sidebar, clay highlight. Light + dark.
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+JP:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap');
 
 /* ---------- Tokens: light (default) ---------- */
 :root {
-  --font-sans: 'IBM Plex Sans', 'IBM Plex Sans JP', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', monospace;
+  --font-sans: 'Geist', 'Noto Sans JP', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'Cascadia Code', monospace;
+  --font-serif: 'Newsreader', 'Noto Serif JP', Georgia, serif;
 
-  --bg: oklch(98.4% 0.004 255);
+  --bg: oklch(97.6% 0.006 84);
   --surface: oklch(100% 0 0);
-  --surface-2: oklch(97.2% 0.005 255);
-  --surface-sunk: oklch(96.2% 0.006 255);
-  --border: oklch(91.5% 0.008 255);
-  --border-strong: oklch(84% 0.012 255);
-  --ring: oklch(60% 0.14 264 / 0.45);
+  --surface-2: oklch(95.8% 0.008 84);
+  --surface-sunk: oklch(94% 0.01 82);
+  --border: oklch(92.6% 0.008 84);
+  --border-strong: oklch(88% 0.012 82);
+  --hair: oklch(94.6% 0.006 84);
+  --ring: oklch(40% 0.03 70 / 0.35);
 
-  --ink: oklch(30% 0.022 264);
-  --ink-2: oklch(47% 0.018 264);
-  --ink-3: oklch(60% 0.014 264);
-  --ink-on-accent: oklch(99% 0 0);
+  --ink: oklch(28% 0.012 70);
+  --ink-2: oklch(48% 0.014 74);
+  --ink-3: oklch(64% 0.014 80);
+  --ink-on-accent: oklch(97.6% 0.006 84);
 
-  --accent: oklch(53% 0.155 264);
-  --accent-hover: oklch(48% 0.16 264);
-  --accent-soft: color-mix(in oklch, var(--accent) 11%, var(--surface));
-  --accent-line: color-mix(in oklch, var(--accent) 34%, var(--surface));
+  --accent: oklch(26% 0.012 68);
+  --accent-hover: oklch(20% 0.012 68);
+  --accent-soft: oklch(94% 0.01 82);
+  --accent-line: oklch(86% 0.014 80);
+  --hi: oklch(56% 0.1 55);
+  --hi-soft: oklch(93% 0.04 60);
+  --charcoal: oklch(24% 0.012 68);
 
   /* status families: ink (text), soft (chip bg), line (chip border), dot */
-  --st-neutral-ink: oklch(46% 0.012 264);
-  --st-neutral-soft: oklch(96% 0.004 264);
-  --st-neutral-line: oklch(89% 0.008 264);
-  --st-neutral-dot: oklch(66% 0.01 264);
+  --st-neutral-ink: oklch(48% 0.012 74);
+  --st-neutral-soft: oklch(95.5% 0.006 80);
+  --st-neutral-line: oklch(90% 0.01 80);
+  --st-neutral-dot: oklch(66% 0.012 78);
 
-  --st-pending-ink: oklch(48% 0.11 70);
-  --st-pending-soft: oklch(96% 0.045 80);
-  --st-pending-line: oklch(88% 0.07 78);
-  --st-pending-dot: oklch(72% 0.14 72);
+  --st-pending-ink: oklch(50% 0.09 65);
+  --st-pending-soft: oklch(95% 0.04 70);
+  --st-pending-line: oklch(88% 0.05 68);
+  --st-pending-dot: oklch(64% 0.1 62);
 
-  --st-go-ink: oklch(45% 0.11 158);
-  --st-go-soft: oklch(95.5% 0.04 158);
-  --st-go-line: oklch(86% 0.07 158);
-  --st-go-dot: oklch(60% 0.13 158);
+  --st-go-ink: oklch(46% 0.09 150);
+  --st-go-soft: oklch(95% 0.035 150);
+  --st-go-line: oklch(87% 0.05 150);
+  --st-go-dot: oklch(56% 0.1 150);
 
-  --st-stop-ink: oklch(51% 0.17 26);
-  --st-stop-soft: oklch(96% 0.035 28);
-  --st-stop-line: oklch(89% 0.06 28);
-  --st-stop-dot: oklch(60% 0.18 27);
+  --st-stop-ink: oklch(50% 0.13 32);
+  --st-stop-soft: oklch(95% 0.035 36);
+  --st-stop-line: oklch(88% 0.05 36);
+  --st-stop-dot: oklch(57% 0.14 33);
 
-  --st-info-ink: oklch(50% 0.14 290);
-  --st-info-soft: oklch(96% 0.035 290);
-  --st-info-line: oklch(89% 0.05 290);
-  --st-info-dot: oklch(60% 0.15 290);
+  --st-info-ink: oklch(48% 0.05 60);
+  --st-info-soft: oklch(94.5% 0.025 65);
+  --st-info-line: oklch(87% 0.035 65);
+  --st-info-dot: oklch(58% 0.08 58);
 
-  --shadow-sm: 0 1px 2px oklch(40% 0.03 264 / 0.07), 0 1px 1px oklch(40% 0.03 264 / 0.04);
-  --shadow-md: 0 6px 24px oklch(40% 0.04 264 / 0.1), 0 2px 6px oklch(40% 0.03 264 / 0.06);
-  --shadow-lg: 0 18px 50px oklch(35% 0.05 264 / 0.18), 0 6px 16px oklch(35% 0.04 264 / 0.1);
+  --shadow-sm: 0 1px 2px oklch(40% 0.03 264 / 0.06);
+  --shadow-md: 0 4px 16px oklch(40% 0.04 264 / 0.08), 0 1px 3px oklch(40% 0.03 264 / 0.05);
+  --shadow-lg: 0 16px 44px oklch(35% 0.05 264 / 0.16), 0 4px 12px oklch(35% 0.04 264 / 0.08);
 
   --r-sm: 7px;
   --r-md: 11px;
-  --r-lg: 16px;
-  --r-xl: 22px;
+  --r-lg: 14px;
+  --r-xl: 20px;
 
-  --nav-w: 252px;
-  --topbar-h: 60px;
+  --nav-w: 256px;
+  --topbar-h: 58px;
 }
 
 [data-theme='dark'] {
-  --bg: oklch(21% 0.015 265);
-  --surface: oklch(24.5% 0.017 265);
-  --surface-2: oklch(27.5% 0.019 265);
-  --surface-sunk: oklch(22.5% 0.016 265);
-  --border: oklch(33% 0.02 265);
-  --border-strong: oklch(40% 0.024 265);
-  --ring: oklch(70% 0.13 264 / 0.5);
+  --bg: oklch(16% 0.008 72);
+  --surface: oklch(20.5% 0.009 70);
+  --surface-2: oklch(24% 0.01 70);
+  --surface-sunk: oklch(22% 0.009 70);
+  --border: oklch(28% 0.011 70);
+  --border-strong: oklch(35% 0.013 70);
+  --hair: oklch(23% 0.01 70);
+  --ring: oklch(85% 0.04 80 / 0.4);
 
-  --ink: oklch(95% 0.008 260);
-  --ink-2: oklch(78% 0.012 260);
-  --ink-3: oklch(63% 0.014 260);
-  --ink-on-accent: oklch(99% 0 0);
+  --ink: oklch(92% 0.012 82);
+  --ink-2: oklch(72% 0.014 80);
+  --ink-3: oklch(56% 0.014 76);
+  --ink-on-accent: oklch(16% 0.008 72);
 
-  --accent: oklch(67% 0.15 266);
-  --accent-hover: oklch(72% 0.15 266);
-  --accent-soft: color-mix(in oklch, var(--accent) 22%, var(--surface));
-  --accent-line: color-mix(in oklch, var(--accent) 42%, var(--surface));
+  --accent: oklch(92% 0.012 82);
+  --accent-hover: oklch(86% 0.014 82);
+  --accent-soft: oklch(26% 0.012 70);
+  --accent-line: oklch(34% 0.014 70);
+  --hi: oklch(72% 0.085 65);
+  --hi-soft: oklch(30% 0.05 60);
+  --charcoal: oklch(24.5% 0.011 68);
 
-  --st-neutral-ink: oklch(74% 0.014 264);
-  --st-neutral-soft: oklch(30% 0.012 264);
-  --st-neutral-line: oklch(38% 0.014 264);
-  --st-neutral-dot: oklch(60% 0.012 264);
+  --st-neutral-ink: oklch(72% 0.014 78);
+  --st-neutral-soft: oklch(28% 0.011 70);
+  --st-neutral-line: oklch(36% 0.013 70);
+  --st-neutral-dot: oklch(60% 0.014 76);
 
-  --st-pending-ink: oklch(82% 0.11 78);
-  --st-pending-soft: oklch(34% 0.06 70);
-  --st-pending-line: oklch(45% 0.08 72);
-  --st-pending-dot: oklch(78% 0.14 75);
+  --st-pending-ink: oklch(80% 0.1 70);
+  --st-pending-soft: oklch(30% 0.05 62);
+  --st-pending-line: oklch(40% 0.06 64);
+  --st-pending-dot: oklch(74% 0.11 66);
 
-  --st-go-ink: oklch(82% 0.12 160);
-  --st-go-soft: oklch(31% 0.06 160);
-  --st-go-line: oklch(42% 0.08 160);
-  --st-go-dot: oklch(72% 0.14 160);
+  --st-go-ink: oklch(80% 0.1 152);
+  --st-go-soft: oklch(28% 0.05 152);
+  --st-go-line: oklch(38% 0.06 152);
+  --st-go-dot: oklch(70% 0.11 152);
 
-  --st-stop-ink: oklch(78% 0.13 28);
-  --st-stop-soft: oklch(33% 0.08 28);
-  --st-stop-line: oklch(45% 0.1 28);
-  --st-stop-dot: oklch(70% 0.17 28);
+  --st-stop-ink: oklch(76% 0.12 34);
+  --st-stop-soft: oklch(30% 0.07 32);
+  --st-stop-line: oklch(41% 0.09 33);
+  --st-stop-dot: oklch(68% 0.14 33);
 
-  --st-info-ink: oklch(80% 0.12 292);
-  --st-info-soft: oklch(33% 0.07 292);
-  --st-info-line: oklch(45% 0.09 292);
-  --st-info-dot: oklch(72% 0.14 292);
+  --st-info-ink: oklch(78% 0.07 64);
+  --st-info-soft: oklch(29% 0.04 62);
+  --st-info-line: oklch(39% 0.05 62);
+  --st-info-dot: oklch(70% 0.08 60);
 
   --shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.3);
-  --shadow-md: 0 8px 26px oklch(0% 0 0 / 0.42), 0 2px 6px oklch(0% 0 0 / 0.3);
-  --shadow-lg: 0 22px 56px oklch(0% 0 0 / 0.55), 0 8px 18px oklch(0% 0 0 / 0.4);
+  --shadow-md: 0 6px 20px oklch(0% 0 0 / 0.4), 0 1px 3px oklch(0% 0 0 / 0.3);
+  --shadow-lg: 0 20px 50px oklch(0% 0 0 / 0.55), 0 6px 16px oklch(0% 0 0 / 0.4);
 }
 
 /* ---------- Reset ---------- */
@@ -134,6 +144,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   line-height: 1.5;
+  font-feature-settings: 'cv11', 'ss03';
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -167,38 +178,47 @@ svg {
 
 /* ---------- Type ---------- */
 .t-display {
-  font-size: 34px;
+  font-size: 33px;
   font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
 }
 .t-h1 {
-  font-size: 23px;
+  font-size: 22px;
   font-weight: 600;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
+  line-height: 1.18;
 }
 .t-h2 {
-  font-size: 16px;
+  font-size: 15.5px;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.012em;
 }
 .t-h3 {
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.005em;
 }
 .t-body {
   font-size: 14px;
+  letter-spacing: -0.003em;
 }
 .t-cap {
   font-size: 12.5px;
+  letter-spacing: 0;
 }
 .t-tiny {
   font-size: 11.5px;
 }
 .mono {
   font-family: var(--font-mono);
-  font-feature-settings: 'ss01';
+  letter-spacing: -0.01em;
+  font-feature-settings:
+    'zero' 1,
+    'tnum' 1;
+}
+.tnum {
+  font-variant-numeric: tabular-nums;
 }
 .muted {
   color: var(--ink-2);
@@ -207,9 +227,10 @@ svg {
   color: var(--ink-3);
 }
 .eyebrow {
+  font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-weight: 500;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-3);
 }
@@ -268,6 +289,15 @@ svg {
 }
 .app.nav-top {
   grid-template-columns: 1fr;
+}
+
+/* embed-fit: scale the app from INSIDE the iframe document using in-document
+   zoom (reflows + paints normally; avoids the transformed-layer no-paint bug
+   that hits transforms inside nested iframes). Parent sets --embed-scale. */
+.app.embed-fit {
+  width: 1280px;
+  height: 880px;
+  zoom: var(--embed-scale, 1);
 }
 
 /* ---- Sidebar ---- */
@@ -549,6 +579,7 @@ svg {
   font-size: 12px;
   font-weight: 600;
   color: var(--ink-3);
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -1343,6 +1374,14 @@ table.table {
   background: var(--border);
   border: none;
 }
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 .vr {
   width: 1px;
   align-self: stretch;
@@ -1428,4 +1467,395 @@ table.table {
       transform: translateY(9px);
     }
   }
+}
+
+/* ============================================================
+   Micro-interactions (refined, both directions)
+   ============================================================ */
+.btn {
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.07s ease;
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn-primary:hover {
+  box-shadow: 0 2px 10px var(--accent-line);
+}
+.icon-btn {
+  transition:
+    background 0.14s ease,
+    color 0.14s ease,
+    transform 0.07s ease;
+}
+.icon-btn:active {
+  transform: scale(0.94);
+}
+.nav-item {
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.pill {
+  transition:
+    background 0.14s ease,
+    border-color 0.14s ease;
+}
+.chip {
+  transition:
+    border-color 0.14s ease,
+    background 0.14s ease;
+}
+.table tbody tr {
+  transition:
+    background 0.13s ease,
+    box-shadow 0.13s ease;
+}
+.copy-btn,
+.seg button {
+  transition:
+    background 0.14s ease,
+    color 0.14s ease,
+    box-shadow 0.14s ease;
+}
+.input,
+.select,
+.textarea {
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+.kpi-val {
+  transition: color 0.15s ease;
+}
+.info-dot {
+  transition:
+    border-color 0.14s ease,
+    color 0.14s ease,
+    transform 0.12s ease;
+}
+.info-dot:hover {
+  transform: scale(1.08);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .table tbody tr:hover {
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* ============================================================
+   Editorial / Ink — serif headings (Mincho), quiet pills,
+   charcoal sidebar, clay highlight.
+   ============================================================ */
+
+/* Mincho/serif display headings + serif numerals */
+.t-display {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.t-h1 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+.kpi-val {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+.kpi-delta.up {
+  color: var(--hi);
+}
+
+/* quiet status pills (editorial) */
+.pill {
+  background: transparent;
+  font-weight: 600;
+  border-color: transparent;
+  padding-left: 0;
+  padding-right: 0;
+  gap: 6px;
+}
+.pill .pdot {
+  width: 7px;
+  height: 7px;
+}
+
+/* logo mark holds the Beacon SVG */
+.logo-mark {
+  background: var(--charcoal);
+  color: var(--ink-on-accent);
+  overflow: hidden;
+}
+.brand-name {
+  letter-spacing: -0.022em;
+}
+.brand-name b {
+  font-weight: 600;
+}
+.brand-name span {
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+/* ---- Charcoal sidebar (both themes) ---- */
+.sidebar {
+  background: var(--charcoal);
+  border-right: none;
+  --side-on: oklch(94% 0.012 84);
+}
+.side-brand {
+  border-bottom: 1px solid color-mix(in oklch, white 12%, transparent);
+}
+.sidebar .brand-name {
+  color: var(--side-on);
+}
+.sidebar .brand-name span {
+  color: color-mix(in oklch, white 58%, transparent);
+}
+.sidebar .logo-mark {
+  background: color-mix(in oklch, white 18%, transparent);
+}
+.sidebar .nav-group-label {
+  color: color-mix(in oklch, white 50%, transparent);
+}
+.sidebar .nav-item {
+  color: color-mix(in oklch, white 80%, transparent);
+}
+.sidebar .nav-item:hover {
+  background: color-mix(in oklch, white 9%, transparent);
+  color: var(--side-on);
+}
+.sidebar .nav-item.active {
+  background: color-mix(in oklch, white 15%, transparent);
+  color: #fff;
+  font-weight: 600;
+}
+.sidebar .nav-item .ni-badge {
+  background: color-mix(in oklch, white 22%, transparent);
+  color: #fff;
+  border-color: transparent;
+}
+.side-foot {
+  border-top: 1px solid color-mix(in oklch, white 13%, transparent);
+}
+[data-theme='dark'] .nav-item.active {
+  color: #fff;
+}
+
+/* ============================================================
+   Auth screens (login / set password)
+   Two-column frame: accent brand panel + the form.
+   All layout lives here so the React shell carries class names only.
+   ============================================================ */
+.auth-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 100vh;
+}
+.auth-aside {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 40px;
+  overflow: hidden;
+  background: var(--accent);
+  color: var(--ink-on-accent);
+}
+/* keep brand/pitch/copy above the signal deco (which stays absolute) */
+.auth-brand,
+.auth-pitch,
+.auth-copy {
+  position: relative;
+}
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.auth-brand-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in oklch, white 16%, transparent);
+}
+.auth-brand-mark svg {
+  width: 20px;
+  height: 20px;
+}
+.auth-brand-name {
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: -0.02em;
+}
+.auth-pitch {
+  max-width: 30ch;
+}
+.auth-pitch .t-display {
+  color: var(--ink-on-accent);
+}
+.auth-pitch p {
+  font-size: 14px;
+  line-height: 1.6;
+  opacity: 0.85;
+}
+.auth-copy {
+  opacity: 0.7;
+}
+
+.auth-form-col {
+  display: grid;
+  place-items: center;
+  padding: 40px 28px;
+  background: var(--bg);
+}
+.auth-form {
+  width: min(380px, 100%);
+}
+/* header: title left, theme/lang controls right; controls drop to their own
+   row (and segs wrap internally) so the six-locale toggle never squeezes the
+   title in the narrow form. */
+.auth-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+}
+.auth-head > .stack {
+  min-width: 0;
+}
+.auth-head .auth-controls {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.auth-head .seg {
+  flex-wrap: wrap;
+  height: auto;
+}
+.auth-foot {
+  justify-content: center;
+}
+.auth-foot svg {
+  width: 13px;
+  height: 13px;
+}
+
+@media (max-width: 760px) {
+  .auth-grid {
+    grid-template-columns: 1fr;
+  }
+  .auth-aside {
+    display: none;
+  }
+}
+
+/* ============================================================
+   Home (onboarding) — hero, setup card, the core-loop diagram,
+   and the step cards. All layout lives here; the page carries
+   class names only.
+   ============================================================ */
+.home-lead {
+  max-width: 60ch;
+}
+
+/* setup progress bar width comes from --pct (data, not styling) */
+.setup-prog > i {
+  width: var(--pct, 0%);
+}
+
+/* the seven-step core loop, as a horizontal track */
+.loop {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 14px 8px;
+}
+.loop-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  width: 92px;
+  text-align: center;
+}
+.loop-mark {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  color: var(--ink-3);
+  border: 1px solid var(--border);
+}
+.loop-mark svg {
+  width: 21px;
+  height: 21px;
+}
+.loop-step.is-done .loop-mark {
+  background: var(--st-go-soft);
+  color: var(--st-go-ink);
+}
+.loop-step.is-current .loop-mark {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1.5px solid var(--accent-line);
+}
+.loop-label {
+  font-size: 11.5px;
+  line-height: 1.25;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+.loop-step.is-current .loop-label {
+  color: var(--ink);
+  font-weight: 600;
+}
+.loop-bar {
+  flex: 0 0 14px;
+  height: 2px;
+  margin-top: 22px;
+  background: var(--border-strong);
+  opacity: 0.7;
+}
+
+/* step cards grid: a touch wider than the default card grid */
+.grid-steps {
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+}
+/* the step card is a <button>; keep its content left-aligned */
+.grid-steps .step {
+  width: 100%;
+  text-align: left;
+}
+.step-arrow {
+  align-self: center;
+  flex-shrink: 0;
+  color: var(--ink-3);
+}
+.step-arrow svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* "Do this" accent chip on the current step */
+.chip-accent {
+  height: 22px;
+  color: var(--accent);
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
 }
