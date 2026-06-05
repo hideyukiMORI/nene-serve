@@ -33,6 +33,9 @@ use NeneServe\Settings\SettingsRouteRegistrar;
 use NeneServe\Settings\SettingsServiceProvider;
 use NeneServe\Tenant\Account\AccountRouteRegistrar;
 use NeneServe\Tenant\Account\AccountServiceProvider;
+use NeneServe\Tenant\Invitations\InvitationInvalidExceptionHandler;
+use NeneServe\Tenant\Invitations\InvitationsRouteRegistrar;
+use NeneServe\Tenant\Invitations\InvitationsServiceProvider;
 use NeneServe\Tenant\Users\UsersRouteRegistrar;
 use NeneServe\Tenant\Users\UsersServiceProvider;
 use NeneServe\Tenant\Users\UserValidationExceptionHandler;
@@ -64,7 +67,8 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
             ->addProvider(new MetricsServiceProvider())
             ->addProvider(new PlacementsServiceProvider())
             ->addProvider(new CreativesServiceProvider())
-            ->addProvider(new MarketplaceServiceProvider());
+            ->addProvider(new MarketplaceServiceProvider())
+            ->addProvider(new InvitationsServiceProvider());
 
         $builder
             ->set(
@@ -80,6 +84,7 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                     $creatives = $container->get(CreativesServiceProvider::ROUTE_REGISTRAR);
                     $creativeReview = $container->get(CreativesServiceProvider::REVIEW_ROUTE_REGISTRAR);
                     $marketplace = $container->get(MarketplaceServiceProvider::ROUTE_REGISTRAR);
+                    $invitations = $container->get(InvitationsServiceProvider::ROUTE_REGISTRAR);
 
                     if (!$health instanceof HealthRouteRegistrar) {
                         throw new LogicException('Health route registrar service is invalid.');
@@ -121,8 +126,12 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Marketplace route registrar service is invalid.');
                     }
 
+                    if (!$invitations instanceof InvitationsRouteRegistrar) {
+                        throw new LogicException('Invitations route registrar service is invalid.');
+                    }
+
                     /** @var list<callable(\Nene2\Routing\Router): void> $registrars */
-                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements, $creatives, $creativeReview, $marketplace];
+                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements, $creatives, $creativeReview, $marketplace, $invitations];
 
                     return $registrars;
                 },
@@ -173,9 +182,14 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                     }
 
                     $marketplaceValidation = $container->get(MarketplaceServiceProvider::EXCEPTION_HANDLER);
+                    $invitationInvalid = $container->get(InvitationsServiceProvider::EXCEPTION_HANDLER);
 
                     if (!$marketplaceValidation instanceof MarketplaceValidationExceptionHandler) {
                         throw new LogicException('Marketplace validation exception handler service is invalid.');
+                    }
+
+                    if (!$invitationInvalid instanceof InvitationInvalidExceptionHandler) {
+                        throw new LogicException('Invitation invalid exception handler service is invalid.');
                     }
 
                     /** @var list<DomainExceptionHandlerInterface> $handlers */
@@ -189,6 +203,7 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         $selfApproval,
                         $scanFailed,
                         $marketplaceValidation,
+                        $invitationInvalid,
                     ];
 
                     return $handlers;
