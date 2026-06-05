@@ -48,6 +48,8 @@ use NeneServe\Serving\Placements\CreativeValidationExceptionHandler;
 use NeneServe\Serving\Placements\PlacementNotFoundExceptionHandler;
 use NeneServe\Serving\Placements\PlacementsRouteRegistrar;
 use NeneServe\Serving\Placements\PlacementsServiceProvider;
+use NeneServe\Serving\PublicApi\PublicRouteRegistrar;
+use NeneServe\Serving\PublicApi\PublicServiceProvider;
 use NeneServe\Settings\SettingsRouteRegistrar;
 use NeneServe\Settings\SettingsServiceProvider;
 use NeneServe\Tenant\Account\AccountRouteRegistrar;
@@ -92,7 +94,8 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
             ->addProvider(new DsrServiceProvider())
             ->addProvider(new BillingServiceProvider())
             ->addProvider(new DealServiceProvider())
-            ->addProvider(new AssetsServiceProvider());
+            ->addProvider(new AssetsServiceProvider())
+            ->addProvider(new PublicServiceProvider());
 
         $builder
             ->set(
@@ -114,6 +117,7 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                     $billing = $container->get(BillingServiceProvider::ROUTE_REGISTRAR);
                     $deal = $container->get(DealServiceProvider::ROUTE_REGISTRAR);
                     $assets = $container->get(AssetsServiceProvider::ROUTE_REGISTRAR);
+                    $public = $container->get(PublicServiceProvider::ROUTE_REGISTRAR);
 
                     if (!$health instanceof HealthRouteRegistrar) {
                         throw new LogicException('Health route registrar service is invalid.');
@@ -179,8 +183,12 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Assets route registrar service is invalid.');
                     }
 
+                    if (!$public instanceof PublicRouteRegistrar) {
+                        throw new LogicException('Public route registrar service is invalid.');
+                    }
+
                     /** @var list<callable(\Nene2\Routing\Router): void> $registrars */
-                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements, $creatives, $creativeReview, $marketplace, $invitations, $legalHolds, $dsr, $billing, $deal, $assets];
+                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements, $creatives, $creativeReview, $marketplace, $invitations, $legalHolds, $dsr, $billing, $deal, $assets, $public];
 
                     return $registrars;
                 },

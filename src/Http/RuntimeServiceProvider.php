@@ -25,6 +25,9 @@ use Nene2\Http\ResponseEmitter;
 use Nene2\Http\RuntimeApplicationFactory;
 use Nene2\Log\MonologLoggerFactory;
 use Nene2\Log\RequestIdHolder;
+use Nene2\Middleware\InMemoryRateLimitStorage;
+use Nene2\Middleware\RateLimitStorageInterface;
+use Nene2\Middleware\ThrottleMiddleware;
 use NeneServe\ApplicationServiceProvider;
 use NeneServe\Audit\AuditLogInterface;
 use NeneServe\Audit\PdoAuditLog;
@@ -35,9 +38,13 @@ use NeneServe\Marketplace\Invoice\HttpInvoiceClient;
 use NeneServe\Marketplace\Invoice\InvoiceClientInterface;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\PdoEventStore;
+use NeneServe\Serving\Frequency\FileFrequencyCapStore;
+use NeneServe\Serving\Frequency\FrequencyCapStoreInterface;
 use NeneServe\Serving\Scan\BundleScannerInterface;
 use NeneServe\Serving\Scan\ClamAvScanner;
 use NeneServe\Serving\Scan\StubBundleScanner;
+use NeneServe\Serving\Token\FileTokenStore;
+use NeneServe\Serving\Token\TokenStoreInterface;
 use NeneServe\Storage\LocalStorage;
 use NeneServe\Storage\StorageInterface;
 use NeneServe\Support\Crypto;
@@ -223,6 +230,30 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                     return new LocalStorage($projectRoot . '/var/uploads');
                 },
             )
+            ->set(
+                TokenStoreInterface::class,
+                static function (ContainerInterface $container): TokenStoreInterface {
+                    $projectRoot = $container->get(self::PROJECT_ROOT);
+
+                    if (!is_string($projectRoot) || $projectRoot === '') {
+                        throw new LogicException('Project root service is invalid.');
+                    }
+
+                    return new FileTokenStore($projectRoot . '/var/tokens.json');
+                },
+            )
+            ->set(
+                FrequencyCapStoreInterface::class,
+                static function (ContainerInterface $container): FrequencyCapStoreInterface {
+                    $projectRoot = $container->get(self::PROJECT_ROOT);
+
+                    if (!is_string($projectRoot) || $projectRoot === '') {
+                        throw new LogicException('Project root service is invalid.');
+                    }
+
+                    return new FileFrequencyCapStore($projectRoot . '/var/frequency.json');
+                },
+            )
             ->set(Crypto::class, static fn (ContainerInterface $container): Crypto => new Crypto())
             ->set(
                 MailerFactoryInterface::class,
@@ -373,6 +404,30 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                 },
             )
             ->set(
+                RateLimitStorageInterface::class,
+                static fn (ContainerInterface $container): RateLimitStorageInterface => new InMemoryRateLimitStorage(),
+            )
+            ->set(
+                ThrottleMiddleware::class,
+                static function (ContainerInterface $container): ThrottleMiddleware {
+                    $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
+                    $storage = $container->get(RateLimitStorageInterface::class);
+
+                    if (!$problemDetails instanceof ProblemDetailsResponseFactory) {
+                        throw new LogicException('Problem details response factory service is invalid.');
+                    }
+
+                    if (!$storage instanceof RateLimitStorageInterface) {
+                        throw new LogicException('Rate limit storage service is invalid.');
+                    }
+
+                    // Generous fixed-window budget for the untrusted public surface;
+                    // production must inject a shared (Redis/DB) storage so the limit
+                    // is enforced across PHP-FPM workers.
+                    return new ThrottleMiddleware($problemDetails, $storage, limit: 600, windowSeconds: 60);
+                },
+            )
+            ->set(
                 RuntimeApplicationFactory::class,
                 static function (ContainerInterface $container): RuntimeApplicationFactory {
                     $responseFactory = $container->get(ResponseFactoryInterface::class);
@@ -382,6 +437,7 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                     $requestIdHolder = $container->get(RequestIdHolder::class);
                     $adminAuth = $container->get(AdminAuthMiddleware::class);
                     $capability = $container->get(CapabilityMiddleware::class);
+                    $throttle = $container->get(ThrottleMiddleware::class);
                     $exceptionHandlers = $container->get(ApplicationServiceProvider::EXCEPTION_HANDLERS);
                     $routeRegistrars = $container->get(ApplicationServiceProvider::ROUTE_REGISTRARS);
 
@@ -413,6 +469,10 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Capability middleware service is invalid.');
                     }
 
+                    if (!$throttle instanceof ThrottleMiddleware) {
+                        throw new LogicException('Throttle middleware service is invalid.');
+                    }
+
                     if (!is_array($exceptionHandlers) || !array_is_list($exceptionHandlers)) {
                         throw new LogicException('Exception handlers service is invalid.');
                     }
@@ -433,6 +493,7 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                         requestIdHolder: $requestIdHolder,
                         routeRegistrars: $routeRegistrars,
                         authMiddleware: [$adminAuth, $capability],
+                        throttleMiddleware: $throttle,
                         debug: $config->debug,
                         requestMaxBodyBytes: 10 * 1024 * 1024,
                         problemDetailsBaseUrl: $config->problemDetailsBaseUrl,
