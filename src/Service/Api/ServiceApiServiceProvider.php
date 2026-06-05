@@ -17,6 +17,7 @@ use NeneServe\Mcp\Api\ProposePlacementChangeUseCase;
 use NeneServe\Mcp\Api\ProposePlacementChangeUseCaseInterface;
 use NeneServe\Measurement\Metrics\GetMetricsUseCase;
 use NeneServe\Measurement\UseCase\ExportMetricsUseCase;
+use NeneServe\Serving\Placements\ListPlacementsUseCaseInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
@@ -45,7 +46,15 @@ final readonly class ServiceApiServiceProvider implements ServiceProviderInterfa
             )
             ->set(
                 ListPlacementsHandler::class,
-                static fn (ContainerInterface $c): ListPlacementsHandler => new ListPlacementsHandler(self::query($c), self::json($c), self::problem($c)),
+                static function (ContainerInterface $c): ListPlacementsHandler {
+                    $useCase = $c->get(ListPlacementsUseCaseInterface::class);
+
+                    if (!$useCase instanceof ListPlacementsUseCaseInterface) {
+                        throw new LogicException('List placements use case service is invalid.');
+                    }
+
+                    return new ListPlacementsHandler($useCase, self::json($c));
+                },
             )
             ->set(
                 GetMetricsHandler::class,
