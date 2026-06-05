@@ -37,6 +37,11 @@ use NeneServe\Measurement\Metrics\MetricsServiceProvider;
 use NeneServe\Retention\LegalHolds\LegalHoldExceptionHandler;
 use NeneServe\Retention\LegalHolds\LegalHoldsRouteRegistrar;
 use NeneServe\Retention\LegalHolds\LegalHoldsServiceProvider;
+use NeneServe\Service\Api\ChangePlanNotFoundExceptionHandler;
+use NeneServe\Service\Api\InvalidPlanStateExceptionHandler;
+use NeneServe\Service\Api\McpValidationExceptionHandler;
+use NeneServe\Service\Api\ServiceApiServiceProvider;
+use NeneServe\Service\Api\ServiceRouteRegistrar;
 use NeneServe\Serving\Creatives\CreativeNotFoundExceptionHandler;
 use NeneServe\Serving\Creatives\CreativeReviewRouteRegistrar;
 use NeneServe\Serving\Creatives\CreativeScanFailedExceptionHandler;
@@ -95,7 +100,8 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
             ->addProvider(new BillingServiceProvider())
             ->addProvider(new DealServiceProvider())
             ->addProvider(new AssetsServiceProvider())
-            ->addProvider(new PublicServiceProvider());
+            ->addProvider(new PublicServiceProvider())
+            ->addProvider(new ServiceApiServiceProvider());
 
         $builder
             ->set(
@@ -118,6 +124,7 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                     $deal = $container->get(DealServiceProvider::ROUTE_REGISTRAR);
                     $assets = $container->get(AssetsServiceProvider::ROUTE_REGISTRAR);
                     $public = $container->get(PublicServiceProvider::ROUTE_REGISTRAR);
+                    $service = $container->get(ServiceApiServiceProvider::ROUTE_REGISTRAR);
 
                     if (!$health instanceof HealthRouteRegistrar) {
                         throw new LogicException('Health route registrar service is invalid.');
@@ -187,8 +194,12 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Public route registrar service is invalid.');
                     }
 
+                    if (!$service instanceof ServiceRouteRegistrar) {
+                        throw new LogicException('Service route registrar service is invalid.');
+                    }
+
                     /** @var list<callable(\Nene2\Routing\Router): void> $registrars */
-                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements, $creatives, $creativeReview, $marketplace, $invitations, $legalHolds, $dsr, $billing, $deal, $assets, $public];
+                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements, $creatives, $creativeReview, $marketplace, $invitations, $legalHolds, $dsr, $billing, $deal, $assets, $public, $service];
 
                     return $registrars;
                 },
@@ -298,6 +309,22 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Records unavailable exception handler service is invalid.');
                     }
 
+                    $mcpValidation = $container->get(ServiceApiServiceProvider::EXCEPTION_HANDLER_MCP_VALIDATION);
+                    $changePlanNotFound = $container->get(ServiceApiServiceProvider::EXCEPTION_HANDLER_PLAN_NOT_FOUND);
+                    $invalidPlanState = $container->get(ServiceApiServiceProvider::EXCEPTION_HANDLER_PLAN_STATE);
+
+                    if (!$mcpValidation instanceof McpValidationExceptionHandler) {
+                        throw new LogicException('MCP validation exception handler service is invalid.');
+                    }
+
+                    if (!$changePlanNotFound instanceof ChangePlanNotFoundExceptionHandler) {
+                        throw new LogicException('Change plan not found exception handler service is invalid.');
+                    }
+
+                    if (!$invalidPlanState instanceof InvalidPlanStateExceptionHandler) {
+                        throw new LogicException('Invalid plan state exception handler service is invalid.');
+                    }
+
                     /** @var list<DomainExceptionHandlerInterface> $handlers */
                     $handlers = [
                         $authenticationFailed,
@@ -319,6 +346,9 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         $dealHandoffFailed,
                         $assetValidation,
                         $recordsUnavailable,
+                        $mcpValidation,
+                        $changePlanNotFound,
+                        $invalidPlanState,
                     ];
 
                     return $handlers;

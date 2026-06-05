@@ -4,41 +4,42 @@ declare(strict_types=1);
 
 namespace NeneServe\Mcp;
 
-use PDO;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 
-final class PdoChangePlanRepository implements ChangePlanRepositoryInterface
+final readonly class PdoChangePlanRepository implements ChangePlanRepositoryInterface
 {
     private const COLUMNS = 'id, organization_id, placement_id, new_creative_id, status, created_at';
 
     public function __construct(
-        private readonly PDO $pdo,
+        private DatabaseQueryExecutorInterface $query,
     ) {
     }
 
     public function findByIdInOrganization(string $id, string $organizationId): ?ChangePlan
     {
-        $stmt = $this->pdo->prepare('SELECT ' . self::COLUMNS . ' FROM change_plans WHERE id = ? AND organization_id = ? LIMIT 1');
-        $stmt->execute([$id, $organizationId]);
-        $row = $stmt->fetch();
+        $row = $this->query->fetchOne(
+            'SELECT ' . self::COLUMNS . ' FROM change_plans WHERE id = ? AND organization_id = ? LIMIT 1',
+            [$id, $organizationId],
+        );
 
-        return $row === false ? null : $this->hydrate($row);
+        return $row === null ? null : $this->hydrate($row);
     }
 
     public function save(ChangePlan $plan): void
     {
-        $stmt = $this->pdo->prepare(
+        $this->query->execute(
             'INSERT INTO change_plans (id, organization_id, placement_id, new_creative_id, status, created_at)
              VALUES (?, ?, ?, ?, ?, ?) AS new
              ON DUPLICATE KEY UPDATE placement_id = new.placement_id, new_creative_id = new.new_creative_id, status = new.status',
+            [
+                $plan->id,
+                $plan->organizationId,
+                $plan->placementId,
+                $plan->newCreativeId,
+                $plan->status,
+                $plan->createdAt,
+            ],
         );
-        $stmt->execute([
-            $plan->id,
-            $plan->organizationId,
-            $plan->placementId,
-            $plan->newCreativeId,
-            $plan->status,
-            $plan->createdAt,
-        ]);
     }
 
     /** @param array<string, mixed> $row */

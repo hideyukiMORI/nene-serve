@@ -38,6 +38,10 @@ use NeneServe\Marketplace\Invoice\HttpInvoiceClient;
 use NeneServe\Marketplace\Invoice\InvoiceClientInterface;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\PdoEventStore;
+use NeneServe\Service\Auth\ScopeMiddleware;
+use NeneServe\Service\Auth\ServiceAuthMiddleware;
+use NeneServe\Service\PdoServiceTokenRepository;
+use NeneServe\Service\ServiceTokenRepositoryInterface;
 use NeneServe\Serving\Frequency\FileFrequencyCapStore;
 use NeneServe\Serving\Frequency\FrequencyCapStoreInterface;
 use NeneServe\Serving\Scan\BundleScannerInterface;
@@ -404,6 +408,47 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                 },
             )
             ->set(
+                ServiceTokenRepositoryInterface::class,
+                static function (ContainerInterface $container): ServiceTokenRepositoryInterface {
+                    $query = $container->get(DatabaseQueryExecutorInterface::class);
+
+                    if (!$query instanceof DatabaseQueryExecutorInterface) {
+                        throw new LogicException('Database query executor service is invalid.');
+                    }
+
+                    return new PdoServiceTokenRepository($query);
+                },
+            )
+            ->set(
+                ServiceAuthMiddleware::class,
+                static function (ContainerInterface $container): ServiceAuthMiddleware {
+                    $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
+                    $tokens = $container->get(ServiceTokenRepositoryInterface::class);
+
+                    if (!$problemDetails instanceof ProblemDetailsResponseFactory) {
+                        throw new LogicException('Problem details response factory service is invalid.');
+                    }
+
+                    if (!$tokens instanceof ServiceTokenRepositoryInterface) {
+                        throw new LogicException('Service token repository service is invalid.');
+                    }
+
+                    return new ServiceAuthMiddleware($problemDetails, $tokens);
+                },
+            )
+            ->set(
+                ScopeMiddleware::class,
+                static function (ContainerInterface $container): ScopeMiddleware {
+                    $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
+
+                    if (!$problemDetails instanceof ProblemDetailsResponseFactory) {
+                        throw new LogicException('Problem details response factory service is invalid.');
+                    }
+
+                    return new ScopeMiddleware($problemDetails);
+                },
+            )
+            ->set(
                 RateLimitStorageInterface::class,
                 static fn (ContainerInterface $container): RateLimitStorageInterface => new InMemoryRateLimitStorage(),
             )
@@ -437,6 +482,8 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                     $requestIdHolder = $container->get(RequestIdHolder::class);
                     $adminAuth = $container->get(AdminAuthMiddleware::class);
                     $capability = $container->get(CapabilityMiddleware::class);
+                    $serviceAuth = $container->get(ServiceAuthMiddleware::class);
+                    $scope = $container->get(ScopeMiddleware::class);
                     $throttle = $container->get(ThrottleMiddleware::class);
                     $exceptionHandlers = $container->get(ApplicationServiceProvider::EXCEPTION_HANDLERS);
                     $routeRegistrars = $container->get(ApplicationServiceProvider::ROUTE_REGISTRARS);
@@ -469,6 +516,14 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Capability middleware service is invalid.');
                     }
 
+                    if (!$serviceAuth instanceof ServiceAuthMiddleware) {
+                        throw new LogicException('Service auth middleware service is invalid.');
+                    }
+
+                    if (!$scope instanceof ScopeMiddleware) {
+                        throw new LogicException('Scope middleware service is invalid.');
+                    }
+
                     if (!$throttle instanceof ThrottleMiddleware) {
                         throw new LogicException('Throttle middleware service is invalid.');
                     }
@@ -492,7 +547,7 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                         domainExceptionHandlers: $exceptionHandlers,
                         requestIdHolder: $requestIdHolder,
                         routeRegistrars: $routeRegistrars,
-                        authMiddleware: [$adminAuth, $capability],
+                        authMiddleware: [$adminAuth, $capability, $serviceAuth, $scope],
                         throttleMiddleware: $throttle,
                         debug: $config->debug,
                         requestMaxBodyBytes: 10 * 1024 * 1024,
