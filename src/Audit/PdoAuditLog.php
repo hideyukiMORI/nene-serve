@@ -55,19 +55,6 @@ final readonly class PdoAuditLog implements AuditLogInterface
         );
     }
 
-    public function forSubject(string $organizationId, string $subjectType, string $subjectId): array
-    {
-        $rows = $this->query->fetchAll(
-            'SELECT ' . self::COLUMNS . '
-             FROM audit_events
-             WHERE organization_id = ? AND subject_type = ? AND subject_id = ?
-             ORDER BY seq DESC',
-            [$organizationId, $subjectType, $subjectId],
-        );
-
-        return $this->hydrateAll($rows);
-    }
-
     public function allForOrganization(string $organizationId): array
     {
         $rows = $this->query->fetchAll(

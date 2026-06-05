@@ -23,13 +23,6 @@ interface AuditLogInterface
     ): void;
 
     /**
-     * Audit trail for one subject (newest first).
-     *
-     * @return list<AuditEvent>
-     */
-    public function forSubject(string $organizationId, string $subjectType, string $subjectId): array;
-
-    /**
      * Full tenant chain, oldest → newest, for {@see AuditChainVerifier}.
      *
      * @return list<AuditEvent>
