@@ -12,7 +12,9 @@ const users = [
 ]
 
 export const userHandlers = [
-  http.get('/admin/users', () => HttpResponse.json({ items: users, limit: users.length, offset: 0 })),
+  http.get('/admin/users', () =>
+    HttpResponse.json({ items: users, limit: users.length, offset: 0 }),
+  ),
   http.post('/admin/users', async ({ request }) => {
     const body = (await request.json()) as { email: string; role: string }
     return HttpResponse.json(

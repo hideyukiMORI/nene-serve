@@ -25,6 +25,9 @@ jobs:
       - name: Validate composer.json
         run: composer validate --no-check-publish
 
+      - name: Clone NENE2 (local path dependency)
+        run: git clone --depth=1 https://github.com/hideyukiMORI/NENE2.git ../NENE2
+
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 

@@ -58,7 +58,9 @@ const placements = [
 ]
 
 export const placementHandlers = [
-  http.get('/admin/placements', () => HttpResponse.json({ items: placements, limit: placements.length, offset: 0 })),
+  http.get('/admin/placements', () =>
+    HttpResponse.json({ items: placements, limit: placements.length, offset: 0 }),
+  ),
   http.post('/admin/placements', async ({ request }) => {
     const body = (await request.json()) as { public_placement_key: string }
     return HttpResponse.json(

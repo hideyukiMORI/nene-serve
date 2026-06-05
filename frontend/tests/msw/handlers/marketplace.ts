@@ -30,9 +30,15 @@ const campaigns = [
 ]
 
 export const marketplaceHandlers = [
-  http.get('/admin/advertisers', () => HttpResponse.json({ items: advertisers, limit: advertisers.length, offset: 0 })),
-  http.get('/admin/pricing-rules', () => HttpResponse.json({ items: pricingRules, limit: pricingRules.length, offset: 0 })),
-  http.get('/admin/campaigns', () => HttpResponse.json({ items: campaigns, limit: campaigns.length, offset: 0 })),
+  http.get('/admin/advertisers', () =>
+    HttpResponse.json({ items: advertisers, limit: advertisers.length, offset: 0 }),
+  ),
+  http.get('/admin/pricing-rules', () =>
+    HttpResponse.json({ items: pricingRules, limit: pricingRules.length, offset: 0 }),
+  ),
+  http.get('/admin/campaigns', () =>
+    HttpResponse.json({ items: campaigns, limit: campaigns.length, offset: 0 }),
+  ),
 
   http.post('/admin/advertisers', async ({ request }) => {
     const body = (await request.json()) as { name: string }

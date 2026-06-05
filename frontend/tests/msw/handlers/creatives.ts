@@ -37,9 +37,13 @@ const reviewQueue = [
 ]
 
 export const creativeHandlers = [
-  http.get('/admin/creatives', () => HttpResponse.json({ items: creatives, limit: creatives.length, offset: 0 })),
+  http.get('/admin/creatives', () =>
+    HttpResponse.json({ items: creatives, limit: creatives.length, offset: 0 }),
+  ),
 
-  http.get('/admin/review-queue', () => HttpResponse.json({ items: reviewQueue, limit: reviewQueue.length, offset: 0 })),
+  http.get('/admin/review-queue', () =>
+    HttpResponse.json({ items: reviewQueue, limit: reviewQueue.length, offset: 0 }),
+  ),
 
   http.post('/admin/creatives', () =>
     HttpResponse.json(makeCreativeDto({ id: 'cr-new', review_status: 'draft' }), { status: 201 }),
