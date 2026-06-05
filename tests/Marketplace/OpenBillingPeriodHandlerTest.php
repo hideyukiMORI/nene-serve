@@ -9,10 +9,11 @@ use Nene2\Http\JsonResponseFactory;
 use Nene2\Routing\Router;
 use Nene2\Validation\ValidationException;
 use NeneServe\Marketplace\Billing\OpenBillingPeriodHandler;
+use NeneServe\Marketplace\Billing\OpenBillingPeriodInput;
+use NeneServe\Marketplace\Billing\OpenBillingPeriodOutput;
 use NeneServe\Marketplace\Billing\OpenBillingPeriodUseCaseInterface;
 use NeneServe\Marketplace\BillingPeriod;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
-use NeneServe\Tenant\AuthContext;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -54,9 +55,9 @@ final class OpenBillingPeriodHandlerTest extends TestCase
     private function useCase(): OpenBillingPeriodUseCaseInterface
     {
         return new class () implements OpenBillingPeriodUseCaseInterface {
-            public function execute(AuthContext $actor, string $campaignId, string $periodStart, string $periodEnd): BillingPeriod
+            public function execute(OpenBillingPeriodInput $input): OpenBillingPeriodOutput
             {
-                return new BillingPeriod('bp-1', $actor->organizationId, $campaignId, $periodStart, $periodEnd, 'open');
+                return new OpenBillingPeriodOutput(new BillingPeriod('bp-1', 'org-acme', $input->campaignId, $input->periodStart, $input->periodEnd, 'open'));
             }
         };
     }

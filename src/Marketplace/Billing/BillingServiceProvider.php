@@ -14,6 +14,7 @@ use Nene2\Http\JsonResponseFactory;
 use Nene2\Http\RequestScopedHolder;
 use NeneServe\Http\RuntimeServiceProvider;
 use NeneServe\Marketplace\BillingPeriodRepositoryInterface;
+use NeneServe\Marketplace\CampaignRepositoryInterface;
 use NeneServe\Marketplace\Invoice\InvoiceClientInterface;
 use NeneServe\Marketplace\PdoBillingPeriodRepository;
 use NeneServe\Marketplace\PdoSpendSnapshotRepository;
@@ -46,7 +47,15 @@ final readonly class BillingServiceProvider implements ServiceProviderInterface
             )
             ->set(
                 OpenBillingPeriodUseCaseInterface::class,
-                static fn (ContainerInterface $c): OpenBillingPeriodUseCaseInterface => new OpenBillingPeriodUseCase(self::query($c), self::transactions($c)),
+                static function (ContainerInterface $c): OpenBillingPeriodUseCaseInterface {
+                    $campaigns = $c->get(CampaignRepositoryInterface::class);
+
+                    if (!$campaigns instanceof CampaignRepositoryInterface) {
+                        throw new LogicException('Campaign repository service is invalid.');
+                    }
+
+                    return new OpenBillingPeriodUseCase($campaigns, self::transactions($c), self::orgId($c));
+                },
             )
             ->set(
                 CloseBillingPeriodUseCaseInterface::class,
@@ -57,7 +66,7 @@ final readonly class BillingServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Get campaign spend use case service is invalid.');
                     }
 
-                    return new CloseBillingPeriodUseCase(self::query($c), self::transactions($c), $spend);
+                    return new CloseBillingPeriodUseCase(self::query($c), self::transactions($c), $spend, self::orgId($c));
                 },
             )
             ->set(
@@ -69,7 +78,7 @@ final readonly class BillingServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Invoice client service is invalid.');
                     }
 
-                    return new HandoffBillingPeriodUseCase(self::query($c), self::transactions($c), $invoice);
+                    return new HandoffBillingPeriodUseCase(self::query($c), self::transactions($c), $invoice, self::orgId($c));
                 },
             )
             ->set(

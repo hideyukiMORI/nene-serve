@@ -8,10 +8,11 @@ use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Routing\Router;
 use NeneServe\Marketplace\Billing\HandoffBillingPeriodHandler;
+use NeneServe\Marketplace\Billing\HandoffBillingPeriodInput;
+use NeneServe\Marketplace\Billing\HandoffBillingPeriodOutput;
 use NeneServe\Marketplace\Billing\HandoffBillingPeriodUseCaseInterface;
 use NeneServe\Marketplace\InvoiceHandoff;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
-use NeneServe\Tenant\AuthContext;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -57,12 +58,12 @@ final class HandoffBillingPeriodHandlerTest extends TestCase
     private function useCase(): HandoffBillingPeriodUseCaseInterface
     {
         return new class () implements HandoffBillingPeriodUseCaseInterface {
-            public function execute(AuthContext $actor, string $periodId): InvoiceHandoff
+            public function execute(HandoffBillingPeriodInput $input): HandoffBillingPeriodOutput
             {
-                return new InvoiceHandoff(
+                return new HandoffBillingPeriodOutput(new InvoiceHandoff(
                     'ho-1',
-                    $actor->organizationId,
-                    $periodId,
+                    'org-acme',
+                    $input->periodId,
                     'ho:org:bp-1:v1',
                     1000,
                     50,
@@ -72,7 +73,7 @@ final class HandoffBillingPeriodHandlerTest extends TestCase
                     'handed_off',
                     'ipay-1',
                     '2026-06-05T00:00:00+00:00',
-                );
+                ));
             }
         };
     }

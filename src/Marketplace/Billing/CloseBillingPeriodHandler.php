@@ -32,11 +32,11 @@ final readonly class CloseBillingPeriodHandler
         $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
         $id = is_array($parameters) && is_string($parameters['id'] ?? null) ? $parameters['id'] : '';
 
-        $result = $this->close->execute($context, $id);
+        $output = $this->close->execute(new CloseBillingPeriodInput($context->userId, $id));
 
         return $this->response->create([
-            'period' => $result['period']->toArray(),
-            'snapshot' => $result['snapshot']->toArray(),
+            'period' => $output->period->toArray(),
+            'snapshot' => $output->snapshot->toArray(),
         ]);
     }
 }

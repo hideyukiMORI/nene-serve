@@ -37,7 +37,7 @@ final readonly class HandoffBillingPeriodHandler
         $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
         $id = is_array($parameters) && is_string($parameters['id'] ?? null) ? $parameters['id'] : '';
 
-        $record = $this->handoff->execute($context, $id);
+        $record = $this->handoff->execute(new HandoffBillingPeriodInput($context->userId, $id))->handoff;
 
         return $this->response->create($record->toArray());
     }

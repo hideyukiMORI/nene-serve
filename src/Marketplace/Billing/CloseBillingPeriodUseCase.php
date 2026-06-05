@@ -6,6 +6,7 @@ namespace NeneServe\Marketplace\Billing;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Marketplace\PdoBillingPeriodRepository;
 use NeneServe\Marketplace\PdoCampaignRepository;
@@ -16,7 +17,6 @@ use NeneServe\Marketplace\UseCase\BillingPeriodNotFoundException;
 use NeneServe\Marketplace\UseCase\GetCampaignSpendUseCase;
 use NeneServe\Marketplace\UseCase\InvalidPeriodTransitionException;
 use NeneServe\Marketplace\UseCase\MarketplaceValidationException;
-use NeneServe\Tenant\AuthContext;
 
 /**
  * Closes an open billing period: derives the reproducible spend, persists an
@@ -26,16 +26,21 @@ use NeneServe\Tenant\AuthContext;
  */
 final readonly class CloseBillingPeriodUseCase implements CloseBillingPeriodUseCaseInterface
 {
+    /**
+     * @param RequestScopedHolder<string> $organizationId
+     */
     public function __construct(
         private DatabaseQueryExecutorInterface $query,
         private DatabaseTransactionManagerInterface $transactions,
         private GetCampaignSpendUseCase $campaignSpend,
+        private RequestScopedHolder $organizationId,
     ) {
     }
 
-    public function execute(AuthContext $actor, string $periodId): array
+    public function execute(CloseBillingPeriodInput $input): CloseBillingPeriodOutput
     {
-        $period = (new PdoBillingPeriodRepository($this->query))->findByIdInOrganization($periodId, $actor->organizationId);
+        $organizationId = $this->organizationId->get();
+        $period = (new PdoBillingPeriodRepository($this->query))->findByIdInOrganization($input->periodId, $organizationId);
 
         if ($period === null) {
             throw new BillingPeriodNotFoundException();
@@ -45,16 +50,16 @@ final readonly class CloseBillingPeriodUseCase implements CloseBillingPeriodUseC
             throw new InvalidPeriodTransitionException('Only an open period can be closed; closed figures are immutable.');
         }
 
-        $campaign = (new PdoCampaignRepository($this->query))->findByIdInOrganization($period->campaignId, $actor->organizationId);
+        $campaign = (new PdoCampaignRepository($this->query))->findByIdInOrganization($period->campaignId, $organizationId);
 
         if ($campaign === null) {
             throw new MarketplaceValidationException('Campaign for this period no longer exists.');
         }
 
         $spend = $this->campaignSpend->forCampaign($campaign);
-        $version = (new PdoSpendSnapshotRepository($this->query))->currentVersion($actor->organizationId, $period->id) + 1;
+        $version = (new PdoSpendSnapshotRepository($this->query))->currentVersion($organizationId, $period->id) + 1;
         $hash = SpendSnapshotHasher::compute(
-            $actor->organizationId,
+            $organizationId,
             $period->id,
             $version,
             $spend->impressions,
@@ -65,7 +70,7 @@ final readonly class CloseBillingPeriodUseCase implements CloseBillingPeriodUseC
         );
         $snapshot = new SpendSnapshot(
             'ss-' . bin2hex(random_bytes(8)),
-            $actor->organizationId,
+            $organizationId,
             $period->id,
             $version,
             $spend->impressions,
@@ -79,12 +84,12 @@ final readonly class CloseBillingPeriodUseCase implements CloseBillingPeriodUseC
         $closed = $period->withStatus('closed');
 
         return $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($snapshot, $closed, $actor, $spend): array {
+            static function (DatabaseQueryExecutorInterface $tx) use ($snapshot, $closed, $input, $organizationId, $spend): CloseBillingPeriodOutput {
                 (new PdoSpendSnapshotRepository($tx))->save($snapshot);
                 (new PdoBillingPeriodRepository($tx))->save($closed);
                 (new PdoAuditLog($tx))->record(
-                    $actor->organizationId,
-                    $actor->userId,
+                    $organizationId,
+                    $input->actorUserId,
                     'billing_period.closed',
                     'billing_period',
                     $closed->id,
@@ -98,7 +103,7 @@ final readonly class CloseBillingPeriodUseCase implements CloseBillingPeriodUseC
                     ],
                 );
 
-                return ['period' => $closed, 'snapshot' => $snapshot];
+                return new CloseBillingPeriodOutput($closed, $snapshot);
             },
         );
     }

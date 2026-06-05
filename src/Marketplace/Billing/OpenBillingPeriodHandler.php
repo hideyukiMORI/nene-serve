@@ -53,7 +53,7 @@ final readonly class OpenBillingPeriodHandler
             throw new ValidationException($errors);
         }
 
-        $period = $this->open->execute($context, $campaignId, $start, $end);
+        $period = $this->open->execute(new OpenBillingPeriodInput($context->userId, $campaignId, $start, $end))->period;
 
         return $this->response->create($period->toArray(), 201);
     }
