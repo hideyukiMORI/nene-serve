@@ -13,6 +13,8 @@ use NeneServe\Auth\AuthRouteRegistrar;
 use NeneServe\Auth\AuthServiceProvider;
 use NeneServe\Health\HealthRouteRegistrar;
 use NeneServe\Health\HealthServiceProvider;
+use NeneServe\Tenant\Account\AccountRouteRegistrar;
+use NeneServe\Tenant\Account\AccountServiceProvider;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -34,7 +36,8 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
     {
         $builder
             ->addProvider(new HealthServiceProvider())
-            ->addProvider(new AuthServiceProvider());
+            ->addProvider(new AuthServiceProvider())
+            ->addProvider(new AccountServiceProvider());
 
         $builder
             ->set(
@@ -42,6 +45,7 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                 static function (ContainerInterface $container): array {
                     $health = $container->get(HealthServiceProvider::ROUTE_REGISTRAR);
                     $auth = $container->get(AuthServiceProvider::ROUTE_REGISTRAR);
+                    $account = $container->get(AccountServiceProvider::ROUTE_REGISTRAR);
 
                     if (!$health instanceof HealthRouteRegistrar) {
                         throw new LogicException('Health route registrar service is invalid.');
@@ -51,8 +55,12 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Auth route registrar service is invalid.');
                     }
 
+                    if (!$account instanceof AccountRouteRegistrar) {
+                        throw new LogicException('Account route registrar service is invalid.');
+                    }
+
                     /** @var list<callable(\Nene2\Routing\Router): void> $registrars */
-                    $registrars = [$health, $auth];
+                    $registrars = [$health, $auth, $account];
 
                     return $registrars;
                 },
