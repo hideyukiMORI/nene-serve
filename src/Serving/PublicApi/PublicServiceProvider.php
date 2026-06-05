@@ -47,7 +47,7 @@ final readonly class PublicServiceProvider implements ServiceProviderInterface
             ->set(
                 RecordImpressionUseCaseInterface::class,
                 static fn (ContainerInterface $c): RecordImpressionUseCaseInterface => new RecordImpressionUseCase(
-                    self::query($c),
+                    self::service($c, PlacementRepositoryInterface::class),
                     self::service($c, TokenStoreInterface::class),
                     self::service($c, EventStoreInterface::class),
                     self::service($c, FrequencyCapStoreInterface::class),
@@ -56,7 +56,7 @@ final readonly class PublicServiceProvider implements ServiceProviderInterface
             ->set(
                 RecordClickUseCaseInterface::class,
                 static fn (ContainerInterface $c): RecordClickUseCaseInterface => new RecordClickUseCase(
-                    self::query($c),
+                    self::service($c, PlacementRepositoryInterface::class),
                     self::service($c, TokenStoreInterface::class),
                     self::service($c, EventStoreInterface::class),
                 ),
@@ -64,7 +64,7 @@ final readonly class PublicServiceProvider implements ServiceProviderInterface
             ->set(
                 RecordConversionUseCaseInterface::class,
                 static fn (ContainerInterface $c): RecordConversionUseCaseInterface => new RecordConversionUseCase(
-                    self::query($c),
+                    self::service($c, PlacementRepositoryInterface::class),
                     self::service($c, EventStoreInterface::class),
                 ),
             )

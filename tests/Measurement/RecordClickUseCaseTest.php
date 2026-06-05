@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace NeneServe\Tests\Measurement;
 
 use NeneServe\Measurement\InMemoryEventStore;
-use NeneServe\Measurement\UseCase\RecordClickUseCase;
 use NeneServe\Serving\InMemoryPlacementRepository;
 use NeneServe\Serving\Placement;
+use NeneServe\Serving\PublicApi\RecordClickUseCase;
 use NeneServe\Serving\Token\FileTokenStore;
 use PHPUnit\Framework\TestCase;
 
@@ -43,7 +43,7 @@ final class RecordClickUseCaseTest extends TestCase
     {
         $placement = new Placement(self::PLACEMENT, self::ORG, 'pk_home', [], 'active', null, $measurementEnabled);
 
-        return new RecordClickUseCase($this->tokens, $this->events, new InMemoryPlacementRepository([$placement]));
+        return new RecordClickUseCase(new InMemoryPlacementRepository([$placement]), $this->tokens, $this->events);
     }
 
     private function issueToken(): string
