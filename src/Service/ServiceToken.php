@@ -25,11 +25,6 @@ final class ServiceToken
         return $this->status === 'active';
     }
 
-    public function matches(string $presented): bool
-    {
-        return hash_equals($this->tokenHash, hash('sha256', $presented));
-    }
-
     public function context(): ServiceContext
     {
         return new ServiceContext($this->organizationId, $this->scopes);

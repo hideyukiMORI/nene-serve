@@ -21,11 +21,6 @@ final class Invitation
     ) {
     }
 
-    public static function hash(string $rawToken): string
-    {
-        return hash('sha256', $rawToken);
-    }
-
     public function isPending(): bool
     {
         return $this->status === 'pending';

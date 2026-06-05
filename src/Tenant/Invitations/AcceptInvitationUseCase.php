@@ -6,8 +6,8 @@ namespace NeneServe\Tenant\Invitations;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\SecureTokenHelper;
 use NeneServe\Audit\PdoAuditLog;
-use NeneServe\Tenant\Invitation;
 use NeneServe\Tenant\InvitationRepositoryInterface;
 use NeneServe\Tenant\PdoInvitationRepository;
 use NeneServe\Tenant\PdoUserRepository;
@@ -39,7 +39,7 @@ final readonly class AcceptInvitationUseCase implements AcceptInvitationUseCaseI
         }
 
         $now = gmdate('Y-m-d H:i:s');
-        $invitation = $this->invitations->findByTokenHash(Invitation::hash($input->rawToken));
+        $invitation = $this->invitations->findByTokenHash(SecureTokenHelper::hash($input->rawToken));
 
         if ($invitation === null || !$invitation->isAcceptable($now)) {
             throw new InvitationInvalidException('Invitation is invalid, used, or expired.');
@@ -77,7 +77,7 @@ final readonly class AcceptInvitationUseCase implements AcceptInvitationUseCaseI
     public function preview(PreviewInvitationInput $input): PreviewInvitationOutput
     {
         $now = gmdate('Y-m-d H:i:s');
-        $invitation = $this->invitations->findByTokenHash(Invitation::hash($input->rawToken));
+        $invitation = $this->invitations->findByTokenHash(SecureTokenHelper::hash($input->rawToken));
 
         if ($invitation === null || !$invitation->isAcceptable($now)) {
             return new PreviewInvitationOutput(null);
