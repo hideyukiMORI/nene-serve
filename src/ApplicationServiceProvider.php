@@ -20,6 +20,8 @@ use NeneServe\Marketplace\Billing\BillingPeriodNotFoundExceptionHandler;
 use NeneServe\Marketplace\Billing\BillingRouteRegistrar;
 use NeneServe\Marketplace\Billing\BillingServiceProvider;
 use NeneServe\Marketplace\Billing\InvalidPeriodTransitionExceptionHandler;
+use NeneServe\Marketplace\Billing\InvoiceHandoffFailedExceptionHandler;
+use NeneServe\Marketplace\Billing\ReconciliationFailedExceptionHandler;
 use NeneServe\Marketplace\Deal\CampaignNotFoundExceptionHandler;
 use NeneServe\Marketplace\Deal\DealHandoffFailedExceptionHandler;
 use NeneServe\Marketplace\Deal\DealRouteRegistrar;
@@ -245,6 +247,17 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Invalid period transition exception handler service is invalid.');
                     }
 
+                    $reconciliationFailed = $container->get(BillingServiceProvider::EXCEPTION_HANDLER_RECONCILIATION);
+                    $invoiceHandoffFailed = $container->get(BillingServiceProvider::EXCEPTION_HANDLER_INVOICE_HANDOFF);
+
+                    if (!$reconciliationFailed instanceof ReconciliationFailedExceptionHandler) {
+                        throw new LogicException('Reconciliation failed exception handler service is invalid.');
+                    }
+
+                    if (!$invoiceHandoffFailed instanceof InvoiceHandoffFailedExceptionHandler) {
+                        throw new LogicException('Invoice handoff failed exception handler service is invalid.');
+                    }
+
                     $dealCampaignNotFound = $container->get(DealServiceProvider::EXCEPTION_HANDLER_NOT_FOUND);
                     $dealHandoffFailed = $container->get(DealServiceProvider::EXCEPTION_HANDLER_FAILED);
 
@@ -271,6 +284,8 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         $legalHold,
                         $billingNotFound,
                         $periodTransition,
+                        $reconciliationFailed,
+                        $invoiceHandoffFailed,
                         $dealCampaignNotFound,
                         $dealHandoffFailed,
                     ];

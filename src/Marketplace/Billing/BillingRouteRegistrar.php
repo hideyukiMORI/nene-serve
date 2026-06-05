@@ -13,6 +13,7 @@ final readonly class BillingRouteRegistrar
         private OpenBillingPeriodHandler $openHandler,
         private CloseBillingPeriodHandler $closeHandler,
         private GetBillingPeriodHandler $getHandler,
+        private HandoffBillingPeriodHandler $handoffHandler,
     ) {
     }
 
@@ -21,9 +22,11 @@ final readonly class BillingRouteRegistrar
         $openHandler = $this->openHandler;
         $closeHandler = $this->closeHandler;
         $getHandler = $this->getHandler;
+        $handoffHandler = $this->handoffHandler;
 
         $router->post('/admin/campaigns/{id}/billing-periods', static fn (ServerRequestInterface $request) => $openHandler->handle($request));
         $router->post('/admin/billing-periods/{id}/close', static fn (ServerRequestInterface $request) => $closeHandler->handle($request));
+        $router->post('/admin/billing-periods/{id}/handoff', static fn (ServerRequestInterface $request) => $handoffHandler->handle($request));
         $router->get('/admin/billing-periods/{id}', static fn (ServerRequestInterface $request) => $getHandler->handle($request));
     }
 }

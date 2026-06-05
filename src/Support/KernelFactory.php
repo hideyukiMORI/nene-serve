@@ -121,7 +121,7 @@ final class KernelFactory
             campaigns: new PdoCampaignRepository($query),
             billingPeriods: new PdoBillingPeriodRepository($query),
             spendSnapshots: new PdoSpendSnapshotRepository($query),
-            invoiceHandoffs: new PdoInvoiceHandoffRepository($pdo),
+            invoiceHandoffs: new PdoInvoiceHandoffRepository($query),
             invoiceClient: self::invoiceClient($read),
             legalHolds: new PdoLegalHoldRepository($query),
             records: self::recordsClient($read),

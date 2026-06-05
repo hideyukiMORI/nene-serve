@@ -30,6 +30,9 @@ use NeneServe\Audit\AuditLogInterface;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Mail\MailerFactoryInterface;
 use NeneServe\Mail\SmtpMailerFactory;
+use NeneServe\Marketplace\Invoice\FakeInvoiceClient;
+use NeneServe\Marketplace\Invoice\HttpInvoiceClient;
+use NeneServe\Marketplace\Invoice\InvoiceClientInterface;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\PdoEventStore;
 use NeneServe\Serving\Scan\BundleScannerInterface;
@@ -175,6 +178,19 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                     }
 
                     return new FakeDealClient();
+                },
+            )
+            ->set(
+                InvoiceClientInterface::class,
+                static function (ContainerInterface $container): InvoiceClientInterface {
+                    $base = getenv('NENE_INVOICE_API_BASE_URL');
+                    $token = getenv('NENE_INVOICE_SERVICE_TOKEN');
+
+                    if (is_string($base) && $base !== '' && is_string($token) && $token !== '') {
+                        return new HttpInvoiceClient($base, $token);
+                    }
+
+                    return new FakeInvoiceClient();
                 },
             )
             ->set(Crypto::class, static fn (ContainerInterface $container): Crypto => new Crypto())
