@@ -47,6 +47,14 @@ final class CapabilityResolver
         }
 
         if (str_starts_with($path, '/admin/creatives')) {
+            // Four-eyes: reviewer decisions need review_creatives; author actions
+            // (create, submit, revise) need manage_creatives (ADR 0020 §4).
+            foreach (['/start-review', '/approve', '/reject', '/request-changes'] as $reviewerAction) {
+                if (str_ends_with($path, $reviewerAction)) {
+                    return Capability::ReviewCreatives;
+                }
+            }
+
             return Capability::ManageCreatives;
         }
 

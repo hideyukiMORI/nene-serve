@@ -15,8 +15,13 @@ use NeneServe\Health\HealthRouteRegistrar;
 use NeneServe\Health\HealthServiceProvider;
 use NeneServe\Measurement\Metrics\MetricsRouteRegistrar;
 use NeneServe\Measurement\Metrics\MetricsServiceProvider;
+use NeneServe\Serving\Creatives\CreativeNotFoundExceptionHandler;
+use NeneServe\Serving\Creatives\CreativeReviewRouteRegistrar;
+use NeneServe\Serving\Creatives\CreativeScanFailedExceptionHandler;
 use NeneServe\Serving\Creatives\CreativesRouteRegistrar;
 use NeneServe\Serving\Creatives\CreativesServiceProvider;
+use NeneServe\Serving\Creatives\InvalidReviewTransitionExceptionHandler;
+use NeneServe\Serving\Creatives\SelfApprovalForbiddenExceptionHandler;
 use NeneServe\Serving\Placements\CreativeValidationExceptionHandler;
 use NeneServe\Serving\Placements\PlacementNotFoundExceptionHandler;
 use NeneServe\Serving\Placements\PlacementsRouteRegistrar;
@@ -69,6 +74,7 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                     $metrics = $container->get(MetricsServiceProvider::ROUTE_REGISTRAR);
                     $placements = $container->get(PlacementsServiceProvider::ROUTE_REGISTRAR);
                     $creatives = $container->get(CreativesServiceProvider::ROUTE_REGISTRAR);
+                    $creativeReview = $container->get(CreativesServiceProvider::REVIEW_ROUTE_REGISTRAR);
 
                     if (!$health instanceof HealthRouteRegistrar) {
                         throw new LogicException('Health route registrar service is invalid.');
@@ -102,8 +108,12 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Creatives route registrar service is invalid.');
                     }
 
+                    if (!$creativeReview instanceof CreativeReviewRouteRegistrar) {
+                        throw new LogicException('Creative review route registrar service is invalid.');
+                    }
+
                     /** @var list<callable(\Nene2\Routing\Router): void> $registrars */
-                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements, $creatives];
+                    $registrars = [$health, $auth, $account, $settings, $users, $metrics, $placements, $creatives, $creativeReview];
 
                     return $registrars;
                 },
@@ -132,8 +142,38 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Placement validation exception handler service is invalid.');
                     }
 
+                    $creativeNotFound = $container->get(CreativesServiceProvider::EXCEPTION_HANDLER_NOT_FOUND);
+                    $invalidTransition = $container->get(CreativesServiceProvider::EXCEPTION_HANDLER_TRANSITION);
+                    $selfApproval = $container->get(CreativesServiceProvider::EXCEPTION_HANDLER_SELF_APPROVAL);
+                    $scanFailed = $container->get(CreativesServiceProvider::EXCEPTION_HANDLER_SCAN);
+
+                    if (!$creativeNotFound instanceof CreativeNotFoundExceptionHandler) {
+                        throw new LogicException('Creative not found exception handler service is invalid.');
+                    }
+
+                    if (!$invalidTransition instanceof InvalidReviewTransitionExceptionHandler) {
+                        throw new LogicException('Invalid review transition exception handler service is invalid.');
+                    }
+
+                    if (!$selfApproval instanceof SelfApprovalForbiddenExceptionHandler) {
+                        throw new LogicException('Self-approval exception handler service is invalid.');
+                    }
+
+                    if (!$scanFailed instanceof CreativeScanFailedExceptionHandler) {
+                        throw new LogicException('Creative scan failed exception handler service is invalid.');
+                    }
+
                     /** @var list<DomainExceptionHandlerInterface> $handlers */
-                    $handlers = [$authenticationFailed, $userValidation, $placementNotFound, $placementValidation];
+                    $handlers = [
+                        $authenticationFailed,
+                        $userValidation,
+                        $placementNotFound,
+                        $placementValidation,
+                        $creativeNotFound,
+                        $invalidTransition,
+                        $selfApproval,
+                        $scanFailed,
+                    ];
 
                     return $handlers;
                 },

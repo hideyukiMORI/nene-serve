@@ -6,6 +6,7 @@ namespace NeneServe\Serving\Creatives;
 
 use LogicException;
 use Nene2\Database\DatabaseQueryExecutorInterface;
+use Nene2\Database\DatabaseTransactionManagerInterface;
 use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
@@ -17,6 +18,16 @@ use Psr\Container\ContainerInterface;
 final readonly class CreativesServiceProvider implements ServiceProviderInterface
 {
     public const string ROUTE_REGISTRAR = 'nene-serve.route_registrar.creatives';
+
+    public const string REVIEW_ROUTE_REGISTRAR = 'nene-serve.route_registrar.creative_review';
+
+    public const string EXCEPTION_HANDLER_NOT_FOUND = 'nene-serve.exception_handler.creative_not_found';
+
+    public const string EXCEPTION_HANDLER_TRANSITION = 'nene-serve.exception_handler.invalid_review_transition';
+
+    public const string EXCEPTION_HANDLER_SELF_APPROVAL = 'nene-serve.exception_handler.self_approval';
+
+    public const string EXCEPTION_HANDLER_SCAN = 'nene-serve.exception_handler.creative_scan';
 
     public function register(ContainerBuilder $builder): void
     {
@@ -78,6 +89,51 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
 
                     return new CreativesRouteRegistrar($list, $get, $queue);
                 },
+            )
+            ->set(
+                TransitionCreativeUseCaseInterface::class,
+                static function (ContainerInterface $container): TransitionCreativeUseCaseInterface {
+                    $query = $container->get(DatabaseQueryExecutorInterface::class);
+                    $transactions = $container->get(DatabaseTransactionManagerInterface::class);
+
+                    if (!$query instanceof DatabaseQueryExecutorInterface) {
+                        throw new LogicException('Database query executor service is invalid.');
+                    }
+
+                    if (!$transactions instanceof DatabaseTransactionManagerInterface) {
+                        throw new LogicException('Database transaction manager service is invalid.');
+                    }
+
+                    return new TransitionCreativeUseCase($query, $transactions);
+                },
+            )
+            ->set(
+                self::REVIEW_ROUTE_REGISTRAR,
+                static function (ContainerInterface $container): CreativeReviewRouteRegistrar {
+                    $useCase = $container->get(TransitionCreativeUseCaseInterface::class);
+
+                    if (!$useCase instanceof TransitionCreativeUseCaseInterface) {
+                        throw new LogicException('Transition creative use case service is invalid.');
+                    }
+
+                    return new CreativeReviewRouteRegistrar($useCase, self::json($container), self::problem($container));
+                },
+            )
+            ->set(
+                self::EXCEPTION_HANDLER_NOT_FOUND,
+                static fn (ContainerInterface $c): CreativeNotFoundExceptionHandler => new CreativeNotFoundExceptionHandler(self::problem($c)),
+            )
+            ->set(
+                self::EXCEPTION_HANDLER_TRANSITION,
+                static fn (ContainerInterface $c): InvalidReviewTransitionExceptionHandler => new InvalidReviewTransitionExceptionHandler(self::problem($c)),
+            )
+            ->set(
+                self::EXCEPTION_HANDLER_SELF_APPROVAL,
+                static fn (ContainerInterface $c): SelfApprovalForbiddenExceptionHandler => new SelfApprovalForbiddenExceptionHandler(self::problem($c)),
+            )
+            ->set(
+                self::EXCEPTION_HANDLER_SCAN,
+                static fn (ContainerInterface $c): CreativeScanFailedExceptionHandler => new CreativeScanFailedExceptionHandler(self::problem($c)),
             );
     }
 
