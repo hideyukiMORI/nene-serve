@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace NeneServe\Marketplace\Admin;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
-use NeneServe\Marketplace\AdvertiserRepositoryInterface;
-use NeneServe\Tenant\Auth\AuthContextResolver;
+use Nene2\Http\PaginationQueryParser;
+use Nene2\Http\PaginationResponse;
+use NeneServe\Marketplace\Advertiser;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -15,25 +15,23 @@ use Psr\Http\Message\ServerRequestInterface;
 final readonly class ListAdvertisersHandler
 {
     public function __construct(
-        private AdvertiserRepositoryInterface $advertisers,
+        private ListAdvertisersUseCaseInterface $useCase,
         private JsonResponseFactory $response,
-        private ProblemDetailsResponseFactory $problemDetails,
     ) {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $context = AuthContextResolver::fromRequest($request);
+        $pagination = PaginationQueryParser::parse($request);
 
-        if ($context === null) {
-            return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
-        }
+        $output = $this->useCase->execute(new ListAdvertisersInput($pagination->limit, $pagination->offset));
 
-        return $this->response->create([
-            'advertisers' => array_map(
-                static fn ($advertiser) => $advertiser->toArray(),
-                $this->advertisers->listByOrganization($context->organizationId),
-            ),
-        ]);
+        return $this->response->create(
+            (new PaginationResponse(
+                items: array_map(static fn (Advertiser $advertiser): array => $advertiser->toArray(), $output->items),
+                limit: $output->limit,
+                offset: $output->offset,
+            ))->toArray(),
+        );
     }
 }

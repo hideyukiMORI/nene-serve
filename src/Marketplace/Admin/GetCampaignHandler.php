@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace NeneServe\Marketplace\Admin;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Routing\Router;
-use NeneServe\Marketplace\CampaignRepositoryInterface;
-use NeneServe\Marketplace\UseCase\GetCampaignSpendUseCase;
-use NeneServe\Tenant\Auth\AuthContextResolver;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -21,30 +17,18 @@ use Psr\Http\Message\ServerRequestInterface;
 final readonly class GetCampaignHandler
 {
     public function __construct(
-        private CampaignRepositoryInterface $campaigns,
-        private GetCampaignSpendUseCase $spend,
+        private GetCampaignUseCaseInterface $useCase,
         private JsonResponseFactory $response,
-        private ProblemDetailsResponseFactory $problemDetails,
     ) {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $context = AuthContextResolver::fromRequest($request);
-
-        if ($context === null) {
-            return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
-        }
-
         $parameters = $request->getAttribute(Router::PARAMETERS_ATTRIBUTE);
         $id = is_array($parameters) && is_string($parameters['id'] ?? null) ? $parameters['id'] : '';
 
-        $campaign = $this->campaigns->findByIdInOrganization($id, $context->organizationId);
+        $output = $this->useCase->execute(new GetCampaignInput($id));
 
-        if ($campaign === null) {
-            return $this->problemDetails->create($request, 'campaign-not-found', 'Campaign not found', 404, 'No campaign with that id.');
-        }
-
-        return $this->response->create($campaign->toArray() + ['spend' => $this->spend->forCampaign($campaign)->toArray()]);
+        return $this->response->create($output->campaign->toArray() + ['spend' => $output->spend->toArray()]);
     }
 }

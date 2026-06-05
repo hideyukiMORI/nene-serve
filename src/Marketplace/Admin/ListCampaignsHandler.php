@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace NeneServe\Marketplace\Admin;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
-use NeneServe\Marketplace\CampaignRepositoryInterface;
-use NeneServe\Tenant\Auth\AuthContextResolver;
+use Nene2\Http\PaginationQueryParser;
+use Nene2\Http\PaginationResponse;
+use NeneServe\Marketplace\Campaign;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -15,25 +15,23 @@ use Psr\Http\Message\ServerRequestInterface;
 final readonly class ListCampaignsHandler
 {
     public function __construct(
-        private CampaignRepositoryInterface $campaigns,
+        private ListCampaignsUseCaseInterface $useCase,
         private JsonResponseFactory $response,
-        private ProblemDetailsResponseFactory $problemDetails,
     ) {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $context = AuthContextResolver::fromRequest($request);
+        $pagination = PaginationQueryParser::parse($request);
 
-        if ($context === null) {
-            return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
-        }
+        $output = $this->useCase->execute(new ListCampaignsInput($pagination->limit, $pagination->offset));
 
-        return $this->response->create([
-            'campaigns' => array_map(
-                static fn ($campaign) => $campaign->toArray(),
-                $this->campaigns->listByOrganization($context->organizationId),
-            ),
-        ]);
+        return $this->response->create(
+            (new PaginationResponse(
+                items: array_map(static fn (Campaign $campaign): array => $campaign->toArray(), $output->items),
+                limit: $output->limit,
+                offset: $output->offset,
+            ))->toArray(),
+        );
     }
 }

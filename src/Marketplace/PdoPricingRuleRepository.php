@@ -25,11 +25,11 @@ final readonly class PdoPricingRuleRepository implements PricingRuleRepositoryIn
         return $row === null ? null : $this->hydrate($row);
     }
 
-    public function listByOrganization(string $organizationId): array
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array
     {
         $rows = $this->query->fetchAll(
-            'SELECT ' . self::COLUMNS . ' FROM pricing_rules WHERE organization_id = ? ORDER BY name, version',
-            [$organizationId],
+            'SELECT ' . self::COLUMNS . ' FROM pricing_rules WHERE organization_id = ? ORDER BY name, version LIMIT ? OFFSET ?',
+            [$organizationId, $limit, $offset],
         );
 
         return array_map($this->hydrate(...), $rows);

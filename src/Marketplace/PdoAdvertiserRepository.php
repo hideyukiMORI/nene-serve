@@ -25,11 +25,11 @@ final readonly class PdoAdvertiserRepository implements AdvertiserRepositoryInte
         return $row === null ? null : $this->hydrate($row);
     }
 
-    public function listByOrganization(string $organizationId): array
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array
     {
         $rows = $this->query->fetchAll(
-            'SELECT ' . self::COLUMNS . ' FROM advertisers WHERE organization_id = ? ORDER BY name',
-            [$organizationId],
+            'SELECT ' . self::COLUMNS . ' FROM advertisers WHERE organization_id = ? ORDER BY name LIMIT ? OFFSET ?',
+            [$organizationId, $limit, $offset],
         );
 
         return array_map($this->hydrate(...), $rows);

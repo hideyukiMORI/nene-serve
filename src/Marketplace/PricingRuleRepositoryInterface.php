@@ -11,7 +11,7 @@ interface PricingRuleRepositoryInterface
     /**
      * @return list<PricingRule>
      */
-    public function listByOrganization(string $organizationId): array;
+    public function listByOrganization(string $organizationId, int $limit, int $offset): array;
 
     /** Highest existing version for a logical rule name in the org (0 if none). */
     public function currentVersion(string $organizationId, string $name): int;
