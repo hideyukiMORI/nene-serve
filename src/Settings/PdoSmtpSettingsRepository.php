@@ -4,50 +4,49 @@ declare(strict_types=1);
 
 namespace NeneServe\Settings;
 
-use PDO;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 
-final class PdoSmtpSettingsRepository implements SmtpSettingsRepositoryInterface
+final readonly class PdoSmtpSettingsRepository implements SmtpSettingsRepositoryInterface
 {
     private const COLUMNS = 'organization_id, host, port, username, password_encrypted, from_address, from_name, encryption';
 
     public function __construct(
-        private readonly PDO $pdo,
+        private DatabaseQueryExecutorInterface $query,
     ) {
     }
 
     public function find(string $organizationId): ?SmtpSettingsRecord
     {
-        $stmt = $this->pdo->prepare(
+        $row = $this->query->fetchOne(
             'SELECT ' . self::COLUMNS . ' FROM smtp_settings WHERE organization_id = ? LIMIT 1',
+            [$organizationId],
         );
-        $stmt->execute([$organizationId]);
-        $row = $stmt->fetch();
 
-        return $row === false ? null : $this->hydrate($row);
+        return $row === null ? null : $this->hydrate($row);
     }
 
     public function save(SmtpSettingsRecord $record): void
     {
         // Upsert without DELETE privilege (the app role has none): INSERT .. ON
         // DUPLICATE KEY UPDATE, so the single per-org row is created or updated.
-        $stmt = $this->pdo->prepare(
+        $this->query->execute(
             'INSERT INTO smtp_settings (organization_id, host, port, username, password_encrypted, from_address, from_name, encryption)
              VALUES (:org, :host, :port, :username, :password, :from_address, :from_name, :encryption) AS new
              ON DUPLICATE KEY UPDATE
                 host = new.host, port = new.port, username = new.username,
                 password_encrypted = new.password_encrypted, from_address = new.from_address,
                 from_name = new.from_name, encryption = new.encryption',
+            [
+                ':org' => $record->organizationId,
+                ':host' => $record->host,
+                ':port' => $record->port,
+                ':username' => $record->username,
+                ':password' => $record->passwordEncrypted,
+                ':from_address' => $record->fromAddress,
+                ':from_name' => $record->fromName,
+                ':encryption' => $record->encryption,
+            ],
         );
-        $stmt->execute([
-            ':org' => $record->organizationId,
-            ':host' => $record->host,
-            ':port' => $record->port,
-            ':username' => $record->username,
-            ':password' => $record->passwordEncrypted,
-            ':from_address' => $record->fromAddress,
-            ':from_name' => $record->fromName,
-            ':encryption' => $record->encryption,
-        ]);
     }
 
     /** @param array<string, mixed> $row */

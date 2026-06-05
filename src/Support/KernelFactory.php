@@ -128,7 +128,7 @@ final class KernelFactory
             dealOpportunities: new PdoDealOpportunityRepository($pdo),
             dealClient: self::dealClient($read),
             changePlans: new PdoChangePlanRepository($pdo),
-            smtpSettings: new PdoSmtpSettingsRepository($pdo),
+            smtpSettings: new PdoSmtpSettingsRepository($query),
             invitations: new PdoInvitationRepository($pdo),
             assets: new PdoAssetRepository($pdo),
             storage: new LocalStorage($storageDir . '/uploads'),

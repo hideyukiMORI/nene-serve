@@ -13,6 +13,8 @@ use NeneServe\Auth\AuthRouteRegistrar;
 use NeneServe\Auth\AuthServiceProvider;
 use NeneServe\Health\HealthRouteRegistrar;
 use NeneServe\Health\HealthServiceProvider;
+use NeneServe\Settings\SettingsRouteRegistrar;
+use NeneServe\Settings\SettingsServiceProvider;
 use NeneServe\Tenant\Account\AccountRouteRegistrar;
 use NeneServe\Tenant\Account\AccountServiceProvider;
 use Psr\Container\ContainerInterface;
@@ -37,7 +39,8 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
         $builder
             ->addProvider(new HealthServiceProvider())
             ->addProvider(new AuthServiceProvider())
-            ->addProvider(new AccountServiceProvider());
+            ->addProvider(new AccountServiceProvider())
+            ->addProvider(new SettingsServiceProvider());
 
         $builder
             ->set(
@@ -46,6 +49,7 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                     $health = $container->get(HealthServiceProvider::ROUTE_REGISTRAR);
                     $auth = $container->get(AuthServiceProvider::ROUTE_REGISTRAR);
                     $account = $container->get(AccountServiceProvider::ROUTE_REGISTRAR);
+                    $settings = $container->get(SettingsServiceProvider::ROUTE_REGISTRAR);
 
                     if (!$health instanceof HealthRouteRegistrar) {
                         throw new LogicException('Health route registrar service is invalid.');
@@ -59,8 +63,12 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Account route registrar service is invalid.');
                     }
 
+                    if (!$settings instanceof SettingsRouteRegistrar) {
+                        throw new LogicException('Settings route registrar service is invalid.');
+                    }
+
                     /** @var list<callable(\Nene2\Routing\Router): void> $registrars */
-                    $registrars = [$health, $auth, $account];
+                    $registrars = [$health, $auth, $account, $settings];
 
                     return $registrars;
                 },
