@@ -129,7 +129,7 @@ final class KernelFactory
             dealClient: self::dealClient($read),
             changePlans: new PdoChangePlanRepository($pdo),
             smtpSettings: new PdoSmtpSettingsRepository($query),
-            invitations: new PdoInvitationRepository($pdo),
+            invitations: new PdoInvitationRepository($query),
             assets: new PdoAssetRepository($pdo),
             storage: new LocalStorage($storageDir . '/uploads'),
             scanner: self::scanner($read),

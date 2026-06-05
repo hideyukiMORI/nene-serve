@@ -19,6 +19,7 @@ use NeneServe\Tenant\Account\AccountRouteRegistrar;
 use NeneServe\Tenant\Account\AccountServiceProvider;
 use NeneServe\Tenant\Users\UsersRouteRegistrar;
 use NeneServe\Tenant\Users\UsersServiceProvider;
+use NeneServe\Tenant\Users\UserValidationExceptionHandler;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -85,13 +86,18 @@ final readonly class ApplicationServiceProvider implements ServiceProviderInterf
                 self::EXCEPTION_HANDLERS,
                 static function (ContainerInterface $container): array {
                     $authenticationFailed = $container->get(AuthServiceProvider::EXCEPTION_HANDLER);
+                    $userValidation = $container->get(UsersServiceProvider::EXCEPTION_HANDLER);
 
                     if (!$authenticationFailed instanceof AuthenticationFailedExceptionHandler) {
                         throw new LogicException('Authentication failed exception handler service is invalid.');
                     }
 
+                    if (!$userValidation instanceof UserValidationExceptionHandler) {
+                        throw new LogicException('User validation exception handler service is invalid.');
+                    }
+
                     /** @var list<DomainExceptionHandlerInterface> $handlers */
-                    $handlers = [$authenticationFailed];
+                    $handlers = [$authenticationFailed, $userValidation];
 
                     return $handlers;
                 },
