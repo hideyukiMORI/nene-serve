@@ -23,6 +23,8 @@ final readonly class AuthServiceProvider implements ServiceProviderInterface
 
     public const string EXCEPTION_HANDLER = 'nene-serve.exception_handler.authentication_failed';
 
+    public const string EXCEPTION_HANDLER_CONTEXT_REQUIRED = 'nene-serve.exception_handler.auth_context_required';
+
     public function register(ContainerBuilder $builder): void
     {
         $builder
@@ -99,6 +101,18 @@ final readonly class AuthServiceProvider implements ServiceProviderInterface
                     }
 
                     return new AuthenticationFailedExceptionHandler($problemDetails);
+                },
+            )
+            ->set(
+                self::EXCEPTION_HANDLER_CONTEXT_REQUIRED,
+                static function (ContainerInterface $container): AuthContextRequiredExceptionHandler {
+                    $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
+
+                    if (!$problemDetails instanceof ProblemDetailsResponseFactory) {
+                        throw new LogicException('Problem details response factory service is invalid.');
+                    }
+
+                    return new AuthContextRequiredExceptionHandler($problemDetails);
                 },
             )
             ->set(

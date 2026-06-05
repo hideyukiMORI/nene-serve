@@ -50,7 +50,6 @@ final readonly class UsersServiceProvider implements ServiceProviderInterface
                 static function (ContainerInterface $container): ListUsersHandler {
                     $listUsers = $container->get(ListUsersUseCaseInterface::class);
                     $response = $container->get(JsonResponseFactory::class);
-                    $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
 
                     if (!$listUsers instanceof ListUsersUseCaseInterface) {
                         throw new LogicException('List users use case service is invalid.');
@@ -60,11 +59,7 @@ final readonly class UsersServiceProvider implements ServiceProviderInterface
                         throw new LogicException('JSON response factory service is invalid.');
                     }
 
-                    if (!$problemDetails instanceof ProblemDetailsResponseFactory) {
-                        throw new LogicException('Problem details response factory service is invalid.');
-                    }
-
-                    return new ListUsersHandler($listUsers, $response, $problemDetails);
+                    return new ListUsersHandler($listUsers, $response);
                 },
             )
             ->set(
@@ -113,7 +108,6 @@ final readonly class UsersServiceProvider implements ServiceProviderInterface
                     $smtp = $container->get(SmtpConfigResolver::class);
                     $mailerFactory = $container->get(MailerFactoryInterface::class);
                     $response = $container->get(JsonResponseFactory::class);
-                    $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
 
                     if (!$createUser instanceof CreateInvitedUserUseCaseInterface) {
                         throw new LogicException('Create invited user use case service is invalid.');
@@ -131,10 +125,6 @@ final readonly class UsersServiceProvider implements ServiceProviderInterface
                         throw new LogicException('JSON response factory service is invalid.');
                     }
 
-                    if (!$problemDetails instanceof ProblemDetailsResponseFactory) {
-                        throw new LogicException('Problem details response factory service is invalid.');
-                    }
-
                     $appBaseUrl = getenv('APP_BASE_URL');
 
                     return new CreateUserHandler(
@@ -142,7 +132,6 @@ final readonly class UsersServiceProvider implements ServiceProviderInterface
                         $smtp,
                         $mailerFactory,
                         $response,
-                        $problemDetails,
                         is_string($appBaseUrl) && $appBaseUrl !== '' ? $appBaseUrl : 'http://localhost:5189',
                     );
                 },

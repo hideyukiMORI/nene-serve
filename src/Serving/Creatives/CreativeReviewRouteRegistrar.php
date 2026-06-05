@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\Creatives;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Routing\Router;
 use NeneServe\Serving\Review\ReviewAction;
@@ -20,7 +19,6 @@ final readonly class CreativeReviewRouteRegistrar
     public function __construct(
         private TransitionCreativeUseCaseInterface $transition,
         private JsonResponseFactory $response,
-        private ProblemDetailsResponseFactory $problemDetails,
     ) {
     }
 
@@ -35,7 +33,7 @@ final readonly class CreativeReviewRouteRegistrar
         ];
 
         foreach ($actions as $path => $action) {
-            $handler = new TransitionCreativeHandler($action, $this->transition, $this->response, $this->problemDetails);
+            $handler = new TransitionCreativeHandler($action, $this->transition, $this->response);
             $router->post(
                 '/admin/creatives/{id}/' . $path,
                 static fn (ServerRequestInterface $request) => $handler->handle($request),

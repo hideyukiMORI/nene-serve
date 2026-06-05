@@ -78,7 +78,7 @@ final readonly class PlacementsServiceProvider implements ServiceProviderInterfa
                         throw new LogicException('Create placement use case service is invalid.');
                     }
 
-                    return new CreatePlacementHandler($useCase, self::json($c), self::problem($c));
+                    return new CreatePlacementHandler($useCase, self::json($c));
                 },
             )
             ->set(
@@ -90,7 +90,7 @@ final readonly class PlacementsServiceProvider implements ServiceProviderInterfa
                         throw new LogicException('Archive placement use case service is invalid.');
                     }
 
-                    return new ArchivePlacementHandler($useCase, self::json($c), self::problem($c));
+                    return new ArchivePlacementHandler($useCase, self::json($c));
                 },
             )
             ->set(

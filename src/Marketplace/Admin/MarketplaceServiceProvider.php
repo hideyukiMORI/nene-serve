@@ -157,7 +157,7 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Create advertiser use case service is invalid.');
                     }
 
-                    return new CreateAdvertiserHandler($useCase, self::json($c), self::problem($c));
+                    return new CreateAdvertiserHandler($useCase, self::json($c));
                 },
             )
             ->set(
@@ -169,7 +169,7 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Create pricing rule use case service is invalid.');
                     }
 
-                    return new CreatePricingRuleHandler($useCase, self::json($c), self::problem($c));
+                    return new CreatePricingRuleHandler($useCase, self::json($c));
                 },
             )
             ->set(
@@ -181,7 +181,7 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
                         throw new LogicException('Create campaign use case service is invalid.');
                     }
 
-                    return new CreateCampaignHandler($useCase, self::json($c), self::problem($c));
+                    return new CreateCampaignHandler($useCase, self::json($c));
                 },
             )
             ->set(

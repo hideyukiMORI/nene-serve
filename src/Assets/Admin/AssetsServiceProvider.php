@@ -65,7 +65,7 @@ final readonly class AssetsServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Upload asset use case service is invalid.');
                     }
 
-                    return new UploadAssetHandler($useCase, self::json($c), self::problem($c));
+                    return new UploadAssetHandler($useCase, self::json($c));
                 },
             )
             ->set(

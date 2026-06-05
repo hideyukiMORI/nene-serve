@@ -104,7 +104,7 @@ final readonly class SettingsServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Update SMTP settings use case service is invalid.');
                     }
 
-                    return new UpdateSmtpSettingsHandler($useCase, self::json($container), self::problem($container));
+                    return new UpdateSmtpSettingsHandler($useCase, self::json($container));
                 },
             )
             ->set(
@@ -143,7 +143,7 @@ final readonly class SettingsServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Test SMTP settings use case service is invalid.');
                     }
 
-                    return new TestSmtpSettingsHandler($useCase, self::json($container), self::problem($container));
+                    return new TestSmtpSettingsHandler($useCase, self::json($container));
                 },
             )
             ->set(

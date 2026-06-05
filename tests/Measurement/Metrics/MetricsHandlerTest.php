@@ -14,6 +14,7 @@ use NeneServe\Measurement\Metrics\GetMetricsHandler;
 use NeneServe\Measurement\Metrics\GetMetricsUseCase;
 use NeneServe\Measurement\UseCase\ExportMetricsUseCase;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
+use NeneServe\Tenant\Auth\AuthContextRequiredException;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -45,9 +46,8 @@ final class MetricsHandlerTest extends TestCase
 
     public function testRejectsRequestWithoutClaims(): void
     {
-        $response = $this->get(null, []);
-
-        self::assertSame(401, $response->getStatusCode());
+        $this->expectException(AuthContextRequiredException::class);
+        $this->get(null, []);
     }
 
     public function testExportReturnsCsv(): void
@@ -57,7 +57,6 @@ final class MetricsHandlerTest extends TestCase
             new ExportMetricsUseCase($this->events(), $this->orgId()),
             $psr17,
             $psr17,
-            new ProblemDetailsResponseFactory($psr17, $psr17),
         );
 
         $request = $psr17->createServerRequest('GET', '/admin/metrics/export')

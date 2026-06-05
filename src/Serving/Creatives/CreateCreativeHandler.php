@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\Creatives;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonRequestBodyParser;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Validation\ValidationError;
@@ -26,17 +25,12 @@ final readonly class CreateCreativeHandler
     public function __construct(
         private CreateCreativeUseCaseInterface $createCreative,
         private JsonResponseFactory $response,
-        private ProblemDetailsResponseFactory $problemDetails,
     ) {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $context = AuthContextResolver::fromRequest($request);
-
-        if ($context === null) {
-            return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
-        }
+        $context = AuthContextResolver::require($request);
 
         $body = JsonRequestBodyParser::parse($request);
         $type = isset($body['type']) && is_string($body['type']) ? $body['type'] : 'image';

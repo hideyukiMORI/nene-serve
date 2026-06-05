@@ -88,7 +88,7 @@ final readonly class BillingServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Open billing period use case service is invalid.');
                     }
 
-                    return new OpenBillingPeriodHandler($useCase, self::json($c), self::problem($c));
+                    return new OpenBillingPeriodHandler($useCase, self::json($c));
                 },
             )
             ->set(
@@ -100,7 +100,7 @@ final readonly class BillingServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Close billing period use case service is invalid.');
                     }
 
-                    return new CloseBillingPeriodHandler($useCase, self::json($c), self::problem($c));
+                    return new CloseBillingPeriodHandler($useCase, self::json($c));
                 },
             )
             ->set(
@@ -141,7 +141,7 @@ final readonly class BillingServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Handoff billing period use case service is invalid.');
                     }
 
-                    return new HandoffBillingPeriodHandler($useCase, self::json($c), self::problem($c));
+                    return new HandoffBillingPeriodHandler($useCase, self::json($c));
                 },
             )
             ->set(

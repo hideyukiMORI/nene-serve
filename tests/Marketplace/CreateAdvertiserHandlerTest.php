@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Tests\Marketplace;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Validation\ValidationException;
 use NeneServe\Marketplace\Admin\CreateAdvertiserHandler;
@@ -43,7 +42,6 @@ final class CreateAdvertiserHandlerTest extends TestCase
         $handler = new CreateAdvertiserHandler(
             $this->useCase(),
             new JsonResponseFactory($psr17, $psr17),
-            new ProblemDetailsResponseFactory($psr17, $psr17),
         );
 
         $request = $psr17->createServerRequest('POST', '/admin/advertisers')

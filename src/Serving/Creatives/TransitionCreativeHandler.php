@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\Creatives;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonRequestBodyParser;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Routing\Router;
@@ -25,17 +24,12 @@ final readonly class TransitionCreativeHandler
         private ReviewAction $action,
         private TransitionCreativeUseCaseInterface $transition,
         private JsonResponseFactory $response,
-        private ProblemDetailsResponseFactory $problemDetails,
     ) {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $context = AuthContextResolver::fromRequest($request);
-
-        if ($context === null) {
-            return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
-        }
+        $context = AuthContextResolver::require($request);
 
         $id = Router::param($request, 'id') ?? '';
 

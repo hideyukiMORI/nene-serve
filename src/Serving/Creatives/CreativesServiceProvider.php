@@ -137,7 +137,7 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
                         throw new LogicException('Create creative use case service is invalid.');
                     }
 
-                    return new CreateCreativeHandler($useCase, self::json($container), self::problem($container));
+                    return new CreateCreativeHandler($useCase, self::json($container));
                 },
             )
             ->set(
@@ -149,7 +149,7 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
                         throw new LogicException('Revise creative use case service is invalid.');
                     }
 
-                    return new ReviseCreativeHandler($useCase, self::json($container), self::problem($container));
+                    return new ReviseCreativeHandler($useCase, self::json($container));
                 },
             )
             ->set(
@@ -210,7 +210,7 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
                         throw new LogicException('Transition creative use case service is invalid.');
                     }
 
-                    return new CreativeReviewRouteRegistrar($useCase, self::json($container), self::problem($container));
+                    return new CreativeReviewRouteRegistrar($useCase, self::json($container));
                 },
             )
             ->set(

@@ -90,7 +90,7 @@ final readonly class DealServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Handoff campaign to deal use case service is invalid.');
                     }
 
-                    return new HandoffCampaignToDealHandler($useCase, self::json($c), self::problem($c));
+                    return new HandoffCampaignToDealHandler($useCase, self::json($c));
                 },
             )
             ->set(

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace NeneServe\Tests\Tenant\Users;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
+use NeneServe\Tenant\Auth\AuthContextRequiredException;
 use NeneServe\Tenant\Role;
 use NeneServe\Tenant\User;
 use NeneServe\Tenant\Users\ListUsersHandler;
@@ -33,9 +33,8 @@ final class ListUsersHandlerTest extends TestCase
 
     public function testRejectsRequestWithoutClaims(): void
     {
-        $response = $this->handle(null);
-
-        self::assertSame(401, $response->getStatusCode());
+        $this->expectException(AuthContextRequiredException::class);
+        $this->handle(null);
     }
 
     /**
@@ -53,7 +52,7 @@ final class ListUsersHandlerTest extends TestCase
                 ], $input->limit, $input->offset);
             }
         };
-        $handler = new ListUsersHandler($useCase, new JsonResponseFactory($psr17, $psr17), new ProblemDetailsResponseFactory($psr17, $psr17));
+        $handler = new ListUsersHandler($useCase, new JsonResponseFactory($psr17, $psr17));
 
         $request = $psr17->createServerRequest('GET', '/admin/users');
 

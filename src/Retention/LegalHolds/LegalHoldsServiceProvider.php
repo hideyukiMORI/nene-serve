@@ -63,11 +63,11 @@ final readonly class LegalHoldsServiceProvider implements ServiceProviderInterfa
             )
             ->set(
                 PlaceLegalHoldHandler::class,
-                static fn (ContainerInterface $c): PlaceLegalHoldHandler => new PlaceLegalHoldHandler(self::useCase($c), self::json($c), self::problem($c)),
+                static fn (ContainerInterface $c): PlaceLegalHoldHandler => new PlaceLegalHoldHandler(self::useCase($c), self::json($c)),
             )
             ->set(
                 ReleaseLegalHoldHandler::class,
-                static fn (ContainerInterface $c): ReleaseLegalHoldHandler => new ReleaseLegalHoldHandler(self::useCase($c), self::json($c), self::problem($c)),
+                static fn (ContainerInterface $c): ReleaseLegalHoldHandler => new ReleaseLegalHoldHandler(self::useCase($c), self::json($c)),
             )
             ->set(
                 self::EXCEPTION_HANDLER,

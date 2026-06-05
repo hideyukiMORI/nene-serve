@@ -28,11 +28,7 @@ final readonly class CurrentUserHandler
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $context = AuthContextResolver::fromRequest($request);
-
-        if ($context === null) {
-            return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'Authentication is required.');
-        }
+        $context = AuthContextResolver::require($request);
 
         $user = $this->useCase->execute(new GetCurrentUserInput($context->userId))->user;
 

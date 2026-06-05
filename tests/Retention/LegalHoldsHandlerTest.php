@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Tests\Retention;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Validation\ValidationException;
 use NeneServe\Retention\LegalHold;
@@ -42,7 +41,7 @@ final class LegalHoldsHandlerTest extends TestCase
     private function place(string $json): ResponseInterface
     {
         $psr17 = new Psr17Factory();
-        $handler = new PlaceLegalHoldHandler($this->useCase(), new JsonResponseFactory($psr17, $psr17), new ProblemDetailsResponseFactory($psr17, $psr17));
+        $handler = new PlaceLegalHoldHandler($this->useCase(), new JsonResponseFactory($psr17, $psr17));
 
         $request = $psr17->createServerRequest('POST', '/admin/legal-holds')
             ->withHeader('Content-Type', 'application/json')

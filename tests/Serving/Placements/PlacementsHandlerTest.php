@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace NeneServe\Tests\Serving\Placements;
 
-use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Routing\Router;
 use Nene2\Validation\ValidationException;
@@ -74,7 +73,7 @@ final class PlacementsHandlerTest extends TestCase
     public function testCreateRejectsMissingKey(): void
     {
         $psr17 = new Psr17Factory();
-        $handler = new CreatePlacementHandler($this->createUseCase(), $this->json($psr17), $this->problem($psr17));
+        $handler = new CreatePlacementHandler($this->createUseCase(), $this->json($psr17));
 
         $this->expectException(ValidationException::class);
         $handler->handle($this->jsonRequest($psr17, '{}'));
@@ -83,7 +82,7 @@ final class PlacementsHandlerTest extends TestCase
     public function testCreateReturns201(): void
     {
         $psr17 = new Psr17Factory();
-        $handler = new CreatePlacementHandler($this->createUseCase(), $this->json($psr17), $this->problem($psr17));
+        $handler = new CreatePlacementHandler($this->createUseCase(), $this->json($psr17));
 
         $response = $handler->handle($this->jsonRequest($psr17, '{"public_placement_key":"pk_home"}'));
 
@@ -99,7 +98,7 @@ final class PlacementsHandlerTest extends TestCase
                 return new ArchivePlacementOutput(new Placement($input->placementId, 'org-acme', 'pk_home', [], 'archived', null, true, null, gmdate('c')));
             }
         };
-        $handler = new ArchivePlacementHandler($useCase, $this->json($psr17), $this->problem($psr17));
+        $handler = new ArchivePlacementHandler($useCase, $this->json($psr17));
 
         $request = $this->request($psr17, 'POST', '/admin/placements/plc-1/archive')
             ->withAttribute(Router::PARAMETERS_ATTRIBUTE, ['id' => 'plc-1']);
@@ -122,11 +121,6 @@ final class PlacementsHandlerTest extends TestCase
     private function json(Psr17Factory $psr17): JsonResponseFactory
     {
         return new JsonResponseFactory($psr17, $psr17);
-    }
-
-    private function problem(Psr17Factory $psr17): ProblemDetailsResponseFactory
-    {
-        return new ProblemDetailsResponseFactory($psr17, $psr17);
     }
 
     private function createUseCase(): CreatePlacementUseCaseInterface
