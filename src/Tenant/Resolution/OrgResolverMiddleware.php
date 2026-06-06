@@ -6,6 +6,7 @@ namespace NeneServe\Tenant\Resolution;
 
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\RequestScopedHolder;
+use NeneServe\Tenant\Organization;
 use NeneServe\Tenant\OrganizationRepositoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -81,8 +82,18 @@ final readonly class OrgResolverMiddleware implements MiddlewareInterface
             return $handler->handle($request);
         }
 
-        // Open onboarding routes carry their own org (login body / invite token).
-        if ($effectivePath === '/admin/login' || str_starts_with($effectivePath, '/admin/invitations')) {
+        // Open bootstrap/onboarding routes carry their own org (login body, invite
+        // token) or merely report it (tenant-context). Resolution there is
+        // best-effort: attach the tenant when we can, but never fail closed — the
+        // login screen must still load on a bare domain.
+        if ($this->isOpenAdminRoute($effectivePath)) {
+            $organization = $slug !== null ? $this->lookup($slug) : null;
+
+            if ($organization !== null && $organization->isActive()) {
+                $this->organizationId->set($organization->id);
+                $request = $this->attach($request, $organization);
+            }
+
             return $handler->handle($request);
         }
 
@@ -96,8 +107,7 @@ final readonly class OrgResolverMiddleware implements MiddlewareInterface
             );
         }
 
-        $organization = $this->organizations->findBySlug($slug)
-            ?? $this->organizations->findByCustomDomain($slug);
+        $organization = $this->lookup($slug);
 
         if ($organization === null) {
             return $this->problem($request, 'org-not-found', 'Organization Not Found', 404, "No organization found for '{$slug}'.");
@@ -109,11 +119,27 @@ final readonly class OrgResolverMiddleware implements MiddlewareInterface
 
         $this->organizationId->set($organization->id);
 
-        return $handler->handle(
-            $request
-                ->withAttribute(self::RESOLVED_ORG_ID_ATTRIBUTE, $organization->id)
-                ->withAttribute(self::RESOLVED_ORG_SLUG_ATTRIBUTE, $organization->slug),
-        );
+        return $handler->handle($this->attach($request, $organization));
+    }
+
+    private function isOpenAdminRoute(string $path): bool
+    {
+        return $path === '/admin/login'
+            || $path === '/admin/tenant-context'
+            || str_starts_with($path, '/admin/invitations');
+    }
+
+    private function lookup(string $slug): ?Organization
+    {
+        return $this->organizations->findBySlug($slug)
+            ?? $this->organizations->findByCustomDomain($slug);
+    }
+
+    private function attach(ServerRequestInterface $request, Organization $organization): ServerRequestInterface
+    {
+        return $request
+            ->withAttribute(self::RESOLVED_ORG_ID_ATTRIBUTE, $organization->id)
+            ->withAttribute(self::RESOLVED_ORG_SLUG_ATTRIBUTE, $organization->slug);
     }
 
     private function problem(

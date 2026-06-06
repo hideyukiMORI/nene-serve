@@ -8,6 +8,9 @@ const USER = {
 }
 
 export const authHandlers = [
+  // Mock-first default: login mode, so the org field is shown.
+  http.get('/admin/tenant-context', () => HttpResponse.json({ mode: 'login', organization: null })),
+
   http.post('/admin/login', async ({ request }) => {
     const body = (await request.json()) as {
       organization?: string

@@ -10,6 +10,7 @@ use NeneServe\Auth\LoginHandler;
 use NeneServe\Auth\LoginInput;
 use NeneServe\Auth\LoginOutput;
 use NeneServe\Auth\LoginUseCaseInterface;
+use NeneServe\Tenant\Resolution\OrgResolverMiddleware;
 use NeneServe\Tenant\UseCase\AuthenticationFailedException;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
@@ -61,7 +62,45 @@ final class LoginHandlerTest extends TestCase
         $this->handle($useCase, '{"organization":"acme","email":"x@y.test","password":"nope"}');
     }
 
-    private function handle(LoginUseCaseInterface $useCase, string $json): \Psr\Http\Message\ResponseInterface
+    public function testResolvedTenantOverridesBodyOrganization(): void
+    {
+        $useCase = new class () implements LoginUseCaseInterface {
+            public ?string $seenOrganization = null;
+
+            public function execute(LoginInput $input): LoginOutput
+            {
+                $this->seenOrganization = $input->organization;
+
+                return new LoginOutput('t', ['id' => 'u-1', 'organization_id' => 'org-acme', 'email' => $input->email, 'role' => 'org_admin']);
+            }
+        };
+
+        // URL mode resolved 'acme'; a body trying another org is ignored.
+        $this->handle($useCase, '{"organization":"evil","email":"a@acme.test","password":"secret"}', 'acme');
+
+        self::assertSame('acme', $useCase->seenOrganization);
+    }
+
+    public function testResolvedTenantSatisfiesMissingBodyOrganization(): void
+    {
+        $useCase = new class () implements LoginUseCaseInterface {
+            public ?string $seenOrganization = null;
+
+            public function execute(LoginInput $input): LoginOutput
+            {
+                $this->seenOrganization = $input->organization;
+
+                return new LoginOutput('t', ['id' => 'u-1', 'organization_id' => 'org-acme', 'email' => $input->email, 'role' => 'org_admin']);
+            }
+        };
+
+        // In URL modes the SPA omits the org field; the resolved tenant fills it.
+        $this->handle($useCase, '{"email":"a@acme.test","password":"secret"}', 'acme');
+
+        self::assertSame('acme', $useCase->seenOrganization);
+    }
+
+    private function handle(LoginUseCaseInterface $useCase, string $json, ?string $resolvedSlug = null): \Psr\Http\Message\ResponseInterface
     {
         $psr17 = new Psr17Factory();
         $handler = new LoginHandler($useCase, new JsonResponseFactory($psr17, $psr17));
@@ -69,6 +108,10 @@ final class LoginHandlerTest extends TestCase
         $request = $psr17->createServerRequest('POST', '/admin/login')
             ->withHeader('Content-Type', 'application/json')
             ->withBody($psr17->createStream($json));
+
+        if ($resolvedSlug !== null) {
+            $request = $request->withAttribute(OrgResolverMiddleware::RESOLVED_ORG_SLUG_ATTRIBUTE, $resolvedSlug);
+        }
 
         return $handler->handle($request);
     }

@@ -16,6 +16,27 @@ interface CurrentUserDto {
   organization_id: string
 }
 
+export type TenantResolutionMode = 'login' | 'single' | 'subdomain' | 'path' | 'custom_domain'
+
+export interface TenantContext {
+  mode: TenantResolutionMode
+  organization: { slug: string; name: string } | null
+}
+
+/**
+ * How the admin surface determines the tenant (ADR 0006). The login screen reads
+ * this before sign-in: in a URL mode the organization is resolved from the
+ * address, so the org field is replaced with the resolved organization name.
+ * Unauthenticated, and effectively immutable for the life of the page.
+ */
+export function useTenantContext(): UseQueryResult<TenantContext, AppError> {
+  return useQuery({
+    queryKey: ['auth', 'tenant-context'],
+    queryFn: () => apiClient.get<TenantContext>('/admin/tenant-context'),
+    staleTime: Infinity,
+  })
+}
+
 export function useCurrentUser(): UseQueryResult<CurrentUser, AppError> {
   const token = useAuthToken()
   return useQuery({

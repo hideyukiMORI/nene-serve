@@ -11,6 +11,7 @@ use NeneServe\Support\ServiceProviderHelpers;
 use NeneServe\Tenant\OrganizationRepositoryInterface;
 use NeneServe\Tenant\PdoOrganizationRepository;
 use NeneServe\Tenant\PdoUserRepository;
+use NeneServe\Tenant\Resolution\OrgResolutionMode;
 use NeneServe\Tenant\UserRepositoryInterface;
 use Psr\Container\ContainerInterface;
 
@@ -48,6 +49,14 @@ final readonly class AuthServiceProvider implements ServiceProviderInterface
                 static fn (ContainerInterface $c): LoginHandler => new LoginHandler(self::service($c, LoginUseCaseInterface::class), self::json($c)),
             )
             ->set(
+                TenantContextHandler::class,
+                static fn (ContainerInterface $c): TenantContextHandler => new TenantContextHandler(
+                    self::service($c, OrgResolutionMode::class),
+                    self::service($c, OrganizationRepositoryInterface::class),
+                    self::json($c),
+                ),
+            )
+            ->set(
                 self::EXCEPTION_HANDLER,
                 static fn (ContainerInterface $c): AuthenticationFailedExceptionHandler => new AuthenticationFailedExceptionHandler(self::problem($c)),
             )
@@ -57,7 +66,10 @@ final readonly class AuthServiceProvider implements ServiceProviderInterface
             )
             ->set(
                 self::ROUTE_REGISTRAR,
-                static fn (ContainerInterface $c): AuthRouteRegistrar => new AuthRouteRegistrar(self::service($c, LoginHandler::class)),
+                static fn (ContainerInterface $c): AuthRouteRegistrar => new AuthRouteRegistrar(
+                    self::service($c, LoginHandler::class),
+                    self::service($c, TenantContextHandler::class),
+                ),
             );
     }
 }

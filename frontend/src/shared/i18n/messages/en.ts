@@ -57,6 +57,7 @@ export interface MessageCatalog {
   'login.title': string
   'login.subtitle': string
   'login.organization': string
+  'login.signingInTo': string
   'login.email': string
   'login.password': string
   'login.submit': string
@@ -272,6 +273,7 @@ export const en: MessageCatalog = {
   'login.title': 'Sign in',
   'login.subtitle': 'Operator console',
   'login.organization': 'Organization',
+  'login.signingInTo': 'Signing in to {{name}}',
   'login.email': 'Email',
   'login.password': 'Password',
   'login.submit': 'Sign in',

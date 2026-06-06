@@ -11,6 +11,12 @@ export interface LoginViewProps {
   pending: boolean
   errorMessage: string | null
   onSubmit: (input: LoginInput) => Promise<boolean>
+  /**
+   * The tenant resolved from the URL (subdomain / path / single / custom-domain
+   * modes). When set, the organization field is replaced with the resolved
+   * organization name; null (login mode) shows the field.
+   */
+  tenant?: { slug: string; name: string } | null
 }
 
 interface LoginFormValues {
@@ -19,11 +25,15 @@ interface LoginFormValues {
   password: string
 }
 
-export function LoginView({ pending, errorMessage, onSubmit }: LoginViewProps) {
+export function LoginView({ pending, errorMessage, onSubmit, tenant = null }: LoginViewProps) {
   const { t } = useTranslation()
 
   const schema = z.object({
-    organization: z.string().trim().min(1, t('login.validation.organizationRequired')),
+    // In a URL mode the org is resolved from the address, not typed.
+    organization:
+      tenant !== null
+        ? z.string()
+        : z.string().trim().min(1, t('login.validation.organizationRequired')),
     email: z.string().trim().min(1, t('login.validation.emailRequired')),
     password: z.string().min(1, t('login.validation.passwordRequired')),
   })
@@ -33,7 +43,7 @@ export function LoginView({ pending, errorMessage, onSubmit }: LoginViewProps) {
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { organization: '', email: '', password: '' },
+    defaultValues: { organization: tenant?.slug ?? '', email: '', password: '' },
   })
 
   const submit = handleSubmit(async (values) => {
@@ -63,24 +73,37 @@ export function LoginView({ pending, errorMessage, onSubmit }: LoginViewProps) {
         {errorMessage !== null ? <span className="field-msg err">{errorMessage}</span> : null}
 
         <div className="stack g4">
-          <div className="field">
-            <label htmlFor="login-organization">{t('login.organization')}</label>
-            <div className="input-wrap">
-              <span className="pre-icon">
-                <IconStore />
-              </span>
-              <input
-                id="login-organization"
-                className="input"
-                type="text"
-                placeholder="acme"
-                {...register('organization')}
-              />
+          {tenant !== null ? (
+            <div className="field">
+              <span className="t-cap muted">{t('login.organization')}</span>
+              <div className="row g2">
+                <span className="pre-icon">
+                  <IconStore />
+                </span>
+                <strong>{t('login.signingInTo', { name: tenant.name })}</strong>
+              </div>
+              <input type="hidden" {...register('organization')} />
             </div>
-            {errors.organization?.message !== undefined ? (
-              <span className="field-msg err">{errors.organization.message}</span>
-            ) : null}
-          </div>
+          ) : (
+            <div className="field">
+              <label htmlFor="login-organization">{t('login.organization')}</label>
+              <div className="input-wrap">
+                <span className="pre-icon">
+                  <IconStore />
+                </span>
+                <input
+                  id="login-organization"
+                  className="input"
+                  type="text"
+                  placeholder="acme"
+                  {...register('organization')}
+                />
+              </div>
+              {errors.organization?.message !== undefined ? (
+                <span className="field-msg err">{errors.organization.message}</span>
+              ) : null}
+            </div>
+          )}
           <div className="field">
             <label htmlFor="login-email">{t('login.email')}</label>
             <div className="input-wrap">

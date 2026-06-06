@@ -91,8 +91,11 @@ final readonly class AdminAuthMiddleware implements MiddlewareInterface
             return false;
         }
 
-        // Open onboarding routes: login and invitation preview/accept.
-        if ($path === '/admin/login' || str_starts_with($path, '/admin/invitations')) {
+        // Open onboarding/bootstrap routes: login, invitation preview/accept, and
+        // the tenant-context endpoint the login screen reads before sign-in.
+        if ($path === '/admin/login'
+            || $path === '/admin/tenant-context'
+            || str_starts_with($path, '/admin/invitations')) {
             return false;
         }
 

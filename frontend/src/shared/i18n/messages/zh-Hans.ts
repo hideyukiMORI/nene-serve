@@ -50,6 +50,7 @@ export const zhHans: MessageCatalog = {
   'login.title': '登录',
   'login.subtitle': '运营控制台',
   'login.organization': '组织',
+  'login.signingInTo': '登录到 {{name}}',
   'login.email': '邮箱',
   'login.password': '密码',
   'login.submit': '登录',
