@@ -42,7 +42,8 @@ See [ADR 0009](docs/adr/0009-separate-from-contact-and-concierge.md).
 
 ## Framework
 
-[NENE2](https://github.com/hideyukiMORI/NENE2) via Composer when runtime lands.
+[NENE2](https://github.com/hideyukiMORI/NENE2) via Composer (`hideyukimori/nene2`,
+path repository `../NENE2`); runtime is wired through `Http\RuntimeContainerFactory`.
 
 ## Frontend
 
