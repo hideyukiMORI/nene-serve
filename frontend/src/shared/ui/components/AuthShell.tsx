@@ -3,66 +3,125 @@ import { useTranslation } from '@/shared/i18n'
 import { IconBeacon } from '@/shared/ui/icons'
 
 /**
- * Pointer parallax for the signal deco: maps the cursor position over the panel
- * to `--px`/`--py` (−1..1), which the rings translate by per depth (serve.css).
- * No-op under prefers-reduced-motion.
+ * Animated login "signal deco" (Claude Design login-left handoff): a layered SVG
+ * — a faint static backdrop, expanding sonar ripples, and a pulsing emitter core
+ * — with a requestAnimationFrame loop that parallaxes each layer by its depth
+ * (mouse-follow, eased, plus a slow autonomous sin/cos drift). The host `<aside>`
+ * is position:relative / overflow:hidden and sets `color`, so `currentColor`
+ * drives the line colour. Decoration only (`aria-hidden`); respects reduced motion.
  */
-function useSignalParallax() {
-  const ref = useRef<HTMLElement>(null)
+function SignalDeco() {
+  const ref = useRef<SVGSVGElement>(null)
 
   useEffect(() => {
-    const el = ref.current
-    const reduceMotion =
-      typeof window.matchMedia === 'function' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (el === null || reduceMotion) {
+    const svg = ref.current
+    if (svg === null) {
       return
     }
+    const host = svg.closest('aside') ?? svg.parentElement
+    if (host === null) {
+      return
+    }
+    const layers = [...svg.querySelectorAll<SVGGElement>('.deco-layer')]
+    const reduce =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    let tx = 0
+    let ty = 0
+    let cx = 0
+    let cy = 0
+    let raf = 0
 
     const onMove = (event: PointerEvent): void => {
-      const rect = el.getBoundingClientRect()
-      const px = ((event.clientX - rect.left) / rect.width) * 2 - 1
-      const py = ((event.clientY - rect.top) / rect.height) * 2 - 1
-      el.style.setProperty('--px', px.toFixed(3))
-      el.style.setProperty('--py', py.toFixed(3))
+      const r = host.getBoundingClientRect()
+      tx = ((event.clientX - r.left) / r.width - 0.5) * 2 // -1..1
+      ty = ((event.clientY - r.top) / r.height - 0.5) * 2
     }
-    const reset = (): void => {
-      el.style.setProperty('--px', '0')
-      el.style.setProperty('--py', '0')
+    const onLeave = (): void => {
+      tx = 0
+      ty = 0
     }
 
-    el.addEventListener('pointermove', onMove)
-    el.addEventListener('pointerleave', reset)
+    host.addEventListener('pointermove', onMove)
+    host.addEventListener('pointerleave', onLeave)
+
+    const t0 = performance.now()
+    const tick = (now: number): void => {
+      const t = (now - t0) / 1000
+      cx += (tx - cx) * 0.05
+      cy += (ty - cy) * 0.05
+      const driftX = reduce ? 0 : Math.sin(t * 0.24)
+      const driftY = reduce ? 0 : Math.cos(t * 0.17)
+      for (const layer of layers) {
+        const depth = Number.parseFloat(layer.dataset.depth ?? '1') || 1
+        const px = (cx * 30 + driftX * 8) * depth
+        const py = (cy * 30 + driftY * 6) * depth
+        layer.style.transform = `translate(${px.toFixed(2)}px, ${py.toFixed(2)}px)`
+      }
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+
     return () => {
-      el.removeEventListener('pointermove', onMove)
-      el.removeEventListener('pointerleave', reset)
+      cancelAnimationFrame(raf)
+      host.removeEventListener('pointermove', onMove)
+      host.removeEventListener('pointerleave', onLeave)
     }
   }, [])
 
-  return ref
-}
-
-function SignalDeco() {
   return (
     <svg
+      ref={ref}
       className="signal-deco"
       viewBox="0 0 400 600"
       preserveAspectRatio="xMidYMid slice"
       aria-hidden="true"
     >
-      {[60, 130, 200, 270, 340, 410].map((r, i) => (
+      {/* Layer 1 — static backdrop rings */}
+      <g className="deco-layer deco-static" data-depth="0.3">
+        {[90, 165, 245, 330, 420, 515].map((r) => (
+          <circle
+            key={r}
+            cx="60"
+            cy="300"
+            r={r}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1"
+          />
+        ))}
+      </g>
+      {/* Layer 2 — sonar ripples */}
+      <g className="deco-layer" data-depth="0.85">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <circle
+            key={i}
+            className="ripple"
+            cx="60"
+            cy="300"
+            r="44"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            vectorEffect="non-scaling-stroke"
+            style={{ animationDelay: `${String(i * 1.7)}s` }}
+          />
+        ))}
+      </g>
+      {/* Layer 3 — emitter core + halo */}
+      <g className="deco-layer" data-depth="1.6">
         <circle
-          key={r}
+          className="core-halo"
           cx="60"
           cy="300"
-          r={r}
+          r="9"
           fill="none"
           stroke="currentColor"
-          strokeWidth="1.2"
-          opacity={0.5 - i * 0.06}
+          strokeWidth="1.6"
         />
-      ))}
-      <circle cx="60" cy="300" r="9" fill="currentColor" opacity="0.8" />
+        <circle className="core-dot" cx="60" cy="300" r="9" fill="currentColor" />
+      </g>
     </svg>
   )
 }
@@ -70,10 +129,9 @@ function SignalDeco() {
 /** Two-column auth frame: accent brand panel + the form. */
 export function AuthShell({ children }: { children: ReactNode }) {
   const { t } = useTranslation()
-  const asideRef = useSignalParallax()
   return (
     <div className="auth-grid">
-      <aside className="auth-aside" ref={asideRef}>
+      <aside className="auth-aside">
         <SignalDeco />
         <div className="auth-brand">
           <span className="auth-brand-mark">
