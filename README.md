@@ -94,7 +94,7 @@ curl http://127.0.0.1:8910/health        # {"status":"ok",...}
 #   mysql -uroot -p nene_serve < database/grants.sql
 
 # Admin console (React+Vite SPA, proxies /admin·/api·/public to the API):
-cd frontend && npm install && npm run dev   # http://localhost:5189
+cd frontend && npm install && npm run dev   # http://localhost:8915
 
 # Or run the API without Docker (PHP 8.4+):
 composer install
@@ -116,7 +116,7 @@ MYSQL_TEST_HOST=127.0.0.1 MYSQL_TEST_PORT=3392 MYSQL_TEST_DB=nene_serve \
 | PHP / API | **8910** |
 | phpMyAdmin | **8911** |
 | MySQL | **3392** |
-| Frontend dev (Vite) | **5189** |
+| Frontend dev (Vite) | **8915** |
 | Storybook | **6107** |
 | Mailpit UI (SMTP 1025) | **8913** |
 | ClamAV (clamd) | **3310** |

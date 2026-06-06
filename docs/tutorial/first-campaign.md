@@ -23,14 +23,14 @@ Bring the stack up and start the console:
 
 ```bash
 docker compose up -d            # api 8910 · db · phpMyAdmin 8911 · Mailpit 8913 · ClamAV
-cd frontend && npm run dev      # console on http://localhost:5189
+cd frontend && npm run dev      # console on http://localhost:8915
 ```
 
 Seeded starter account (dev only — change in production):
 
 | Field | Value |
 | --- | --- |
-| Console | `http://localhost:5189` |
+| Console | `http://localhost:8915` |
 | Organization | `acme` |
 | Email | `admin@acme.test` |
 | Password | `password123` |
@@ -40,7 +40,7 @@ Seeded starter account (dev only — change in production):
 
 ## Step 1 — Mei signs in
 
-1. Open `http://localhost:5189` → you land on **Login**.
+1. Open `http://localhost:8915` → you land on **Login**.
 2. Enter **Organization** `acme`, **Email** `admin@acme.test`, **Password**
    `password123`, and submit.
 3. You arrive at **Placements** with the full nav (Placements · Creatives ·
@@ -67,7 +67,7 @@ password, if any, is encrypted at rest and never shown back.)
 2. Email `ken@acme.test`, Role `editor`, send the invite.
 3. The banner confirms the invitation email was sent. Open Mailpit — there's a
    "set your password" email to Ken with a link like
-   `http://localhost:5189/set-password?token=…`.
+   `http://localhost:8915/set-password?token=…`.
 4. Open that link (as Ken), choose a password (≥ 8 chars, e.g. `ken-password`),
    submit, then **Go to sign in**.
 

@@ -9,7 +9,7 @@ always act inside **one organization**, and every list is scoped to your tenant.
 The UI is available in six languages (English, 日本語, 简体中文, 한국어, Deutsch,
 Español) — switch with the globe toggle in the top bar.
 
-> Local dev URLs (default): console `http://localhost:5189`, API
+> Local dev URLs (default): console `http://localhost:8915`, API
 > `http://localhost:8910`, Mailpit (caught email) `http://localhost:8913`.
 
 ---
