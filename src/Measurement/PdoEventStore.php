@@ -129,17 +129,22 @@ final readonly class PdoEventStore implements EventStoreInterface
 
     public function dailyMetrics(string $organizationId, string $fromDate, string $toDate): array
     {
+        // Each subquery binds its own placeholders: native prepared statements
+        // (emulation off) reject a named parameter reused across the UNION.
         $rows = $this->query->fetchAll(
             "SELECT d AS date, placement_id, creative_id, SUM(imp) AS impressions, SUM(clk) AS clicks FROM (
                 SELECT DATE(occurred_at) d, placement_id, creative_id, 1 imp, 0 clk
-                FROM impressions WHERE organization_id = :org AND DATE(occurred_at) BETWEEN :from AND :to
+                FROM impressions WHERE organization_id = :org_i AND DATE(occurred_at) BETWEEN :from_i AND :to_i
                 UNION ALL
                 SELECT DATE(occurred_at) d, placement_id, creative_id, 0 imp, 1 clk
-                FROM clicks WHERE organization_id = :org AND DATE(occurred_at) BETWEEN :from AND :to
+                FROM clicks WHERE organization_id = :org_c AND DATE(occurred_at) BETWEEN :from_c AND :to_c
             ) e
             GROUP BY d, placement_id, creative_id
             ORDER BY d, placement_id, creative_id",
-            ['org' => $organizationId, 'from' => $fromDate, 'to' => $toDate],
+            [
+                'org_i' => $organizationId, 'from_i' => $fromDate, 'to_i' => $toDate,
+                'org_c' => $organizationId, 'from_c' => $fromDate, 'to_c' => $toDate,
+            ],
         );
 
         return array_map(
