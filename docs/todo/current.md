@@ -100,6 +100,34 @@
 - [x] ADR 0020 (review workflow & approval gating), ADR 0021 (acceptance & sandbox safety)
 - [x] Self-review checklist: `docs/review/creative-review.md`; registered review states / scan / creative Problem Details slugs
 
+## Test & quality hardening (2026-06-05 → 06)
+
+- [x] Pure-logic + domain-entity unit coverage; fixed `DestinationUrl` IPv6 loopback
+      bug (PRs #107–#108)
+- [x] SQLite in-memory test harness + PDO repository read coverage; injected repos
+      into `ServeCreativeUseCase` and deduped `Record*` use-cases to test the live
+      path (PR #109)
+- Backend suite now **470 tests** (PHPStan level 8 + PSR-12 green); frontend **33
+  tests** (type-check + lint + knip + Storybook green)
+
+## Tenant resolution modes (2026-06-06)
+
+- [x] Pluggable org resolution for the admin surface (NeNe Records parity, ADR 0006):
+      `Tenant\Resolution\` — `OrgResolutionMode` (login·single·subdomain·path·custom_domain)
+      + Env/Subdomain/PathPrefix/CustomDomain strategies + `OrgResolverMiddleware`
+      (fails closed; path-prefix strip before routing). Default `login` keeps the
+      JWT-only pipeline unchanged.
+- [x] `AdminAuthMiddleware` reconciles the JWT against the URL-resolved tenant
+      (cross-tenant token → 403; superadmin may act within the resolved org)
+- [x] `organizations.custom_domain` (migration 0033) + `findByCustomDomain()`
+- [x] Wired via `TENANT_RESOLUTION` / `TENANT_ORG_SLUG` / `TENANT_BASE_DOMAIN`
+      (env); verified end-to-end on docker MySQL (subdomain mode: resolved→401,
+      unknown→404, bare→404). +22 unit tests (492 total)
+- Fixed a pre-existing `docker-compose.yml` DB-env bug: NENE2 reads `DB_NAME` /
+  `DB_USER`, not the Laravel-style `DB_DATABASE` / `DB_USERNAME`
+- Follow-up: DB-backed mode + admin UI to switch modes (Records #211–213);
+  frontend deriving the org field from host/path in URL modes
+
 ## Notes
 
 - Engineering docs: **English**. UI: **en, ja, zh-Hans, ko, de, es**.
@@ -109,4 +137,4 @@
 - **Three separated API surfaces; fail closed** (ADR 0018/0019); endpoint changes are gated by `docs/review/api-security.md`.
 - **Only approved creatives serve** (ADR 0020/0021); creative changes are gated by `docs/review/creative-review.md`.
 
-Last updated: 2026-06-04 (#69 admin SPA scaffold landed — frontend/, React+Vite, six-locale, mock-first)
+Last updated: 2026-06-06 (test harness + coverage to 470; audit-round refactors; admin SPA read screens + create forms, provisioning, asset upload + ClamAV all landed)

@@ -29,6 +29,16 @@ final readonly class PdoOrganizationRepository implements OrganizationRepository
         return $row === null ? null : $this->hydrate($row);
     }
 
+    public function findByCustomDomain(string $domain): ?Organization
+    {
+        $row = $this->query->fetchOne(
+            'SELECT ' . self::COLUMNS . ' FROM organizations WHERE custom_domain = ? LIMIT 1',
+            [$domain],
+        );
+
+        return $row === null ? null : $this->hydrate($row);
+    }
+
     /** @param array<string, mixed> $row */
     private function hydrate(array $row): Organization
     {

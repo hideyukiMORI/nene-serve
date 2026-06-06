@@ -17,6 +17,10 @@ services:
       APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:-bmVuZS1zZXJ2ZS1kZXYtaW5zZWN1cmUta2V5LTMyYnk=}
       DB_HOST: db
       DB_PORT: "3306"
+      # NENE2 ConfigLoader reads DB_NAME / DB_USER; DB_DATABASE / DB_USERNAME are
+      # kept for the docker-compose ${...} interpolation the db service uses.
+      DB_NAME: ${DB_DATABASE:-nene_serve}
+      DB_USER: ${DB_USERNAME:-nene}
       DB_DATABASE: ${DB_DATABASE:-nene_serve}
       DB_USERNAME: ${DB_USERNAME:-nene}
       DB_PASSWORD: ${DB_PASSWORD:-nene}

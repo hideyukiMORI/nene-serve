@@ -55,6 +55,14 @@ use NeneServe\Storage\StorageInterface;
 use NeneServe\Support\Crypto;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
 use NeneServe\Tenant\Auth\CapabilityMiddleware;
+use NeneServe\Tenant\OrganizationRepositoryInterface;
+use NeneServe\Tenant\Resolution\CustomDomainResolutionStrategy;
+use NeneServe\Tenant\Resolution\EnvResolutionStrategy;
+use NeneServe\Tenant\Resolution\OrgResolutionMode;
+use NeneServe\Tenant\Resolution\OrgResolutionStrategyInterface;
+use NeneServe\Tenant\Resolution\OrgResolverMiddleware;
+use NeneServe\Tenant\Resolution\PathPrefixResolutionStrategy;
+use NeneServe\Tenant\Resolution\SubdomainResolutionStrategy;
 use NeneServe\Upstream\Deal\DealClientInterface;
 use NeneServe\Upstream\Deal\FakeDealClient;
 use NeneServe\Upstream\Deal\HttpDealClient;
@@ -426,6 +434,36 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                 },
             )
             ->set(
+                OrgResolverMiddleware::class,
+                static function (ContainerInterface $container): OrgResolverMiddleware {
+                    $problemDetails = $container->get(ProblemDetailsResponseFactory::class);
+                    $organizations = $container->get(OrganizationRepositoryInterface::class);
+                    $organizationId = $container->get(self::ORG_ID_HOLDER);
+
+                    if (!$problemDetails instanceof ProblemDetailsResponseFactory) {
+                        throw new LogicException('Problem details response factory service is invalid.');
+                    }
+
+                    if (!$organizations instanceof OrganizationRepositoryInterface) {
+                        throw new LogicException('Organization repository service is invalid.');
+                    }
+
+                    if (!$organizationId instanceof RequestScopedHolder) {
+                        throw new LogicException('Organization id holder service is invalid.');
+                    }
+
+                    $mode = self::tenantResolutionMode();
+
+                    return new OrgResolverMiddleware(
+                        $organizationId,
+                        $organizations,
+                        $problemDetails,
+                        self::resolutionStrategy($mode),
+                        $mode,
+                    );
+                },
+            )
+            ->set(
                 ServiceTokenRepositoryInterface::class,
                 static function (ContainerInterface $container): ServiceTokenRepositoryInterface {
                     $query = $container->get(DatabaseQueryExecutorInterface::class);
@@ -508,6 +546,7 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                     $serviceAuth = $container->get(ServiceAuthMiddleware::class);
                     $scope = $container->get(ScopeMiddleware::class);
                     $throttle = $container->get(ThrottleMiddleware::class);
+                    $tenantMode = self::tenantResolutionMode();
                     $exceptionHandlers = $container->get(ApplicationServiceProvider::EXCEPTION_HANDLERS);
                     $routeRegistrars = $container->get(ApplicationServiceProvider::ROUTE_REGISTRARS);
 
@@ -562,6 +601,21 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                     /** @var list<DomainExceptionHandlerInterface> $exceptionHandlers */
                     /** @var list<callable(\Nene2\Routing\Router): void> $routeRegistrars */
 
+                    $authMiddleware = [$adminAuth, $capability, $serviceAuth, $scope];
+
+                    // URL resolution modes (subdomain / path / custom domain /
+                    // single) derive the tenant from the request before auth runs;
+                    // login mode keeps the JWT-only pipeline unchanged (ADR 0006).
+                    if ($tenantMode->usesUrlResolution()) {
+                        $orgResolver = $container->get(OrgResolverMiddleware::class);
+
+                        if (!$orgResolver instanceof OrgResolverMiddleware) {
+                            throw new LogicException('Org resolver middleware service is invalid.');
+                        }
+
+                        array_unshift($authMiddleware, $orgResolver);
+                    }
+
                     return new RuntimeApplicationFactory(
                         responseFactory: $responseFactory,
                         streamFactory: $streamFactory,
@@ -570,7 +624,7 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                         domainExceptionHandlers: $exceptionHandlers,
                         requestIdHolder: $requestIdHolder,
                         routeRegistrars: $routeRegistrars,
-                        authMiddleware: [$adminAuth, $capability, $serviceAuth, $scope],
+                        authMiddleware: $authMiddleware,
                         throttleMiddleware: $throttle,
                         debug: $config->debug,
                         requestMaxBodyBytes: 10 * 1024 * 1024,
@@ -591,5 +645,34 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                 },
             )
             ->set(ResponseEmitter::class, static fn (ContainerInterface $container): ResponseEmitter => new ResponseEmitter());
+    }
+
+    /**
+     * The configured tenant resolution mode (`TENANT_RESOLUTION`), defaulting to
+     * {@see OrgResolutionMode::Login} when unset or unrecognized (ADR 0006).
+     */
+    private static function tenantResolutionMode(): OrgResolutionMode
+    {
+        $value = getenv('TENANT_RESOLUTION');
+
+        return OrgResolutionMode::fromEnv(is_string($value) ? $value : null);
+    }
+
+    private static function resolutionStrategy(OrgResolutionMode $mode): OrgResolutionStrategyInterface
+    {
+        return match ($mode) {
+            OrgResolutionMode::Subdomain => new SubdomainResolutionStrategy(self::env('TENANT_BASE_DOMAIN', 'localhost')),
+            OrgResolutionMode::Path => new PathPrefixResolutionStrategy(),
+            OrgResolutionMode::CustomDomain => new CustomDomainResolutionStrategy(),
+            // Single (fixed slug) — and Login, which never reaches the pipeline.
+            default => new EnvResolutionStrategy(self::env('TENANT_ORG_SLUG', '')),
+        };
+    }
+
+    private static function env(string $name, string $default): string
+    {
+        $value = getenv($name);
+
+        return is_string($value) && $value !== '' ? $value : $default;
     }
 }
