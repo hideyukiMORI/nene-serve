@@ -142,7 +142,7 @@
 ## Notes
 
 - Engineering docs: **English**. UI: **en, ja, zh-Hans, ko, de, es**.
-- Ports: **8910 / 8911 / 3392**.
+- Ports (80xx lane): API **8010** / phpMyAdmin **8011** / Mailpit **8013** / MySQL **3380** / ClamAV **3308** / frontend **5180** / Storybook **6107**.
 - **Serve is tax-neutral and not the books of account** (ADR 0014/0015); Phase 3 marketplace is gated by `docs/review/billing-compliance.md`.
 - **Operator is the data controller; privacy by default** (ADR 0016/0017); measurement changes are gated by `docs/review/privacy-compliance.md`.
 - **Three separated API surfaces; fail closed** (ADR 0018/0019); endpoint changes are gated by `docs/review/api-security.md`.

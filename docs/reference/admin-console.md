@@ -9,8 +9,8 @@ always act inside **one organization**, and every list is scoped to your tenant.
 The UI is available in six languages (English, 日本語, 简体中文, 한국어, Deutsch,
 Español) — switch with the globe toggle in the top bar.
 
-> Local dev URLs (default): console `http://localhost:8915`, API
-> `http://localhost:8910`, Mailpit (caught email) `http://localhost:8913`.
+> Local dev URLs (default): console `http://localhost:5180`, API
+> `http://localhost:8010`, Mailpit (caught email) `http://localhost:8013`.
 
 ---
 
@@ -207,7 +207,7 @@ Outbound email (**SMTP**) used for invitations and test mail.
 - **Save** — stores the settings (audited).
 - **Send test email** — sends a test to your own address through the saved
   settings, so you can confirm delivery before inviting people. In dev the mail
-  appears in Mailpit (`http://localhost:8913`).
+  appears in Mailpit (`http://localhost:8013`).
 
 ---
 

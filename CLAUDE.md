@@ -36,7 +36,7 @@ Agent guide. Cursor rules: `.cursor/rules/`.
 
 ## Ports
 
-API **8910** · phpMyAdmin **8911** · MySQL **3392** · frontend dev **8915** · Storybook **6107** · Mailpit UI **8913** (SMTP 1025) · ClamAV **3310**
+API **8010** · phpMyAdmin **8011** · MySQL **3380** · frontend dev **5180** · Storybook **6107** · Mailpit UI **8013** (SMTP 1080) · ClamAV **3308**
 
 ## Status
 

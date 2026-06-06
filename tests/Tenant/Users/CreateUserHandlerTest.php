@@ -80,7 +80,7 @@ final class CreateUserHandlerTest extends TestCase
             new SmtpConfigResolver($this->settingsRepo(), new Crypto()),
             $this->mailerFactory(),
             new JsonResponseFactory($psr17, $psr17),
-            'http://localhost:8915',
+            'http://localhost:5180',
         );
 
         $request = $psr17->createServerRequest('POST', '/admin/users')

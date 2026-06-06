@@ -22,25 +22,25 @@ screen means.
 Bring the stack up and start the console:
 
 ```bash
-docker compose up -d            # api 8910 · db · phpMyAdmin 8911 · Mailpit 8913 · ClamAV
-cd frontend && npm run dev      # console on http://localhost:8915
+docker compose up -d            # api 8010 · db · phpMyAdmin 8011 · Mailpit 8013 · ClamAV
+cd frontend && npm run dev      # console on http://localhost:5180
 ```
 
 Seeded starter account (dev only — change in production):
 
 | Field | Value |
 | --- | --- |
-| Console | `http://localhost:8915` |
+| Console | `http://localhost:5180` |
 | Organization | `acme` |
 | Email | `admin@acme.test` |
 | Password | `password123` |
-| Caught email (Mailpit) | `http://localhost:8913` |
+| Caught email (Mailpit) | `http://localhost:8013` |
 
 ---
 
 ## Step 1 — Mei signs in
 
-1. Open `http://localhost:8915` → you land on **Login**.
+1. Open `http://localhost:5180` → you land on **Login**.
 2. Enter **Organization** `acme`, **Email** `admin@acme.test`, **Password**
    `password123`, and submit.
 3. You arrive at **Placements** with the full nav (Placements · Creatives ·
@@ -56,7 +56,7 @@ Seeded starter account (dev only — change in production):
    - **From address** `no-reply@acme.test` · **From name** `Acme Media`
    - Username/Password: leave blank.
 3. **Save**, then **Send test email**.
-4. Open Mailpit at `http://localhost:8913`.
+4. Open Mailpit at `http://localhost:8013`.
 
 ✅ *Expected:* a "NeNe Serve — SMTP test" email appears in Mailpit. (The stored
 password, if any, is encrypted at rest and never shown back.)
@@ -67,7 +67,7 @@ password, if any, is encrypted at rest and never shown back.)
 2. Email `ken@acme.test`, Role `editor`, send the invite.
 3. The banner confirms the invitation email was sent. Open Mailpit — there's a
    "set your password" email to Ken with a link like
-   `http://localhost:8915/set-password?token=…`.
+   `http://localhost:5180/set-password?token=…`.
 4. Open that link (as Ken), choose a password (≥ 8 chars, e.g. `ken-password`),
    submit, then **Go to sign in**.
 
@@ -105,9 +105,9 @@ derived and never exceeds the budget.
 
 ```bash
 # Get Mei's token, then submit the draft creative (replace cr-XXXX with its ID).
-TOKEN=$(curl -s -X POST http://localhost:8910/admin/login -H 'Content-Type: application/json' \
+TOKEN=$(curl -s -X POST http://localhost:8010/admin/login -H 'Content-Type: application/json' \
   -d '{"organization":"acme","email":"admin@acme.test","password":"password123"}' | sed 's/.*"token":"//;s/".*//')
-curl -s -X POST http://localhost:8910/admin/creatives/cr-XXXX/submit \
+curl -s -X POST http://localhost:8010/admin/creatives/cr-XXXX/submit \
   -H "Authorization: Bearer $TOKEN" | head -c 200; echo
 ```
 
@@ -146,7 +146,7 @@ mkdir -p /tmp/news && cat > /tmp/news/index.html <<'HTML'
 <body>
   <h1>news.example — homepage</h1>
   <!-- The NeNe Serve embed: one script tag, no other code. -->
-  <script src="http://localhost:8910/serve.js" data-placement="news_home_top" async></script>
+  <script src="http://localhost:8010/serve.js" data-placement="news_home_top" async></script>
 </body></html>
 HTML
 php -S localhost:8080 -t /tmp/news
@@ -165,7 +165,7 @@ hood serve.js:
 Prefer the command line? You can see the serve payload directly (no browser):
 
 ```bash
-curl -s "http://localhost:8910/public/placements/news_home_top/serve" | head -c 300; echo
+curl -s "http://localhost:8010/public/placements/news_home_top/serve" | head -c 300; echo
 ```
 
 It returns the creative payload with opaque tokens only — no internal ids, no

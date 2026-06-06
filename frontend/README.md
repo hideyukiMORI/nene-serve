@@ -15,7 +15,7 @@ Storybook contracts, MSW-backed tests, `openapi-typescript` codegen.
 
 ```bash
 npm install
-npm run dev          # http://localhost:8915 (API proxied to the PHP app on APP_PORT, default 8910)
+npm run dev          # http://localhost:5180 (API proxied to the PHP app on APP_PORT, default 8010)
 npm run mock         # dev server backed by MSW handlers (no PHP needed)
 npm run storybook    # component catalog on :6107
 npm run codegen      # regenerate src/shared/api/schema.gen.ts from ../docs/api/admin.openapi.json

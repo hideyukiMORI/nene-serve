@@ -59,7 +59,7 @@ final readonly class UsersServiceProvider implements ServiceProviderInterface
                         self::service($c, SmtpConfigResolver::class),
                         self::service($c, MailerFactoryInterface::class),
                         self::json($c),
-                        is_string($appBaseUrl) && $appBaseUrl !== '' ? $appBaseUrl : 'http://localhost:8915',
+                        is_string($appBaseUrl) && $appBaseUrl !== '' ? $appBaseUrl : 'http://localhost:5180',
                     );
                 },
             )

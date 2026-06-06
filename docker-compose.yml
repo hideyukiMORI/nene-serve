@@ -1,14 +1,14 @@
 # NeNe Serve — local dev stack (scaffold, #10)
-# Ports (CLAUDE.md): API 8910 · phpMyAdmin 8911 · MySQL 3392 · Mailpit UI 8913
+# Ports (CLAUDE.md): API 8010 · phpMyAdmin 8011 · MySQL 3380 · Mailpit UI 8013
 services:
   api:
     build: .
     ports:
-      - "8910:8910"
+      - "8010:8010"
     volumes:
       - .:/app
     working_dir: /app
-    command: php -S 0.0.0.0:8910 -t public_html public_html/index.php
+    command: php -S 0.0.0.0:8010 -t public_html public_html/index.php
     environment:
       APP_ENV: ${APP_ENV:-local}
       NENE_SERVE_JWT_SECRET: ${NENE_SERVE_JWT_SECRET:-dev-insecure-secret-change-me}
@@ -31,12 +31,12 @@ services:
       - db
       - mailpit
 
-  # Dev mail catcher: SMTP on 1025, web UI on 8913.
+  # Dev mail catcher: SMTP on 1025, web UI on 8013.
   mailpit:
     image: axllent/mailpit:latest
     ports:
-      - "8913:8025"
-      - "1025:1025"
+      - "8013:8025"
+      - "1080:1025"
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: "1"
       MP_SMTP_AUTH_ALLOW_INSECURE: "1"
@@ -46,12 +46,12 @@ services:
   clamav:
     image: clamav/clamav:latest
     ports:
-      - "3310:3310"
+      - "3308:3310"
 
   db:
     image: mysql:8.4
     ports:
-      - "3392:3306"
+      - "3380:3306"
     environment:
       MYSQL_DATABASE: ${DB_DATABASE:-nene_serve}
       MYSQL_USER: ${DB_USERNAME:-nene}
@@ -63,7 +63,7 @@ services:
   phpmyadmin:
     image: phpmyadmin:5
     ports:
-      - "8911:80"
+      - "8011:80"
     environment:
       PMA_HOST: db
       PMA_PORT: "3306"
