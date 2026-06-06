@@ -100,8 +100,13 @@ cd frontend && npm install && npm run dev   # http://localhost:5189
 composer install
 composer serve              # php -S 127.0.0.1:8910 -t public_html
 composer locales:check      # six-locale key parity (ADR 0011)
-composer test               # PHPUnit
+composer test               # PHPUnit (unit; serverless SQLite)
 composer check              # test + PHPStan level 8 + PSR-12
+
+# Integration suite against a real MySQL (native prepares, as in prod) — catches
+# dialect-specific bugs SQLite can't. Skips when MYSQL_TEST_* is unset; CI runs it.
+MYSQL_TEST_HOST=127.0.0.1 MYSQL_TEST_PORT=3392 MYSQL_TEST_DB=nene_serve \
+  MYSQL_TEST_USER=root MYSQL_TEST_PASSWORD=root composer test:integration
 ```
 
 ## Local ports (fixed)

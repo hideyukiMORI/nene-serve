@@ -15,6 +15,13 @@
     <testsuites>
         <testsuite name="unit">
             <directory>tests</directory>
+            <!-- Integration tests need a real MySQL; run them via the
+                 `integration` suite (composer test:integration), not the
+                 serverless default. -->
+            <exclude>tests/Integration</exclude>
+        </testsuite>
+        <testsuite name="integration">
+            <directory>tests/Integration</directory>
         </testsuite>
     </testsuites>
     <source>

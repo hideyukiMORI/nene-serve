@@ -36,7 +36,8 @@
     "scripts": {
         "serve": "php -S 127.0.0.1:8910 -t public_html public_html/index.php",
         "locales:check": "php scripts/locales-check.php",
-        "test": "phpunit",
+        "test": "phpunit --testsuite unit",
+        "test:integration": "phpunit --testsuite integration",
         "stan": "phpstan analyse",
         "analyse": "phpstan analyse --memory-limit 512M",
         "cs": "php-cs-fixer fix --dry-run --diff",
