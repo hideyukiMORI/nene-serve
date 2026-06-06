@@ -52,6 +52,17 @@ trait ServiceProviderHelpers
         return $query;
     }
 
+    protected static function dialect(ContainerInterface $container): SqlDialect
+    {
+        $dialect = $container->get(SqlDialect::class);
+
+        if (!$dialect instanceof SqlDialect) {
+            throw new LogicException('SQL dialect service is invalid.');
+        }
+
+        return $dialect;
+    }
+
     protected static function transactions(ContainerInterface $container): DatabaseTransactionManagerInterface
     {
         $transactions = $container->get(DatabaseTransactionManagerInterface::class);
