@@ -434,6 +434,10 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                 },
             )
             ->set(
+                OrgResolutionMode::class,
+                static fn (ContainerInterface $container): OrgResolutionMode => self::tenantResolutionMode(),
+            )
+            ->set(
                 OrgResolverMiddleware::class,
                 static function (ContainerInterface $container): OrgResolverMiddleware {
                     $problemDetails = $container->get(ProblemDetailsResponseFactory::class);

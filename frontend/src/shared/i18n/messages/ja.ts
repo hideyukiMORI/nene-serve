@@ -51,6 +51,7 @@ export const ja: MessageCatalog = {
   'login.title': 'サインイン',
   'login.subtitle': '管理コンソール',
   'login.organization': '組織',
+  'login.signingInTo': '{{name}} にサインイン',
   'login.email': 'メールアドレス',
   'login.password': 'パスワード',
   'login.submit': 'サインイン',

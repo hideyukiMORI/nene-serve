@@ -90,7 +90,7 @@ final class OrgResolverMiddlewareTest extends TestCase
         self::assertFalse($this->holder->isSet());
     }
 
-    public function testLoginRouteBypassesResolution(): void
+    public function testLoginOnBareDomainResolvesNothingButPassesThrough(): void
     {
         [$response, $seen] = $this->dispatch(
             OrgResolutionMode::Subdomain,
@@ -101,6 +101,52 @@ final class OrgResolverMiddlewareTest extends TestCase
         self::assertSame(200, $response->getStatusCode());
         self::assertFalse($this->holder->isSet());
         self::assertNull($seen->resolvedOrgId);
+    }
+
+    public function testLoginRouteGetsBestEffortTenantWithoutFailingClosed(): void
+    {
+        // A resolvable tenant URL locks login to its own org; an unknown one does
+        // not 404 here (the login screen must still load).
+        [$ok, $okSeen] = $this->dispatch(
+            OrgResolutionMode::Subdomain,
+            new SubdomainResolutionStrategy('serve.example.com'),
+            'http://acme.serve.example.com/admin/login',
+        );
+
+        self::assertSame(200, $ok->getStatusCode());
+        self::assertSame('org-acme', $okSeen->resolvedOrgId);
+
+        $this->holder = new RequestScopedHolder();
+        [$unknown, $unknownSeen] = $this->dispatch(
+            OrgResolutionMode::Subdomain,
+            new SubdomainResolutionStrategy('serve.example.com'),
+            'http://ghost.serve.example.com/admin/login',
+        );
+
+        self::assertSame(200, $unknown->getStatusCode());
+        self::assertNull($unknownSeen->resolvedOrgId);
+    }
+
+    public function testTenantContextGetsBestEffortTenantWithoutFailingClosed(): void
+    {
+        [$resolved, $resolvedSeen] = $this->dispatch(
+            OrgResolutionMode::Subdomain,
+            new SubdomainResolutionStrategy('serve.example.com'),
+            'http://acme.serve.example.com/admin/tenant-context',
+        );
+
+        self::assertSame(200, $resolved->getStatusCode());
+        self::assertSame('org-acme', $resolvedSeen->resolvedOrgId);
+
+        $this->holder = new RequestScopedHolder();
+        [$bare, $bareSeen] = $this->dispatch(
+            OrgResolutionMode::Subdomain,
+            new SubdomainResolutionStrategy('serve.example.com'),
+            'http://serve.example.com/admin/tenant-context',
+        );
+
+        self::assertSame(200, $bare->getStatusCode());
+        self::assertNull($bareSeen->resolvedOrgId);
     }
 
     public function testPublicSurfaceIsNeverTenantByUrl(): void
@@ -138,8 +184,10 @@ final class OrgResolverMiddlewareTest extends TestCase
         );
 
         self::assertSame(200, $response->getStatusCode());
-        self::assertFalse($this->holder->isSet());
         self::assertSame('/admin/login', $seen->path);
+        // Best-effort on the open route still locks login to the resolved tenant.
+        self::assertSame('org-acme', $this->holder->get());
+        self::assertSame('org-acme', $seen->resolvedOrgId);
     }
 
     public function testCustomDomainResolvesViaRepository(): void

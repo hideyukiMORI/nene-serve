@@ -125,8 +125,19 @@
       unknown→404, bare→404). +22 unit tests (492 total)
 - Fixed a pre-existing `docker-compose.yml` DB-env bug: NENE2 reads `DB_NAME` /
   `DB_USER`, not the Laravel-style `DB_DATABASE` / `DB_USERNAME`
-- Follow-up: DB-backed mode + admin UI to switch modes (Records #211–213);
-  frontend deriving the org field from host/path in URL modes
+
+### Login adapts to the mode (#112, 2026-06-06)
+
+- [x] `GET /admin/tenant-context` (open) → `{ mode, organization }`; the admin SPA
+      reads it before sign-in. `OrgResolverMiddleware` now resolves the open admin
+      routes (login / invitations / tenant-context) best-effort — attaches the
+      tenant when available, never fails closed there
+- [x] `LoginHandler`: a URL-resolved tenant is authoritative — the body
+      `organization` is ignored, so a tenant URL only signs into its own org
+- [x] Frontend `LoginView` hides the org field and shows the resolved org name in
+      URL modes (six-locale `login.signingInTo`); `useTenantContext` query + MSW
+      mock. Verified end-to-end on docker MySQL
+- Follow-up: DB-backed mode + admin UI to switch modes (Records #211–213)
 
 ## Notes
 

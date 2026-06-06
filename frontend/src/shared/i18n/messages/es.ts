@@ -52,6 +52,7 @@ export const es: MessageCatalog = {
   'login.title': 'Iniciar sesión',
   'login.subtitle': 'Consola del operador',
   'login.organization': 'Organización',
+  'login.signingInTo': 'Iniciar sesión en {{name}}',
   'login.email': 'Correo electrónico',
   'login.password': 'Contraseña',
   'login.submit': 'Iniciar sesión',

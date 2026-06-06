@@ -50,6 +50,7 @@ export const ko: MessageCatalog = {
   'login.title': '로그인',
   'login.subtitle': '운영 콘솔',
   'login.organization': '조직',
+  'login.signingInTo': '{{name}}에 로그인',
   'login.email': '이메일',
   'login.password': '비밀번호',
   'login.submit': '로그인',

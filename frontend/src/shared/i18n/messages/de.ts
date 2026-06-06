@@ -56,6 +56,7 @@ export const de: MessageCatalog = {
   'login.title': 'Anmelden',
   'login.subtitle': 'Betreiberkonsole',
   'login.organization': 'Organisation',
+  'login.signingInTo': 'Anmeldung bei {{name}}',
   'login.email': 'E-Mail',
   'login.password': 'Passwort',
   'login.submit': 'Anmelden',

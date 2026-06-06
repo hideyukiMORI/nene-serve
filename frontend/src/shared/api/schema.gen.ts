@@ -21,6 +21,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/tenant-context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tenant resolution context for the login screen.
+         * @description How the admin surface determines the tenant (ADR 0006). In a URL resolution mode the resolved organization is returned so the login screen can hide the organization field; in login mode it is null.
+         */
+        get: operations["tenantContext"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/me": {
         parameters: {
             query?: never;
@@ -759,6 +779,37 @@ export interface operations {
             };
             401: components["responses"]["Problem"];
             422: components["responses"]["Problem"];
+        };
+    };
+    tenantContext: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Resolution mode and, when resolvable, the current organization. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Active TENANT_RESOLUTION mode.
+                         * @enum {string}
+                         */
+                        mode: "login" | "single" | "subdomain" | "path" | "custom_domain";
+                        /** @description The resolved tenant in URL modes; null in login mode or when unresolvable. */
+                        organization: {
+                            slug: string;
+                            name: string;
+                        } | null;
+                    };
+                };
+            };
         };
     };
     getCurrentUser: {

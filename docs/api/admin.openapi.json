@@ -124,6 +124,65 @@
         }
       }
     },
+    "/admin/tenant-context": {
+      "get": {
+        "operationId": "tenantContext",
+        "tags": [
+          "auth"
+        ],
+        "security": [],
+        "summary": "Tenant resolution context for the login screen.",
+        "description": "How the admin surface determines the tenant (ADR 0006). In a URL resolution mode the resolved organization is returned so the login screen can hide the organization field; in login mode it is null.",
+        "responses": {
+          "200": {
+            "description": "Resolution mode and, when resolvable, the current organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "login",
+                        "single",
+                        "subdomain",
+                        "path",
+                        "custom_domain"
+                      ],
+                      "description": "Active TENANT_RESOLUTION mode."
+                    },
+                    "organization": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "description": "The resolved tenant in URL modes; null in login mode or when unresolvable.",
+                      "properties": {
+                        "slug": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "slug",
+                        "name"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "mode",
+                    "organization"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/me": {
       "get": {
         "operationId": "getCurrentUser",

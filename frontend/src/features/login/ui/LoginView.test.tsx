@@ -32,6 +32,32 @@ describe('LoginView', () => {
     })
   })
 
+  it('replaces the org field with the resolved tenant and submits its slug', async () => {
+    const user = userEvent.setup()
+    const onSubmit = vi.fn(() => Promise.resolve(true))
+    renderWithProviders(
+      <LoginView
+        pending={false}
+        errorMessage={null}
+        tenant={{ slug: 'acme', name: 'Acme' }}
+        onSubmit={onSubmit}
+      />,
+    )
+
+    expect(screen.queryByLabelText('Organization')).not.toBeInTheDocument()
+    expect(screen.getByText('Signing in to Acme')).toBeInTheDocument()
+
+    await user.type(screen.getByLabelText('Email'), 'admin@acme.test')
+    await user.type(screen.getByLabelText('Password'), 'password')
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      organization: 'acme',
+      email: 'admin@acme.test',
+      password: 'password',
+    })
+  })
+
   it('shows an error message', () => {
     renderWithProviders(
       <LoginView
