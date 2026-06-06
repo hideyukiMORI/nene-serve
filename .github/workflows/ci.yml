@@ -11,6 +11,21 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      # Real MySQL for the integration suite (native prepared statements, as in
+      # prod) — catches dialect-specific bugs SQLite cannot (e.g. #116).
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: nene_serve_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -uroot -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
     steps:
       - uses: actions/checkout@v4
 
@@ -42,6 +57,21 @@ jobs:
 
       - name: Tests (PHPUnit)
         run: composer test
+
+      - name: Apply migrations (integration MySQL)
+        run: |
+          for f in database/migrations/*.sql; do
+            mysql -h127.0.0.1 -P3306 -uroot -proot nene_serve_test < "$f"
+          done
+
+      - name: Integration tests (MySQL)
+        env:
+          MYSQL_TEST_HOST: 127.0.0.1
+          MYSQL_TEST_PORT: '3306'
+          MYSQL_TEST_DB: nene_serve_test
+          MYSQL_TEST_USER: root
+          MYSQL_TEST_PASSWORD: root
+        run: composer test:integration
 
   frontend:
     runs-on: ubuntu-latest
