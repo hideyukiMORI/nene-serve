@@ -17,6 +17,7 @@ use NeneServe\Serving\Review\VideoAcceptance;
 use NeneServe\Serving\ReviewStatus;
 use NeneServe\Serving\Scan\BundleScannerInterface;
 use NeneServe\Support\Id;
+use NeneServe\Support\SqlDialect;
 
 /**
  * Creates a creative in `draft` after enforcing the per-type acceptance rules
@@ -33,6 +34,7 @@ final readonly class CreateCreativeUseCase implements CreateCreativeUseCaseInter
         private DatabaseTransactionManagerInterface $transactions,
         private BundleScannerInterface $scanner,
         private RequestScopedHolder $organizationId,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -118,9 +120,10 @@ final readonly class CreateCreativeUseCase implements CreateCreativeUseCaseInter
      */
     private function persist(Creative $creative, string $actorUserId, array $after, string $action): CreateCreativeOutput
     {
+        $dialect = $this->dialect;
         $stored = $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($creative, $actorUserId, $after, $action): Creative {
-                (new PdoCreativeRepository($tx))->save($creative);
+            static function (DatabaseQueryExecutorInterface $tx) use ($creative, $actorUserId, $after, $action, $dialect): Creative {
+                (new PdoCreativeRepository($tx, $dialect))->save($creative);
                 (new PdoAuditLog($tx))->record(
                     $creative->organizationId,
                     $actorUserId,

@@ -17,6 +17,7 @@ use NeneServe\Serving\UseCase\CreativeScanFailedException;
 use NeneServe\Serving\UseCase\CreativeValidationException;
 use NeneServe\Serving\UseCase\InvalidReviewTransitionException;
 use NeneServe\Serving\UseCase\SelfApprovalForbiddenException;
+use NeneServe\Support\SqlDialect;
 
 /**
  * Drives the review state machine (creative-review §1): legal transitions,
@@ -33,6 +34,7 @@ final readonly class TransitionCreativeUseCase implements TransitionCreativeUseC
         private DatabaseQueryExecutorInterface $query,
         private DatabaseTransactionManagerInterface $transactions,
         private RequestScopedHolder $organizationId,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -82,9 +84,10 @@ final readonly class TransitionCreativeUseCase implements TransitionCreativeUseC
         $fromStatus = $creative->reviewStatus->value;
         $selfApprovalOverride = $input->selfApprovalOverride;
 
+        $dialect = $this->dialect;
         $stored = $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($updated, $organizationId, $actorUserId, $action, $fromStatus, $target, $reason, $selfApprovalOverride): Creative {
-                (new PdoCreativeRepository($tx))->save($updated);
+            static function (DatabaseQueryExecutorInterface $tx) use ($updated, $organizationId, $actorUserId, $action, $fromStatus, $target, $reason, $selfApprovalOverride, $dialect): Creative {
+                (new PdoCreativeRepository($tx, $dialect))->save($updated);
                 (new PdoAuditLog($tx))->record(
                     $organizationId,
                     $actorUserId,
