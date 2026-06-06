@@ -49,5 +49,5 @@ path repository `../NENE2`); runtime is wired through `Http\RuntimeContainerFact
 
 Admin SPA in `frontend/` follows the sibling NeNe convention (React+Vite+TS, Feature-Sliced,
 Tailwind v4, TanStack Query, react-hook-form+zod, MSW mock-first, Storybook, six-locale i18n
-per ADR 0011, `openapi-typescript` codegen). Dev port **5189**, Storybook **6107**; backend
+per ADR 0011, `openapi-typescript` codegen). Dev port **8915**, Storybook **6107**; backend
 proxied from `APP_PORT` (8910). Quality gate: `npm run check`. See `frontend/README.md`.

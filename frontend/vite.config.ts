@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
     server: {
       // Fixed, family-unique dev port (NeNe Serve). strictPort avoids silent
       // fallback into a sibling's range. See AGENTS.md "Local dev ports".
-      port: 5189,
+      port: 8915,
       strictPort: true,
       proxy: {
         '/admin': { target, changeOrigin: true },
