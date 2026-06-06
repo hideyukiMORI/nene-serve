@@ -2,9 +2,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import type { TenantContext } from '@/entities/auth'
 import type { SmtpSettings, UpdateSmtpInput } from '@/entities/settings'
 import { useTranslation } from '@/shared/i18n'
 import { Button, Input, Page, Select, Stack, Text } from '@/shared/ui'
+import { TenantResolutionCard } from './TenantResolutionCard'
 
 export interface SettingsViewProps {
   settings: SmtpSettings | null
@@ -15,6 +17,7 @@ export interface SettingsViewProps {
   saved: boolean
   testing: boolean
   testMessage: string | null
+  tenant: TenantContext | null
   onSave: (input: UpdateSmtpInput) => Promise<boolean>
   onTest: () => void
 }
@@ -40,6 +43,7 @@ export function SettingsView({
   saved,
   testing,
   testMessage,
+  tenant,
   onSave,
   onTest,
 }: SettingsViewProps) {
@@ -87,6 +91,8 @@ export function SettingsView({
   return (
     <Page title={t('settings.title')} subtitle={t('settings.smtp.subtitle')}>
       <Stack gap="md">
+        {tenant !== null ? <TenantResolutionCard tenant={tenant} /> : null}
+
         {loading ? <Text muted>{t('settings.loading')}</Text> : null}
         {errorMessage !== null ? <Text className="danger">{errorMessage}</Text> : null}
 

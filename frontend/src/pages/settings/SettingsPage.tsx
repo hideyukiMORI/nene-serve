@@ -1,8 +1,10 @@
+import { useTenantContext } from '@/entities/auth'
 import { SettingsView, useSettingsPage } from '@/features/settings'
 import { useTranslation } from '@/shared/i18n'
 
 export function SettingsPage() {
   const page = useSettingsPage()
+  const tenantContext = useTenantContext()
   const { t } = useTranslation()
 
   const testMessage =
@@ -22,6 +24,7 @@ export function SettingsPage() {
       saved={page.saved}
       testing={page.testing}
       testMessage={testMessage}
+      tenant={tenantContext.data ?? null}
       onSave={page.save}
       onTest={() => {
         void page.test()

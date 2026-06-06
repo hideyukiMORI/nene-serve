@@ -194,6 +194,10 @@ export interface MessageCatalog {
   'settings.loading': string
   'settings.saved': string
   'settings.testOk': string
+  'settings.tenant.title': string
+  'settings.tenant.mode': string
+  'settings.tenant.organization': string
+  'settings.tenant.note': string
   'settings.smtp.subtitle': string
   'settings.smtp.host': string
   'settings.smtp.port': string
@@ -411,6 +415,10 @@ export const en: MessageCatalog = {
   'settings.loading': 'Loading…',
   'settings.saved': 'Saved.',
   'settings.testOk': 'Test email sent.',
+  'settings.tenant.title': 'Tenant resolution',
+  'settings.tenant.mode': 'Mode',
+  'settings.tenant.organization': 'Organization',
+  'settings.tenant.note': 'Set in deploy configuration (TENANT_RESOLUTION).',
   'settings.smtp.subtitle': 'Outbound email (SMTP) for invitations',
   'settings.smtp.host': 'Host',
   'settings.smtp.port': 'Port',
