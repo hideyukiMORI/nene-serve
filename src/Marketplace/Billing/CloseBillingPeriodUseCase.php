@@ -18,6 +18,7 @@ use NeneServe\Marketplace\UseCase\GetCampaignSpendUseCase;
 use NeneServe\Marketplace\UseCase\InvalidPeriodTransitionException;
 use NeneServe\Marketplace\UseCase\MarketplaceValidationException;
 use NeneServe\Support\Id;
+use NeneServe\Support\SqlDialect;
 
 /**
  * Closes an open billing period: derives the reproducible spend, persists an
@@ -35,6 +36,7 @@ final readonly class CloseBillingPeriodUseCase implements CloseBillingPeriodUseC
         private DatabaseTransactionManagerInterface $transactions,
         private GetCampaignSpendUseCase $campaignSpend,
         private RequestScopedHolder $organizationId,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -84,10 +86,12 @@ final readonly class CloseBillingPeriodUseCase implements CloseBillingPeriodUseC
         );
         $closed = $period->withStatus('closed');
 
+        $dialect = $this->dialect;
+
         return $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($snapshot, $closed, $input, $organizationId, $spend): CloseBillingPeriodOutput {
+            static function (DatabaseQueryExecutorInterface $tx) use ($snapshot, $closed, $input, $organizationId, $spend, $dialect): CloseBillingPeriodOutput {
                 (new PdoSpendSnapshotRepository($tx))->save($snapshot);
-                (new PdoBillingPeriodRepository($tx))->save($closed);
+                (new PdoBillingPeriodRepository($tx, $dialect))->save($closed);
                 (new PdoAuditLog($tx))->record(
                     $organizationId,
                     $input->actorUserId,

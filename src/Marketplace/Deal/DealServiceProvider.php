@@ -40,6 +40,7 @@ final readonly class DealServiceProvider implements ServiceProviderInterface
                     self::transactions($c),
                     self::service($c, DealClientInterface::class),
                     self::orgId($c),
+                    self::dialect($c),
                 ),
             )
             ->set(

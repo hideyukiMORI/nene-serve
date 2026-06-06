@@ -8,6 +8,7 @@ use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
 use Nene2\Http\SecureTokenHelper;
 use NeneServe\Audit\PdoAuditLog;
+use NeneServe\Support\SqlDialect;
 use NeneServe\Tenant\InvitationRepositoryInterface;
 use NeneServe\Tenant\PdoInvitationRepository;
 use NeneServe\Tenant\PdoUserRepository;
@@ -29,6 +30,7 @@ final readonly class AcceptInvitationUseCase implements AcceptInvitationUseCaseI
         private InvitationRepositoryInterface $invitations,
         private UserRepositoryInterface $users,
         private DatabaseTransactionManagerInterface $transactions,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -54,10 +56,11 @@ final readonly class AcceptInvitationUseCase implements AcceptInvitationUseCaseI
         $updated = $user->withPasswordHash(password_hash($input->password, PASSWORD_DEFAULT));
         $accepted = $invitation->accepted($now);
 
+        $dialect = $this->dialect;
         $stored = $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($updated, $accepted, $invitation): User {
-                (new PdoUserRepository($tx))->save($updated);
-                (new PdoInvitationRepository($tx))->save($accepted);
+            static function (DatabaseQueryExecutorInterface $tx) use ($updated, $accepted, $invitation, $dialect): User {
+                (new PdoUserRepository($tx, $dialect))->save($updated);
+                (new PdoInvitationRepository($tx, $dialect))->save($accepted);
                 (new PdoAuditLog($tx))->record(
                     $accepted->organizationId,
                     $updated->id,

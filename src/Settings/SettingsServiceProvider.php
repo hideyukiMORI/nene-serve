@@ -46,6 +46,7 @@ final readonly class SettingsServiceProvider implements ServiceProviderInterface
                     self::service($c, Crypto::class),
                     self::transactions($c),
                     self::orgId($c),
+                    self::dialect($c),
                 ),
             )
             ->set(

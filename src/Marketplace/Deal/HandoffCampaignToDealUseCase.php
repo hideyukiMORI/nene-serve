@@ -16,6 +16,7 @@ use NeneServe\Marketplace\PdoDealOpportunityRepository;
 use NeneServe\Marketplace\UseCase\CampaignNotFoundException;
 use NeneServe\Marketplace\UseCase\DealHandoffFailedException;
 use NeneServe\Support\Id;
+use NeneServe\Support\SqlDialect;
 use NeneServe\Upstream\Deal\DealClientException;
 use NeneServe\Upstream\Deal\DealClientInterface;
 
@@ -37,12 +38,14 @@ final readonly class HandoffCampaignToDealUseCase implements HandoffCampaignToDe
         private DatabaseTransactionManagerInterface $transactions,
         private DealClientInterface $deal,
         private RequestScopedHolder $organizationId,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
     public function execute(HandoffCampaignToDealInput $input): HandoffCampaignToDealOutput
     {
         $organizationId = $this->organizationId->get();
+        $dialect = $this->dialect;
 
         $campaign = $this->campaigns->findByIdInOrganization($input->campaignId, $organizationId);
 
@@ -77,8 +80,8 @@ final readonly class HandoffCampaignToDealUseCase implements HandoffCampaignToDe
         } catch (DealClientException $e) {
             $failed = $pending->withResult('failed', null);
             $this->transactions->transactional(
-                static function (DatabaseQueryExecutorInterface $tx) use ($failed, $input, $organizationId): void {
-                    (new PdoDealOpportunityRepository($tx))->save($failed);
+                static function (DatabaseQueryExecutorInterface $tx) use ($failed, $input, $organizationId, $dialect): void {
+                    (new PdoDealOpportunityRepository($tx, $dialect))->save($failed);
                     (new PdoAuditLog($tx))->record(
                         $organizationId,
                         $input->actorUserId,
@@ -96,8 +99,8 @@ final readonly class HandoffCampaignToDealUseCase implements HandoffCampaignToDe
         $sent = $pending->withResult('sent', $result->opportunityId);
 
         $stored = $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($sent, $input, $organizationId): DealOpportunity {
-                (new PdoDealOpportunityRepository($tx))->save($sent);
+            static function (DatabaseQueryExecutorInterface $tx) use ($sent, $input, $organizationId, $dialect): DealOpportunity {
+                (new PdoDealOpportunityRepository($tx, $dialect))->save($sent);
                 (new PdoAuditLog($tx))->record(
                     $organizationId,
                     $input->actorUserId,

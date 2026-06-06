@@ -13,6 +13,7 @@ use NeneServe\Marketplace\CampaignRepositoryInterface;
 use NeneServe\Marketplace\PdoBillingPeriodRepository;
 use NeneServe\Marketplace\UseCase\MarketplaceValidationException;
 use NeneServe\Support\Id;
+use NeneServe\Support\SqlDialect;
 
 final readonly class OpenBillingPeriodUseCase implements OpenBillingPeriodUseCaseInterface
 {
@@ -23,6 +24,7 @@ final readonly class OpenBillingPeriodUseCase implements OpenBillingPeriodUseCas
         private CampaignRepositoryInterface $campaigns,
         private DatabaseTransactionManagerInterface $transactions,
         private RequestScopedHolder $organizationId,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -47,9 +49,10 @@ final readonly class OpenBillingPeriodUseCase implements OpenBillingPeriodUseCas
             'open',
         );
 
+        $dialect = $this->dialect;
         $stored = $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($period, $input): BillingPeriod {
-                (new PdoBillingPeriodRepository($tx))->save($period);
+            static function (DatabaseQueryExecutorInterface $tx) use ($period, $input, $dialect): BillingPeriod {
+                (new PdoBillingPeriodRepository($tx, $dialect))->save($period);
                 (new PdoAuditLog($tx))->record(
                     $period->organizationId,
                     $input->actorUserId,
