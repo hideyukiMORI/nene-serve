@@ -286,6 +286,22 @@ svg {
   grid-template-rows: 100vh;
   height: 100vh;
   overflow: hidden;
+  /* Content-width tweak (data-cw): wider shells keep text legible because page
+     bodies cap at --pw-normal / --pw-wide. Default is balanced. */
+  --pw-normal: 1320px;
+  --pw-wide: 1680px;
+}
+.app[data-cw='cozy'] {
+  --pw-normal: 1080px;
+  --pw-wide: 1280px;
+}
+.app[data-cw='balanced'] {
+  --pw-normal: 1320px;
+  --pw-wide: 1680px;
+}
+.app[data-cw='full'] {
+  --pw-normal: 1780px;
+  --pw-wide: 2240px;
 }
 .app.nav-top {
   grid-template-columns: 1fr;
@@ -442,12 +458,13 @@ svg {
   min-height: 0;
 }
 .page {
-  max-width: 1080px;
+  width: 100%;
+  max-width: var(--pw-normal, 1320px);
   margin: 0 auto;
-  padding: 30px 30px 90px;
+  padding: 30px clamp(22px, 3.4vw, 60px) 90px;
 }
 .page-wide {
-  max-width: 1240px;
+  max-width: var(--pw-wide, 1680px);
 }
 
 .page-head {

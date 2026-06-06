@@ -68,7 +68,7 @@ export function AppShell() {
   const initials = (email !== '' ? email.slice(0, 2) : 'NS').toUpperCase()
 
   return (
-    <div className="app">
+    <div className="app" data-cw="full">
       <aside className="sidebar">
         <div className="side-brand">
           <span className="logo-mark">
