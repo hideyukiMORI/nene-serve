@@ -40,4 +40,7 @@ API **8910** · phpMyAdmin **8911** · MySQL **3392** · frontend dev **5189** �
 
 ## Status
 
-Phase 0 governance — see `docs/todo/current.md`.
+Phases 1–4 ✅ complete (foundation · rich creatives · marketplace · ecosystem) +
+integrity/audit hardening; operable v1 console (admin SPA, `serve.js`, provisioning,
+asset upload + ClamAV). In flight: billing-period actions/edit forms in the console,
+video/HTML5 upload UI, production deploy hardening. See `docs/todo/current.md`.

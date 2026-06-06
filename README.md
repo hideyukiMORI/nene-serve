@@ -57,21 +57,34 @@ tracks impressions and clicks, and reports time-series metrics with CSV export �
 
 ## Status
 
-**Phase 3 — Marketplace ✅ complete** (#47–#51), on top of Phase 1 (#10–#15) and
-Phase 2 (#24–#28): advertisers, versioned pricing, campaigns with budgets +
-billable spend accrual (no overspend), tamper-evident spend snapshots + immutable
-billing-period close, idempotent net Invoice handoff + reconciliation, and
-statutory retention + legal hold. **Money SSOT stays in NeNe Invoice; Serve is
-tax-neutral** (ADR 0014/0015). Also shipped: **integrity & audit hardening**
-(#36–#41) — append-only governed data, hash-chained audit, DB-enforced no-delete —
-and **Phase 4 — Ecosystem** (#57–#60): Records read, Deal opportunity handoff,
-Concierge conversion beacon, and an MCP write-plan mechanism (propose→confirm→apply,
-read-first, audited; Serve OpenAPI only).
+**Phases 1–4 ✅ complete.** Foundation (#10–#15), Rich creatives (#24–#28),
+Marketplace (#47–#51) and Ecosystem (#57–#60) are all merged, with **integrity &
+audit hardening** (#36–#41) underneath: advertisers, versioned pricing, campaigns
+with budgets + billable spend accrual (no overspend), tamper-evident spend
+snapshots + immutable billing-period close, idempotent net Invoice handoff +
+reconciliation, statutory retention + legal hold; Records read, Deal opportunity
+handoff, Concierge conversion beacon and an MCP write-plan mechanism
+(propose→confirm→apply, read-first, audited; Serve OpenAPI only); append-only
+governed data, hash-chained audit, DB-enforced no-delete. **Money SSOT stays in
+NeNe Invoice; Serve is tax-neutral** (ADR 0014/0015).
+
+**Operable v1 console.** On top of the engine: the `serve.js` embed client (#79),
+an **admin SPA** in `frontend/` (React+Vite, six-locale, mock-first) with read
+screens for placements, creatives & review, metrics and marketplace (#69–#78),
+create forms for advertiser/pricing/campaign and placement/image-creative
+(#82–#84), email-based **provisioning** (SMTP settings → invite → set-password,
+#86–#90), and real **asset upload + ClamAV** malware scan (#93–#97). Quality gates
+are green: PHPStan level 8, PSR-12, **470 backend + 33 frontend tests**.
+
+In flight toward production: billing-period close/handoff + edit forms in the
+console, video/HTML5 upload UI, and deploy hardening (migrations on deploy,
+HTTPS/secrets, shared token/rate-limit store for multi-host). See
+[`docs/todo/current.md`](./docs/todo/current.md).
 
 ## Running locally
 
 ```bash
-# Docker (full stack: API + MySQL + phpMyAdmin)
+# Docker (full stack: API + MySQL + phpMyAdmin + Mailpit + ClamAV)
 docker compose up -d
 curl http://127.0.0.1:8910/health        # {"status":"ok",...}
 
@@ -80,11 +93,15 @@ curl http://127.0.0.1:8910/health        # {"status":"ok",...}
 #   for f in database/migrations/*.sql; do mysql ... < "$f"; done
 #   mysql -uroot -p nene_serve < database/grants.sql
 
-# Or without Docker (PHP 8.3+):
-composer install            # or `composer dump-autoload` for the scaffold only
+# Admin console (React+Vite SPA, proxies /admin·/api·/public to the API):
+cd frontend && npm install && npm run dev   # http://localhost:5189
+
+# Or run the API without Docker (PHP 8.4+):
+composer install
 composer serve              # php -S 127.0.0.1:8910 -t public_html
 composer locales:check      # six-locale key parity (ADR 0011)
 composer test               # PHPUnit
+composer check              # test + PHPStan level 8 + PSR-12
 ```
 
 ## Local ports (fixed)
@@ -92,8 +109,12 @@ composer test               # PHPUnit
 | Service | Host port |
 | --- | --- |
 | PHP / API | **8910** |
-| phpMyAdmin (when added) | **8911** |
-| MySQL (when added) | **3392** |
+| phpMyAdmin | **8911** |
+| MySQL | **3392** |
+| Frontend dev (Vite) | **5189** |
+| Storybook | **6107** |
+| Mailpit UI (SMTP 1025) | **8913** |
+| ClamAV (clamd) | **3310** |
 
 Use the **891x** lane. Do not collide with NeNe Contact (**8900**) or other portfolio ports.
 

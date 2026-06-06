@@ -18,6 +18,9 @@
 /frontend/dist/
 /frontend/.vitest.cache/
 
+# Local dev compose override (machine-specific, e.g. NENE2 path mount)
+/docker-compose.override.yml
+
 # Generated static preview artifacts (not source)
 static-preview/
 static-preview.zip

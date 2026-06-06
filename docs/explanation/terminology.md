@@ -189,7 +189,8 @@ capability; self-approval is disallowed by default.
 
 | Variable | Purpose |
 | --- | --- |
-| `NENE_SERVE_PORT` | Default `8910` |
+| `APP_PORT` | API/dev-server port; default `8910` (also read by the Vite proxy) |
+| `TENANT_RESOLUTION` | Tenant resolution mode: `login` · `single` · `subdomain` · `path` · `custom_domain` (ADR 0006) |
 | `NENE_INVOICE_API_BASE_URL` | Advertiser billing handoff |
 | `NENE_INVOICE_SERVICE_TOKEN` | Scoped Invoice `/api/*` |
 | `NENE_RECORDS_API_BASE_URL` | Records read (creative assets) |
@@ -338,10 +339,13 @@ explicit confirmation token + audited; Serve OpenAPI only — ADR 0018, api-secu
 | --- | --- |
 | `NENE_SERVE_JWT_SECRET` | Admin JWT signing secret (`.env` only) |
 | `NENE_SERVE_CLICK_TOKEN_TTL` | Click token TTL; default `900` (15 min) |
-| `DB_HOST` | When set, the live boot selects **database** persistence (PDO repositories); unset → file/dev defaults. See `Support\KernelFactory` |
-| `DB_PORT` · `DB_DATABASE` · `DB_USERNAME` · `DB_PASSWORD` | MySQL connection for `Support\Database::fromEnv()` (secrets via env only) |
+| `DB_HOST` | Selects **database** persistence (PDO repositories) for the live boot; read by the NENE2 `AppConfig`/`ConfigLoader` and wired in `Http\RuntimeServiceProvider` via `PdoConnectionFactory` |
+| `DB_PORT` · `DB_NAME` · `DB_USER` · `DB_PASSWORD` | MySQL connection. NENE2 `ConfigLoader` reads `DB_NAME` / `DB_USER` (not the Laravel-style `DB_DATABASE` / `DB_USERNAME`); secrets via env only |
+| `TENANT_RESOLUTION` | How the admin surface determines the tenant (ADR 0006): `login` (default — org in the JWT) · `single` · `subdomain` · `path` · `custom_domain` |
+| `TENANT_ORG_SLUG` | Fixed organization slug for `single` mode |
+| `TENANT_BASE_DOMAIN` | Base domain for `subdomain` mode (e.g. `serve.example.com` → `acme.serve.example.com`) |
 | `APP_ENCRYPTION_KEY` | base64 of 32 bytes; at-rest encryption key for stored secrets (`Support\Crypto`, e.g. the SMTP password). Env only |
 | `CLAMAV_HOST` · `CLAMAV_PORT` | clamd address for HTML5 bundle scanning (`ClamAvScanner`); unset → `StubBundleScanner`. Fail-closed when unreachable |
 | `APP_BASE_URL` | Frontend base URL used in invitation links (`/set-password?token=…`) |
 
-Last updated: 2026-06-04
+Last updated: 2026-06-06

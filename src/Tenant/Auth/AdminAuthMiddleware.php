@@ -8,6 +8,8 @@ use Nene2\Auth\TokenVerificationException;
 use Nene2\Auth\TokenVerifierInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
 use Nene2\Http\RequestScopedHolder;
+use NeneServe\Tenant\Resolution\OrgResolverMiddleware;
+use NeneServe\Tenant\Role;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -18,6 +20,13 @@ use Psr\Http\Server\RequestHandlerInterface;
  * `/admin/*` routes and exposes the decoded claims as a request attribute for
  * {@see CapabilityMiddleware}. Open routes (login and invitation onboarding)
  * and the non-admin surfaces (`/health`, `/public/*`, `/api/*`) pass through.
+ *
+ * When a URL {@see \NeneServe\Tenant\Resolution\OrgResolutionMode} resolved the
+ * tenant from the request (subdomain / path / custom domain / single), the token
+ * is reconciled against it: a token minted for a different organization is
+ * rejected (403), except for a cross-tenant superadmin operating within the
+ * resolved tenant. In login mode no tenant is resolved from the URL and the JWT
+ * `org` claim is authoritative, exactly as before.
  */
 final readonly class AdminAuthMiddleware implements MiddlewareInterface
 {
@@ -53,8 +62,21 @@ final readonly class AdminAuthMiddleware implements MiddlewareInterface
         }
 
         $organizationId = $claims['org'] ?? null;
+        $resolvedOrg = $request->getAttribute(OrgResolverMiddleware::RESOLVED_ORG_ID_ATTRIBUTE);
 
-        if (is_string($organizationId) && $organizationId !== '') {
+        if (is_string($resolvedOrg) && $resolvedOrg !== '') {
+            // A URL resolution mode placed the tenant on the request. Reject a
+            // token issued for a different organization (cross-tenant access),
+            // unless the principal is a cross-tenant superadmin acting within the
+            // resolved tenant. The resolved tenant is authoritative.
+            $isSuperadmin = ($claims['role'] ?? null) === Role::SuperAdmin->value;
+
+            if (!$isSuperadmin && (!is_string($organizationId) || $organizationId !== $resolvedOrg)) {
+                return $this->forbidden($request, 'This token is not valid for the requested organization.');
+            }
+
+            $this->organizationId->set($resolvedOrg);
+        } elseif (is_string($organizationId) && $organizationId !== '') {
             $this->organizationId->set($organizationId);
         }
 
@@ -84,6 +106,17 @@ final readonly class AdminAuthMiddleware implements MiddlewareInterface
             'unauthorized',
             'Unauthorized',
             401,
+            $detail,
+        );
+    }
+
+    private function forbidden(ServerRequestInterface $request, string $detail): ResponseInterface
+    {
+        return $this->problemDetails->create(
+            $request,
+            'organization-mismatch',
+            'Forbidden',
+            403,
             $detail,
         );
     }
