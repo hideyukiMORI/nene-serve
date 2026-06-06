@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Settings;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
+use NeneServe\Support\SqlDialect;
 
 final readonly class PdoSmtpSettingsRepository implements SmtpSettingsRepositoryInterface
 {
@@ -12,6 +13,7 @@ final readonly class PdoSmtpSettingsRepository implements SmtpSettingsRepository
 
     public function __construct(
         private DatabaseQueryExecutorInterface $query,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -30,21 +32,21 @@ final readonly class PdoSmtpSettingsRepository implements SmtpSettingsRepository
         // Upsert without DELETE privilege (the app role has none): INSERT .. ON
         // DUPLICATE KEY UPDATE, so the single per-org row is created or updated.
         $this->query->execute(
-            'INSERT INTO smtp_settings (organization_id, host, port, username, password_encrypted, from_address, from_name, encryption)
-             VALUES (:org, :host, :port, :username, :password, :from_address, :from_name, :encryption) AS new
-             ON DUPLICATE KEY UPDATE
-                host = new.host, port = new.port, username = new.username,
-                password_encrypted = new.password_encrypted, from_address = new.from_address,
-                from_name = new.from_name, encryption = new.encryption',
+            $this->dialect->upsert(
+                'smtp_settings',
+                ['organization_id', 'host', 'port', 'username', 'password_encrypted', 'from_address', 'from_name', 'encryption'],
+                ['organization_id'],
+                ['host', 'port', 'username', 'password_encrypted', 'from_address', 'from_name', 'encryption'],
+            ),
             [
-                ':org' => $record->organizationId,
-                ':host' => $record->host,
-                ':port' => $record->port,
-                ':username' => $record->username,
-                ':password' => $record->passwordEncrypted,
-                ':from_address' => $record->fromAddress,
-                ':from_name' => $record->fromName,
-                ':encryption' => $record->encryption,
+                $record->organizationId,
+                $record->host,
+                $record->port,
+                $record->username,
+                $record->passwordEncrypted,
+                $record->fromAddress,
+                $record->fromName,
+                $record->encryption,
             ],
         );
     }

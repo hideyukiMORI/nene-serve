@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Tenant;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
+use NeneServe\Support\SqlDialect;
 
 /**
  * Production user store on the NENE2 query executor. Every tenant-scoped query
@@ -18,6 +19,7 @@ final readonly class PdoUserRepository implements UserRepositoryInterface
 
     public function __construct(
         private DatabaseQueryExecutorInterface $query,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -46,18 +48,19 @@ final readonly class PdoUserRepository implements UserRepositoryInterface
         // Upsert without DELETE privilege (app role has none): INSERT .. ON
         // DUPLICATE KEY UPDATE. Email/role/password/status may change; org is fixed.
         $this->query->execute(
-            'INSERT INTO users (id, organization_id, email, password_hash, role, status)
-             VALUES (:id, :org, :email, :password_hash, :role, :status) AS new
-             ON DUPLICATE KEY UPDATE
-                email = new.email, password_hash = new.password_hash,
-                role = new.role, status = new.status',
+            $this->dialect->upsert(
+                'users',
+                ['id', 'organization_id', 'email', 'password_hash', 'role', 'status'],
+                ['id'],
+                ['email', 'password_hash', 'role', 'status'],
+            ),
             [
-                ':id' => $user->id,
-                ':org' => $user->organizationId,
-                ':email' => $user->email,
-                ':password_hash' => $user->passwordHash,
-                ':role' => $user->role->value,
-                ':status' => $user->status,
+                $user->id,
+                $user->organizationId,
+                $user->email,
+                $user->passwordHash,
+                $user->role->value,
+                $user->status,
             ],
         );
     }

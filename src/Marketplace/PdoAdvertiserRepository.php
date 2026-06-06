@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Marketplace;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
+use NeneServe\Support\SqlDialect;
 
 final readonly class PdoAdvertiserRepository implements AdvertiserRepositoryInterface
 {
@@ -12,6 +13,7 @@ final readonly class PdoAdvertiserRepository implements AdvertiserRepositoryInte
 
     public function __construct(
         private DatabaseQueryExecutorInterface $query,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -38,9 +40,12 @@ final readonly class PdoAdvertiserRepository implements AdvertiserRepositoryInte
     public function save(Advertiser $advertiser): void
     {
         $this->query->execute(
-            'INSERT INTO advertisers (id, organization_id, name, status, invoice_client_id, disabled_at)
-             VALUES (?, ?, ?, ?, ?, ?) AS new
-             ON DUPLICATE KEY UPDATE name = new.name, status = new.status, invoice_client_id = new.invoice_client_id, disabled_at = new.disabled_at',
+            $this->dialect->upsert(
+                'advertisers',
+                ['id', 'organization_id', 'name', 'status', 'invoice_client_id', 'disabled_at'],
+                ['id'],
+                ['name', 'status', 'invoice_client_id', 'disabled_at'],
+            ),
             [
                 $advertiser->id,
                 $advertiser->organizationId,

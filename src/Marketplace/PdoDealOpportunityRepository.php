@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Marketplace;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
+use NeneServe\Support\SqlDialect;
 
 final readonly class PdoDealOpportunityRepository implements DealOpportunityRepositoryInterface
 {
@@ -12,6 +13,7 @@ final readonly class PdoDealOpportunityRepository implements DealOpportunityRepo
 
     public function __construct(
         private DatabaseQueryExecutorInterface $query,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -28,9 +30,12 @@ final readonly class PdoDealOpportunityRepository implements DealOpportunityRepo
     public function save(DealOpportunity $opportunity): void
     {
         $this->query->execute(
-            'INSERT INTO deal_opportunities (id, organization_id, campaign_id, external_reference, amount_cents, status, opportunity_id, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?) AS new
-             ON DUPLICATE KEY UPDATE campaign_id = new.campaign_id, external_reference = new.external_reference, amount_cents = new.amount_cents, status = new.status, opportunity_id = new.opportunity_id',
+            $this->dialect->upsert(
+                'deal_opportunities',
+                ['id', 'organization_id', 'campaign_id', 'external_reference', 'amount_cents', 'status', 'opportunity_id', 'created_at'],
+                ['organization_id', 'external_reference'],
+                ['campaign_id', 'amount_cents', 'status', 'opportunity_id'],
+            ),
             [
                 $opportunity->id,
                 $opportunity->organizationId,

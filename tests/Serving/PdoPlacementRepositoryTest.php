@@ -6,6 +6,8 @@ namespace NeneServe\Tests\Serving;
 
 use Nene2\Database\PdoDatabaseQueryExecutor;
 use NeneServe\Serving\PdoPlacementRepository;
+use NeneServe\Serving\Placement;
+use NeneServe\Support\SqlDialect;
 use NeneServe\Tests\Support\TestDatabase;
 use PHPUnit\Framework\TestCase;
 
@@ -125,5 +127,27 @@ final class PdoPlacementRepositoryTest extends TestCase
         $placement = $this->repo->findByPublicKey('pk_home');
         self::assertNotNull($placement);
         self::assertSame('active', $placement->status);
+    }
+
+    public function testSaveInsertsThenUpsertsOnConflict(): void
+    {
+        // Exercises the SqlDialect upsert on a real engine (SQLite uses the same
+        // ON CONFLICT path as PostgreSQL). save() creates, then updates in place.
+        $repo = new PdoPlacementRepository($this->db, SqlDialect::Sqlite);
+
+        $repo->save(new Placement('plc-1', 'org-1', 'pk_home', ['https://a.com'], 'draft', null, true, null, null));
+        $created = $repo->findByPublicKey('pk_home');
+        self::assertNotNull($created);
+        self::assertSame('draft', $created->status);
+
+        $repo->save(new Placement('plc-1', 'org-1', 'pk_home', ['https://a.com', 'https://b.com'], 'active', 'cr-9', false, 3, null));
+        $updated = $repo->findByPublicKey('pk_home');
+
+        self::assertNotNull($updated);
+        self::assertSame('active', $updated->status);
+        self::assertSame('cr-9', $updated->defaultCreativeId);
+        self::assertSame(['https://a.com', 'https://b.com'], $updated->allowedOrigins);
+        self::assertFalse($updated->measurementEnabled);
+        self::assertSame(3, $updated->frequencyCap);
     }
 }

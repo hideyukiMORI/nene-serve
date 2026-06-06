@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Tenant;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
+use NeneServe\Support\SqlDialect;
 
 final readonly class PdoInvitationRepository implements InvitationRepositoryInterface
 {
@@ -12,6 +13,7 @@ final readonly class PdoInvitationRepository implements InvitationRepositoryInte
 
     public function __construct(
         private DatabaseQueryExecutorInterface $query,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -28,17 +30,20 @@ final readonly class PdoInvitationRepository implements InvitationRepositoryInte
     public function save(Invitation $invitation): void
     {
         $this->query->execute(
-            'INSERT INTO invitations (id, organization_id, user_id, token_hash, status, expires_at, accepted_at)
-             VALUES (:id, :org, :user, :hash, :status, :expires_at, :accepted_at) AS new
-             ON DUPLICATE KEY UPDATE status = new.status, accepted_at = new.accepted_at',
+            $this->dialect->upsert(
+                'invitations',
+                ['id', 'organization_id', 'user_id', 'token_hash', 'status', 'expires_at', 'accepted_at'],
+                ['id'],
+                ['status', 'accepted_at'],
+            ),
             [
-                ':id' => $invitation->id,
-                ':org' => $invitation->organizationId,
-                ':user' => $invitation->userId,
-                ':hash' => $invitation->tokenHash,
-                ':status' => $invitation->status,
-                ':expires_at' => $invitation->expiresAt,
-                ':accepted_at' => $invitation->acceptedAt,
+                $invitation->id,
+                $invitation->organizationId,
+                $invitation->userId,
+                $invitation->tokenHash,
+                $invitation->status,
+                $invitation->expiresAt,
+                $invitation->acceptedAt,
             ],
         );
     }
