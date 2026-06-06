@@ -6,16 +6,18 @@ namespace NeneServe\Measurement;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use NeneServe\Support\Id;
+use NeneServe\Support\SqlDialect;
 
 /**
  * Production event store on the NENE2 query executor. Append-only inserts;
  * aggregation via GROUP BY on the UTC date. Reporting and billing read the same
- * rows (measurement-spec).
+ * rows (measurement-spec). Date truncation is dialect-aware ({@see SqlDialect}).
  */
 final readonly class PdoEventStore implements EventStoreInterface
 {
     public function __construct(
         private DatabaseQueryExecutorInterface $query,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -76,12 +78,13 @@ final readonly class PdoEventStore implements EventStoreInterface
 
     public function dailyConversions(string $organizationId, string $fromDate, string $toDate): array
     {
+        $dateExpr = $this->dialect->dateExpr('occurred_at');
         $rows = $this->query->fetchAll(
-            'SELECT DATE(occurred_at) AS date, placement_id, COUNT(*) AS conversions
+            "SELECT {$dateExpr} AS date, placement_id, COUNT(*) AS conversions
              FROM conversions
-             WHERE organization_id = ? AND DATE(occurred_at) BETWEEN ? AND ?
+             WHERE organization_id = ? AND {$dateExpr} BETWEEN ? AND ?
              GROUP BY date, placement_id
-             ORDER BY date, placement_id',
+             ORDER BY date, placement_id",
             [$organizationId, $fromDate, $toDate],
         );
 
@@ -106,13 +109,14 @@ final readonly class PdoEventStore implements EventStoreInterface
 
     public function dailyFillRates(string $organizationId, string $fromDate, string $toDate): array
     {
+        $dateExpr = $this->dialect->dateExpr('occurred_at');
         $rows = $this->query->fetchAll(
-            'SELECT DATE(occurred_at) AS date, placement_id,
+            "SELECT {$dateExpr} AS date, placement_id,
                     COUNT(*) AS serve_requests, SUM(filled) AS fills
              FROM serve_requests
-             WHERE organization_id = ? AND DATE(occurred_at) BETWEEN ? AND ?
+             WHERE organization_id = ? AND {$dateExpr} BETWEEN ? AND ?
              GROUP BY date, placement_id
-             ORDER BY date, placement_id',
+             ORDER BY date, placement_id",
             [$organizationId, $fromDate, $toDate],
         );
 
@@ -131,13 +135,14 @@ final readonly class PdoEventStore implements EventStoreInterface
     {
         // Each subquery binds its own placeholders: native prepared statements
         // (emulation off) reject a named parameter reused across the UNION.
+        $dateExpr = $this->dialect->dateExpr('occurred_at');
         $rows = $this->query->fetchAll(
             "SELECT d AS date, placement_id, creative_id, SUM(imp) AS impressions, SUM(clk) AS clicks FROM (
-                SELECT DATE(occurred_at) d, placement_id, creative_id, 1 imp, 0 clk
-                FROM impressions WHERE organization_id = :org_i AND DATE(occurred_at) BETWEEN :from_i AND :to_i
+                SELECT {$dateExpr} d, placement_id, creative_id, 1 imp, 0 clk
+                FROM impressions WHERE organization_id = :org_i AND {$dateExpr} BETWEEN :from_i AND :to_i
                 UNION ALL
-                SELECT DATE(occurred_at) d, placement_id, creative_id, 0 imp, 1 clk
-                FROM clicks WHERE organization_id = :org_c AND DATE(occurred_at) BETWEEN :from_c AND :to_c
+                SELECT {$dateExpr} d, placement_id, creative_id, 0 imp, 1 clk
+                FROM clicks WHERE organization_id = :org_c AND {$dateExpr} BETWEEN :from_c AND :to_c
             ) e
             GROUP BY d, placement_id, creative_id
             ORDER BY d, placement_id, creative_id",

@@ -53,6 +53,7 @@ use NeneServe\Serving\Token\TokenStoreInterface;
 use NeneServe\Storage\LocalStorage;
 use NeneServe\Storage\StorageInterface;
 use NeneServe\Support\Crypto;
+use NeneServe\Support\SqlDialect;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
 use NeneServe\Tenant\Auth\CapabilityMiddleware;
 use NeneServe\Tenant\OrganizationRepositoryInterface;
@@ -131,6 +132,18 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                 },
             )
             ->set(
+                SqlDialect::class,
+                static function (ContainerInterface $container): SqlDialect {
+                    $config = $container->get(AppConfig::class);
+
+                    if (!$config instanceof AppConfig) {
+                        throw new LogicException('Application config service is invalid.');
+                    }
+
+                    return SqlDialect::fromAdapter($config->database->adapter);
+                },
+            )
+            ->set(
                 DatabaseConnectionFactoryInterface::class,
                 static function (ContainerInterface $container): DatabaseConnectionFactoryInterface {
                     $config = $container->get(AppConfig::class);
@@ -182,12 +195,17 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                 EventStoreInterface::class,
                 static function (ContainerInterface $container): EventStoreInterface {
                     $query = $container->get(DatabaseQueryExecutorInterface::class);
+                    $dialect = $container->get(SqlDialect::class);
 
                     if (!$query instanceof DatabaseQueryExecutorInterface) {
                         throw new LogicException('Database query executor service is invalid.');
                     }
 
-                    return new PdoEventStore($query);
+                    if (!$dialect instanceof SqlDialect) {
+                        throw new LogicException('SQL dialect service is invalid.');
+                    }
+
+                    return new PdoEventStore($query, $dialect);
                 },
             )
             ->set(
