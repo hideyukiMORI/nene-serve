@@ -38,7 +38,7 @@ final readonly class PlacementsServiceProvider implements ServiceProviderInterfa
             )
             ->set(
                 CreatePlacementUseCaseInterface::class,
-                static fn (ContainerInterface $c): CreatePlacementUseCaseInterface => new CreatePlacementUseCase(self::transactions($c), self::orgId($c)),
+                static fn (ContainerInterface $c): CreatePlacementUseCaseInterface => new CreatePlacementUseCase(self::transactions($c), self::orgId($c), self::dialect($c)),
             )
             ->set(
                 ArchivePlacementUseCaseInterface::class,

@@ -12,6 +12,7 @@ use NeneServe\Serving\PdoPlacementRepository;
 use NeneServe\Serving\Placement;
 use NeneServe\Serving\UseCase\CreativeValidationException;
 use NeneServe\Support\Id;
+use NeneServe\Support\SqlDialect;
 
 /**
  * Creates a placement; the mutation and its audit entry commit together
@@ -25,6 +26,7 @@ final readonly class CreatePlacementUseCase implements CreatePlacementUseCaseInt
     public function __construct(
         private DatabaseTransactionManagerInterface $transactions,
         private RequestScopedHolder $organizationId,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -45,9 +47,10 @@ final readonly class CreatePlacementUseCase implements CreatePlacementUseCaseInt
             $input->defaultCreativeId,
         );
 
+        $dialect = $this->dialect;
         $stored = $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($placement, $input, $organizationId): Placement {
-                (new PdoPlacementRepository($tx))->save($placement);
+            static function (DatabaseQueryExecutorInterface $tx) use ($placement, $input, $organizationId, $dialect): Placement {
+                (new PdoPlacementRepository($tx, $dialect))->save($placement);
                 (new PdoAuditLog($tx))->record(
                     $organizationId,
                     $input->actorUserId,

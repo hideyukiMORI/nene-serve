@@ -15,6 +15,7 @@ use NeneServe\Serving\Review\ImageAcceptance;
 use NeneServe\Serving\ReviewStatus;
 use NeneServe\Serving\UseCase\CreativeNotFoundException;
 use NeneServe\Serving\UseCase\InvalidReviewTransitionException;
+use NeneServe\Support\SqlDialect;
 
 /**
  * Revises an approved creative. An approved version is immutable, so this never
@@ -31,6 +32,7 @@ final readonly class ReviseCreativeUseCase implements ReviseCreativeUseCaseInter
         private DatabaseQueryExecutorInterface $query,
         private DatabaseTransactionManagerInterface $transactions,
         private RequestScopedHolder $organizationId,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -63,9 +65,10 @@ final readonly class ReviseCreativeUseCase implements ReviseCreativeUseCaseInter
             $newVersion,
         );
 
+        $dialect = $this->dialect;
         $stored = $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($revision, $current, $input): Creative {
-                (new PdoCreativeRepository($tx))->save($revision); // prior version row is left untouched
+            static function (DatabaseQueryExecutorInterface $tx) use ($revision, $current, $input, $dialect): Creative {
+                (new PdoCreativeRepository($tx, $dialect))->save($revision); // prior version row is left untouched
                 (new PdoAuditLog($tx))->record(
                     $revision->organizationId,
                     $input->actorUserId,

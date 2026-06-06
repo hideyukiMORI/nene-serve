@@ -65,11 +65,12 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
                     self::transactions($c),
                     self::service($c, BundleScannerInterface::class),
                     self::orgId($c),
+                    self::dialect($c),
                 ),
             )
             ->set(
                 ReviseCreativeUseCaseInterface::class,
-                static fn (ContainerInterface $c): ReviseCreativeUseCaseInterface => new ReviseCreativeUseCase(self::query($c), self::transactions($c), self::orgId($c)),
+                static fn (ContainerInterface $c): ReviseCreativeUseCaseInterface => new ReviseCreativeUseCase(self::query($c), self::transactions($c), self::orgId($c), self::dialect($c)),
             )
             ->set(
                 CreateCreativeHandler::class,
@@ -91,7 +92,7 @@ final readonly class CreativesServiceProvider implements ServiceProviderInterfac
             )
             ->set(
                 TransitionCreativeUseCaseInterface::class,
-                static fn (ContainerInterface $c): TransitionCreativeUseCaseInterface => new TransitionCreativeUseCase(self::query($c), self::transactions($c), self::orgId($c)),
+                static fn (ContainerInterface $c): TransitionCreativeUseCaseInterface => new TransitionCreativeUseCase(self::query($c), self::transactions($c), self::orgId($c), self::dialect($c)),
             )
             ->set(
                 self::REVIEW_ROUTE_REGISTRAR,
