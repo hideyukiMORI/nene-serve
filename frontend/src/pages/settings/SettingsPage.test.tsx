@@ -11,4 +11,11 @@ describe('SettingsPage', () => {
     })
     expect(screen.getByRole('button', { name: 'Send test email' })).toBeEnabled()
   })
+
+  it('shows the read-only tenant resolution mode', async () => {
+    renderWithProviders(<SettingsPage />)
+    const card = await screen.findByLabelText('Tenant resolution')
+    // The mock reports login mode (the org field is shown on the login screen).
+    expect(card).toHaveTextContent('login')
+  })
 })
