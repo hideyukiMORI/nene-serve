@@ -86,7 +86,7 @@ HTTPS/secrets, shared token/rate-limit store for multi-host). See
 ```bash
 # Docker (full stack: API + MySQL + phpMyAdmin + Mailpit + ClamAV)
 docker compose up -d
-curl http://127.0.0.1:8910/health        # {"status":"ok",...}
+curl http://127.0.0.1:8010/health        # {"status":"ok",...}
 
 # Apply migrations, then least-privilege DB grants (ADR 0022: app role cannot
 # DELETE/TRUNCATE governed tables):
@@ -94,18 +94,18 @@ curl http://127.0.0.1:8910/health        # {"status":"ok",...}
 #   mysql -uroot -p nene_serve < database/grants.sql
 
 # Admin console (React+Vite SPA, proxies /admin·/api·/public to the API):
-cd frontend && npm install && npm run dev   # http://localhost:8915
+cd frontend && npm install && npm run dev   # http://localhost:5180
 
 # Or run the API without Docker (PHP 8.4+):
 composer install
-composer serve              # php -S 127.0.0.1:8910 -t public_html
+composer serve              # php -S 127.0.0.1:8010 -t public_html
 composer locales:check      # six-locale key parity (ADR 0011)
 composer test               # PHPUnit (unit; serverless SQLite)
 composer check              # test + PHPStan level 8 + PSR-12
 
 # Integration suite against a real MySQL (native prepares, as in prod) — catches
 # dialect-specific bugs SQLite can't. Skips when MYSQL_TEST_* is unset; CI runs it.
-MYSQL_TEST_HOST=127.0.0.1 MYSQL_TEST_PORT=3392 MYSQL_TEST_DB=nene_serve \
+MYSQL_TEST_HOST=127.0.0.1 MYSQL_TEST_PORT=3380 MYSQL_TEST_DB=nene_serve \
   MYSQL_TEST_USER=root MYSQL_TEST_PASSWORD=root composer test:integration
 ```
 
@@ -113,15 +113,19 @@ MYSQL_TEST_HOST=127.0.0.1 MYSQL_TEST_PORT=3392 MYSQL_TEST_DB=nene_serve \
 
 | Service | Host port |
 | --- | --- |
-| PHP / API | **8910** |
-| phpMyAdmin | **8911** |
-| MySQL | **3392** |
-| Frontend dev (Vite) | **8915** |
+| PHP / API | **8010** |
+| phpMyAdmin | **8011** |
+| MySQL | **3380** |
+| Frontend dev (Vite) | **5180** |
 | Storybook | **6107** |
-| Mailpit UI (SMTP 1025) | **8913** |
-| ClamAV (clamd) | **3310** |
+| Mailpit UI (SMTP 1080) | **8013** |
+| ClamAV (clamd) | **3308** |
 
-Use the **891x** lane. Do not collide with NeNe Contact (**8900**) or other portfolio ports.
+NeNe Serve owns the **80xx** lane (8010 API · 8011 phpMyAdmin · 8013 Mailpit), plus
+MySQL **3380** · ClamAV **3308** · frontend **5180** · Storybook **6107**. Vite uses
+`strictPort` so the dev server never climbs into a sibling's range. Don't collide with the
+other portfolio lanes (81xx Deal · 82xx NENE2 · 83xx Clear · 84xx Profile · 85xx Invoice ·
+86xx Vault · 87xx Concierge · 88xx Suite · 89xx Corpus · 180xx Records).
 
 ## Ecosystem layer
 

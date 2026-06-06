@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
   // Keep the dev proxy in sync with the project-root .env app port without
   // duplicating the value (one level up from frontend/).
   const projectEnv = loadEnv(mode, path.resolve(dirname, '..'), '')
-  const appPort = projectEnv['APP_PORT'] ?? '8910'
+  const appPort = projectEnv['APP_PORT'] ?? '8010'
   const target = `http://localhost:${appPort}`
 
   return {
@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
     server: {
       // Fixed, family-unique dev port (NeNe Serve). strictPort avoids silent
       // fallback into a sibling's range. See AGENTS.md "Local dev ports".
-      port: 8915,
+      port: 5180,
       strictPort: true,
       proxy: {
         '/admin': { target, changeOrigin: true },

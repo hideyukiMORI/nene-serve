@@ -189,7 +189,7 @@ capability; self-approval is disallowed by default.
 
 | Variable | Purpose |
 | --- | --- |
-| `APP_PORT` | API/dev-server port; default `8910` (also read by the Vite proxy) |
+| `APP_PORT` | API/dev-server port; default `8010` (also read by the Vite proxy) |
 | `TENANT_RESOLUTION` | Tenant resolution mode: `login` · `single` · `subdomain` · `path` · `custom_domain` (ADR 0006) |
 | `NENE_INVOICE_API_BASE_URL` | Advertiser billing handoff |
 | `NENE_INVOICE_SERVICE_TOKEN` | Scoped Invoice `/api/*` |
