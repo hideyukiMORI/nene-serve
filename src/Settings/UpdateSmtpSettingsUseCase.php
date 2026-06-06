@@ -10,6 +10,7 @@ use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Support\Crypto;
 use NeneServe\Support\CryptoException;
+use NeneServe\Support\SqlDialect;
 
 /**
  * Persists a tenant's SMTP configuration. The password is encrypted at rest
@@ -26,6 +27,7 @@ final readonly class UpdateSmtpSettingsUseCase implements UpdateSmtpSettingsUseC
         private Crypto $crypto,
         private DatabaseTransactionManagerInterface $transactions,
         private RequestScopedHolder $organizationId,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -55,9 +57,10 @@ final readonly class UpdateSmtpSettingsUseCase implements UpdateSmtpSettingsUseC
             $input->encryption,
         );
 
+        $dialect = $this->dialect;
         $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($record, $input, $organizationId): void {
-                (new PdoSmtpSettingsRepository($tx))->save($record);
+            static function (DatabaseQueryExecutorInterface $tx) use ($record, $input, $organizationId, $dialect): void {
+                (new PdoSmtpSettingsRepository($tx, $dialect))->save($record);
                 (new PdoAuditLog($tx))->record(
                     $organizationId,
                     $input->actorUserId,

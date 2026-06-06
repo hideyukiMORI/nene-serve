@@ -67,7 +67,7 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
             )
             ->set(
                 CreateAdvertiserUseCaseInterface::class,
-                static fn (ContainerInterface $c): CreateAdvertiserUseCaseInterface => new CreateAdvertiserUseCase(self::transactions($c), self::orgId($c)),
+                static fn (ContainerInterface $c): CreateAdvertiserUseCaseInterface => new CreateAdvertiserUseCase(self::transactions($c), self::orgId($c), self::dialect($c)),
             )
             ->set(
                 CreatePricingRuleUseCaseInterface::class,
@@ -84,6 +84,7 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
                     self::service($c, PricingRuleRepositoryInterface::class),
                     self::transactions($c),
                     self::orgId($c),
+                    self::dialect($c),
                 ),
             )
             ->set(

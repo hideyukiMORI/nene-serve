@@ -14,6 +14,7 @@ use NeneServe\Service\ServiceContext;
 use NeneServe\Serving\PdoCreativeRepository;
 use NeneServe\Serving\PdoPlacementRepository;
 use NeneServe\Support\Id;
+use NeneServe\Support\SqlDialect;
 
 /**
  * Proposes a delivery-plan change (place a different default creative) without
@@ -26,6 +27,7 @@ final readonly class ProposePlacementChangeUseCase implements ProposePlacementCh
     public function __construct(
         private DatabaseQueryExecutorInterface $query,
         private DatabaseTransactionManagerInterface $transactions,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -50,9 +52,11 @@ final readonly class ProposePlacementChangeUseCase implements ProposePlacementCh
             gmdate('c'),
         );
 
+        $dialect = $this->dialect;
+
         return $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($plan, $context): ChangePlan {
-                (new PdoChangePlanRepository($tx))->save($plan);
+            static function (DatabaseQueryExecutorInterface $tx) use ($plan, $context, $dialect): ChangePlan {
+                (new PdoChangePlanRepository($tx, $dialect))->save($plan);
                 (new PdoAuditLog($tx))->record(
                     $context->organizationId,
                     'service-token',

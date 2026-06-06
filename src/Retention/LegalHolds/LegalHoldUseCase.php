@@ -13,6 +13,7 @@ use NeneServe\Retention\LegalHoldRepositoryInterface;
 use NeneServe\Retention\PdoLegalHoldRepository;
 use NeneServe\Retention\UseCase\LegalHoldException;
 use NeneServe\Support\Id;
+use NeneServe\Support\SqlDialect;
 
 /**
  * Places / releases legal holds. While any hold is active, retention purges are
@@ -28,6 +29,7 @@ final readonly class LegalHoldUseCase implements LegalHoldUseCaseInterface
         private LegalHoldRepositoryInterface $holds,
         private DatabaseTransactionManagerInterface $transactions,
         private RequestScopedHolder $organizationId,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -44,9 +46,10 @@ final readonly class LegalHoldUseCase implements LegalHoldUseCaseInterface
             gmdate('c'),
         );
 
+        $dialect = $this->dialect;
         $stored = $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($hold, $input): LegalHold {
-                (new PdoLegalHoldRepository($tx))->save($hold);
+            static function (DatabaseQueryExecutorInterface $tx) use ($hold, $input, $dialect): LegalHold {
+                (new PdoLegalHoldRepository($tx, $dialect))->save($hold);
                 (new PdoAuditLog($tx))->record(
                     $hold->organizationId,
                     $input->actorUserId,
@@ -77,9 +80,10 @@ final readonly class LegalHoldUseCase implements LegalHoldUseCaseInterface
 
         $released = $hold->release(gmdate('c'));
 
+        $dialect = $this->dialect;
         $stored = $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($released, $input): LegalHold {
-                (new PdoLegalHoldRepository($tx))->save($released);
+            static function (DatabaseQueryExecutorInterface $tx) use ($released, $input, $dialect): LegalHold {
+                (new PdoLegalHoldRepository($tx, $dialect))->save($released);
                 (new PdoAuditLog($tx))->record(
                     $released->organizationId,
                     $input->actorUserId,

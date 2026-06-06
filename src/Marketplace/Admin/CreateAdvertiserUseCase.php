@@ -12,6 +12,7 @@ use NeneServe\Marketplace\Advertiser;
 use NeneServe\Marketplace\PdoAdvertiserRepository;
 use NeneServe\Marketplace\UseCase\MarketplaceValidationException;
 use NeneServe\Support\Id;
+use NeneServe\Support\SqlDialect;
 
 final readonly class CreateAdvertiserUseCase implements CreateAdvertiserUseCaseInterface
 {
@@ -21,6 +22,7 @@ final readonly class CreateAdvertiserUseCase implements CreateAdvertiserUseCaseI
     public function __construct(
         private DatabaseTransactionManagerInterface $transactions,
         private RequestScopedHolder $organizationId,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -38,9 +40,10 @@ final readonly class CreateAdvertiserUseCase implements CreateAdvertiserUseCaseI
             $input->invoiceClientId,
         );
 
+        $dialect = $this->dialect;
         $stored = $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($advertiser, $input): Advertiser {
-                (new PdoAdvertiserRepository($tx))->save($advertiser);
+            static function (DatabaseQueryExecutorInterface $tx) use ($advertiser, $input, $dialect): Advertiser {
+                (new PdoAdvertiserRepository($tx, $dialect))->save($advertiser);
                 (new PdoAuditLog($tx))->record(
                     $advertiser->organizationId,
                     $input->actorUserId,

@@ -16,6 +16,7 @@ use NeneServe\Marketplace\PricingRuleRepositoryInterface;
 use NeneServe\Marketplace\UseCase\MarketplaceValidationException;
 use NeneServe\Money\Money;
 use NeneServe\Support\Id;
+use NeneServe\Support\SqlDialect;
 
 final readonly class CreateCampaignUseCase implements CreateCampaignUseCaseInterface
 {
@@ -27,6 +28,7 @@ final readonly class CreateCampaignUseCase implements CreateCampaignUseCaseInter
         private PricingRuleRepositoryInterface $rules,
         private DatabaseTransactionManagerInterface $transactions,
         private RequestScopedHolder $organizationId,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -71,9 +73,10 @@ final readonly class CreateCampaignUseCase implements CreateCampaignUseCaseInter
             $input->pauseOnBudgetExhausted,
         );
 
+        $dialect = $this->dialect;
         $stored = $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($campaign, $input): Campaign {
-                (new PdoCampaignRepository($tx))->save($campaign);
+            static function (DatabaseQueryExecutorInterface $tx) use ($campaign, $input, $dialect): Campaign {
+                (new PdoCampaignRepository($tx, $dialect))->save($campaign);
                 (new PdoAuditLog($tx))->record(
                     $campaign->organizationId,
                     $input->actorUserId,

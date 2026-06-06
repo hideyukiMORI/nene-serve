@@ -10,6 +10,7 @@ use Nene2\Http\RequestScopedHolder;
 use Nene2\Http\SecureTokenHelper;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Support\Id;
+use NeneServe\Support\SqlDialect;
 use NeneServe\Tenant\Invitation;
 use NeneServe\Tenant\PdoInvitationRepository;
 use NeneServe\Tenant\PdoUserRepository;
@@ -38,6 +39,7 @@ final readonly class CreateInvitedUserUseCase implements CreateInvitedUserUseCas
         private UserRepositoryInterface $users,
         private DatabaseTransactionManagerInterface $transactions,
         private RequestScopedHolder $organizationId,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -79,10 +81,11 @@ final readonly class CreateInvitedUserUseCase implements CreateInvitedUserUseCas
             gmdate('Y-m-d H:i:s', time() + self::TOKEN_TTL_HOURS * 3600),
         );
 
+        $dialect = $this->dialect;
         $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($user, $invitation, $input, $organizationId): void {
-                (new PdoUserRepository($tx))->save($user);
-                (new PdoInvitationRepository($tx))->save($invitation);
+            static function (DatabaseQueryExecutorInterface $tx) use ($user, $invitation, $input, $organizationId, $dialect): void {
+                (new PdoUserRepository($tx, $dialect))->save($user);
+                (new PdoInvitationRepository($tx, $dialect))->save($invitation);
 
                 $audit = new PdoAuditLog($tx);
                 $audit->record(

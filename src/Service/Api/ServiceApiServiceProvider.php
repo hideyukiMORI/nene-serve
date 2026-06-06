@@ -36,7 +36,7 @@ final readonly class ServiceApiServiceProvider implements ServiceProviderInterfa
         $builder
             ->set(
                 ProposePlacementChangeUseCaseInterface::class,
-                static fn (ContainerInterface $c): ProposePlacementChangeUseCaseInterface => new ProposePlacementChangeUseCase(self::query($c), self::transactions($c)),
+                static fn (ContainerInterface $c): ProposePlacementChangeUseCaseInterface => new ProposePlacementChangeUseCase(self::query($c), self::transactions($c), self::dialect($c)),
             )
             ->set(
                 ApplyChangePlanUseCaseInterface::class,

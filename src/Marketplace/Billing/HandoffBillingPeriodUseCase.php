@@ -25,6 +25,7 @@ use NeneServe\Marketplace\UseCase\HandoffFailedException;
 use NeneServe\Marketplace\UseCase\InvalidPeriodTransitionException;
 use NeneServe\Marketplace\UseCase\ReconciliationFailedException;
 use NeneServe\Support\Id;
+use NeneServe\Support\SqlDialect;
 
 /**
  * Reconciles a closed billing period's snapshot and hands the **net** amount to
@@ -48,6 +49,7 @@ final readonly class HandoffBillingPeriodUseCase implements HandoffBillingPeriod
         private DatabaseTransactionManagerInterface $transactions,
         private InvoiceClientInterface $invoice,
         private RequestScopedHolder $organizationId,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -55,6 +57,7 @@ final readonly class HandoffBillingPeriodUseCase implements HandoffBillingPeriod
     {
         $organizationId = $this->organizationId->get();
         $actorUserId = $input->actorUserId;
+        $dialect = $this->dialect;
 
         $period = (new PdoBillingPeriodRepository($this->query))->findByIdInOrganization($input->periodId, $organizationId);
 
@@ -112,8 +115,8 @@ final readonly class HandoffBillingPeriodUseCase implements HandoffBillingPeriod
             // Failure isolation: record failed, do not pause serving, allow retry.
             $failed = $pending->withResult('failed', null);
             $this->transactions->transactional(
-                static function (DatabaseQueryExecutorInterface $tx) use ($failed, $organizationId, $actorUserId): void {
-                    (new PdoInvoiceHandoffRepository($tx))->save($failed);
+                static function (DatabaseQueryExecutorInterface $tx) use ($failed, $organizationId, $actorUserId, $dialect): void {
+                    (new PdoInvoiceHandoffRepository($tx, $dialect))->save($failed);
                     (new PdoAuditLog($tx))->record(
                         $organizationId,
                         $actorUserId,
@@ -132,9 +135,9 @@ final readonly class HandoffBillingPeriodUseCase implements HandoffBillingPeriod
         $handedOffPeriod = $period->withStatus('handed_off');
 
         $stored = $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($completed, $handedOffPeriod, $organizationId, $actorUserId, $snapshot): InvoiceHandoff {
-                (new PdoInvoiceHandoffRepository($tx))->save($completed);
-                (new PdoBillingPeriodRepository($tx))->save($handedOffPeriod);
+            static function (DatabaseQueryExecutorInterface $tx) use ($completed, $handedOffPeriod, $organizationId, $actorUserId, $snapshot, $dialect): InvoiceHandoff {
+                (new PdoInvoiceHandoffRepository($tx, $dialect))->save($completed);
+                (new PdoBillingPeriodRepository($tx, $dialect))->save($handedOffPeriod);
                 (new PdoAuditLog($tx))->record(
                     $organizationId,
                     $actorUserId,
@@ -193,9 +196,10 @@ final readonly class HandoffBillingPeriodUseCase implements HandoffBillingPeriod
             null,
             gmdate('c'),
         );
+        $dialect = $this->dialect;
         $this->transactions->transactional(
-            static function (DatabaseQueryExecutorInterface $tx) use ($discrepancy, $organizationId, $actorUserId, $recomputed): void {
-                (new PdoInvoiceHandoffRepository($tx))->save($discrepancy);
+            static function (DatabaseQueryExecutorInterface $tx) use ($discrepancy, $organizationId, $actorUserId, $recomputed, $dialect): void {
+                (new PdoInvoiceHandoffRepository($tx, $dialect))->save($discrepancy);
                 (new PdoAuditLog($tx))->record(
                     $organizationId,
                     $actorUserId,
