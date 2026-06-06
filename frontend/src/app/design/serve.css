@@ -1376,52 +1376,105 @@ table.table {
   width: 20px;
 }
 
-/* signal deco (concentric arcs) — radar pulse radiating from the beacon node */
+/* signal deco — animated sonar "signal" (3 parallax layers; per the Claude
+   Design login-left handoff). The host .auth-aside is position:relative;
+   overflow:hidden and sets color, so currentColor drives the line colour. */
 .signal-deco {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  opacity: 0.5;
+  opacity: 0.6;
 }
-/* Pointer parallax: each ring shifts by its depth toward the cursor (--px/--py
-   are set on .auth-aside, −1..1), so the signal field feels layered. Outer rings
-   travel further; the centre node is anchored. */
-.signal-deco circle {
+/* Each parallax layer is translated by JS (AuthShell rAF loop);
+   will-change keeps the transforms on the compositor. */
+.signal-deco .deco-layer {
+  will-change: transform;
+}
+/* Layer 1 — faint static concentric rings (depth backdrop) */
+.signal-deco .deco-static circle {
+  opacity: 0.1;
+}
+/* Layer 2 — expanding sonar ripples; they scale around the emitter (60,300 in
+   viewBox units). vector-effect non-scaling-stroke keeps the ring hairline. */
+.signal-deco .ripple {
+  transform-box: view-box;
+  transform-origin: 60px 300px;
+  opacity: 0;
+  transform: scale(0.16);
+}
+/* Layer 3 — emitter: solid core dot + an outgoing halo */
+.signal-deco .core-dot {
   transform-box: fill-box;
   transform-origin: center;
-  transition: transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
-  transform: translate(
-    calc(var(--px, 0) * var(--depth, 0) * 1px),
-    calc(var(--py, 0) * var(--depth, 0) * 1px)
-  );
+  opacity: 0.55;
 }
-.signal-deco circle:nth-child(1) {
-  --depth: 5;
+.signal-deco .core-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
 }
-.signal-deco circle:nth-child(2) {
-  --depth: 10;
+
+@media (prefers-reduced-motion: no-preference) {
+  .signal-deco .ripple {
+    animation: sonar 8.5s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+  }
+  .signal-deco .core-dot {
+    animation: corepulse 3.2s ease-in-out infinite;
+  }
+  .signal-deco .core-halo {
+    animation: corehalo 3.2s ease-out infinite;
+  }
 }
-.signal-deco circle:nth-child(3) {
-  --depth: 16;
-}
-.signal-deco circle:nth-child(4) {
-  --depth: 23;
-}
-.signal-deco circle:nth-child(5) {
-  --depth: 31;
-}
-.signal-deco circle:nth-child(6) {
-  --depth: 40;
-}
-/* the centre dot is the source — it stays anchored */
-.signal-deco circle:last-child {
-  --depth: 0;
-}
+
+/* Reduced motion: no animation, but keep a few static rings so the panel still
+   reads as "signal" rather than empty. */
 @media (prefers-reduced-motion: reduce) {
-  .signal-deco circle {
-    transition: none;
-    transform: none;
+  .signal-deco .ripple:nth-child(-n + 3) {
+    opacity: 0.14;
+    transform: scale(2.4);
+  }
+}
+
+@keyframes sonar {
+  0% {
+    transform: scale(0.16);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.5;
+  }
+  60% {
+    opacity: 0.08;
+  }
+  100% {
+    transform: scale(7.6);
+    opacity: 0;
+  }
+}
+@keyframes corepulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.25);
+  }
+}
+@keyframes corehalo {
+  0% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(3.4);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(3.4);
   }
 }
 
