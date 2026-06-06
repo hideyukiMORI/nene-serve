@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Marketplace;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
+use NeneServe\Support\SqlDialect;
 
 final readonly class PdoCampaignRepository implements CampaignRepositoryInterface
 {
@@ -12,6 +13,7 @@ final readonly class PdoCampaignRepository implements CampaignRepositoryInterfac
 
     public function __construct(
         private DatabaseQueryExecutorInterface $query,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -38,9 +40,12 @@ final readonly class PdoCampaignRepository implements CampaignRepositoryInterfac
     public function save(Campaign $campaign): void
     {
         $this->query->execute(
-            'INSERT INTO campaigns (id, organization_id, advertiser_id, name, pricing_rule_id, budget_cents, status, funding_status, pause_on_budget_exhausted, archived_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) AS new
-             ON DUPLICATE KEY UPDATE advertiser_id = new.advertiser_id, name = new.name, pricing_rule_id = new.pricing_rule_id, budget_cents = new.budget_cents, status = new.status, funding_status = new.funding_status, pause_on_budget_exhausted = new.pause_on_budget_exhausted, archived_at = new.archived_at',
+            $this->dialect->upsert(
+                'campaigns',
+                ['id', 'organization_id', 'advertiser_id', 'name', 'pricing_rule_id', 'budget_cents', 'status', 'funding_status', 'pause_on_budget_exhausted', 'archived_at'],
+                ['id'],
+                ['advertiser_id', 'name', 'pricing_rule_id', 'budget_cents', 'status', 'funding_status', 'pause_on_budget_exhausted', 'archived_at'],
+            ),
             [
                 $campaign->id,
                 $campaign->organizationId,

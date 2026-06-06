@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Serving;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
+use NeneServe\Support\SqlDialect;
 
 final readonly class PdoPlacementRepository implements PlacementRepositoryInterface
 {
@@ -12,6 +13,7 @@ final readonly class PdoPlacementRepository implements PlacementRepositoryInterf
 
     public function __construct(
         private DatabaseQueryExecutorInterface $query,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -48,9 +50,12 @@ final readonly class PdoPlacementRepository implements PlacementRepositoryInterf
     public function save(Placement $placement): void
     {
         $this->query->execute(
-            'INSERT INTO placements (id, organization_id, public_placement_key, allowed_origins, status, default_creative_id, measurement_enabled, frequency_cap, archived_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) AS new
-             ON DUPLICATE KEY UPDATE public_placement_key = new.public_placement_key, allowed_origins = new.allowed_origins, status = new.status, default_creative_id = new.default_creative_id, measurement_enabled = new.measurement_enabled, frequency_cap = new.frequency_cap, archived_at = new.archived_at',
+            $this->dialect->upsert(
+                'placements',
+                ['id', 'organization_id', 'public_placement_key', 'allowed_origins', 'status', 'default_creative_id', 'measurement_enabled', 'frequency_cap', 'archived_at'],
+                ['id'],
+                ['public_placement_key', 'allowed_origins', 'status', 'default_creative_id', 'measurement_enabled', 'frequency_cap', 'archived_at'],
+            ),
             [
                 $placement->id,
                 $placement->organizationId,

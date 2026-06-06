@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Mcp;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
+use NeneServe\Support\SqlDialect;
 
 final readonly class PdoChangePlanRepository implements ChangePlanRepositoryInterface
 {
@@ -12,6 +13,7 @@ final readonly class PdoChangePlanRepository implements ChangePlanRepositoryInte
 
     public function __construct(
         private DatabaseQueryExecutorInterface $query,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -28,9 +30,12 @@ final readonly class PdoChangePlanRepository implements ChangePlanRepositoryInte
     public function save(ChangePlan $plan): void
     {
         $this->query->execute(
-            'INSERT INTO change_plans (id, organization_id, placement_id, new_creative_id, status, created_at)
-             VALUES (?, ?, ?, ?, ?, ?) AS new
-             ON DUPLICATE KEY UPDATE placement_id = new.placement_id, new_creative_id = new.new_creative_id, status = new.status',
+            $this->dialect->upsert(
+                'change_plans',
+                ['id', 'organization_id', 'placement_id', 'new_creative_id', 'status', 'created_at'],
+                ['id'],
+                ['placement_id', 'new_creative_id', 'status'],
+            ),
             [
                 $plan->id,
                 $plan->organizationId,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Marketplace;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
+use NeneServe\Support\SqlDialect;
 
 final readonly class PdoInvoiceHandoffRepository implements InvoiceHandoffRepositoryInterface
 {
@@ -12,6 +13,7 @@ final readonly class PdoInvoiceHandoffRepository implements InvoiceHandoffReposi
 
     public function __construct(
         private DatabaseQueryExecutorInterface $query,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -30,9 +32,12 @@ final readonly class PdoInvoiceHandoffRepository implements InvoiceHandoffReposi
         // Upsert keyed by the unique external_reference: amounts/units are stable;
         // only status / invoice_payment_id advance (handoff idempotency).
         $this->query->execute(
-            'INSERT INTO invoice_handoffs (id, organization_id, billing_period_id, external_reference, billable_impressions, billable_clicks, pricing_rule_version, amount_cents, reconciliation_status, status, invoice_payment_id, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) AS new
-             ON DUPLICATE KEY UPDATE billing_period_id = new.billing_period_id, external_reference = new.external_reference, billable_impressions = new.billable_impressions, billable_clicks = new.billable_clicks, pricing_rule_version = new.pricing_rule_version, amount_cents = new.amount_cents, reconciliation_status = new.reconciliation_status, status = new.status, invoice_payment_id = new.invoice_payment_id',
+            $this->dialect->upsert(
+                'invoice_handoffs',
+                ['id', 'organization_id', 'billing_period_id', 'external_reference', 'billable_impressions', 'billable_clicks', 'pricing_rule_version', 'amount_cents', 'reconciliation_status', 'status', 'invoice_payment_id', 'created_at'],
+                ['organization_id', 'external_reference'],
+                ['billing_period_id', 'billable_impressions', 'billable_clicks', 'pricing_rule_version', 'amount_cents', 'reconciliation_status', 'status', 'invoice_payment_id'],
+            ),
             [
                 $handoff->id,
                 $handoff->organizationId,

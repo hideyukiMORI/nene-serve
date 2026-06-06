@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Marketplace;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
+use NeneServe\Support\SqlDialect;
 
 final readonly class PdoBillingPeriodRepository implements BillingPeriodRepositoryInterface
 {
@@ -12,6 +13,7 @@ final readonly class PdoBillingPeriodRepository implements BillingPeriodReposito
 
     public function __construct(
         private DatabaseQueryExecutorInterface $query,
+        private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
 
@@ -28,9 +30,12 @@ final readonly class PdoBillingPeriodRepository implements BillingPeriodReposito
     public function save(BillingPeriod $period): void
     {
         $this->query->execute(
-            'INSERT INTO billing_periods (id, organization_id, campaign_id, period_start, period_end, status)
-             VALUES (?, ?, ?, ?, ?, ?) AS new
-             ON DUPLICATE KEY UPDATE campaign_id = new.campaign_id, period_start = new.period_start, period_end = new.period_end, status = new.status',
+            $this->dialect->upsert(
+                'billing_periods',
+                ['id', 'organization_id', 'campaign_id', 'period_start', 'period_end', 'status'],
+                ['id'],
+                ['campaign_id', 'period_start', 'period_end', 'status'],
+            ),
             [
                 $period->id,
                 $period->organizationId,
