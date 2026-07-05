@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace NeneServe\Tests\Support;
 
 use Nene2\Config\DatabaseConfig;
-use Nene2\Database\PdoConnectionFactory;
-use Nene2\Database\PdoDatabaseQueryExecutor;
+use Nene2\Database\DatabaseQueryExecutorInterface;
+use Nene2\Testing\DatabaseTestKit;
 use Throwable;
 
 /**
@@ -22,7 +22,7 @@ use Throwable;
  */
 final class MysqlTestDatabase
 {
-    public static function fromEnv(): ?PdoDatabaseQueryExecutor
+    public static function fromEnv(): ?DatabaseQueryExecutorInterface
     {
         $host = getenv('MYSQL_TEST_HOST');
 
@@ -42,7 +42,7 @@ final class MysqlTestDatabase
             charset: 'utf8mb4',
         );
 
-        $executor = new PdoDatabaseQueryExecutor(new PdoConnectionFactory($config));
+        $executor = DatabaseTestKit::fromConfig($config)->queryExecutor;
 
         // The PDO connection is built lazily; probe it so an unreachable server
         // results in a clean skip rather than a mid-test failure.

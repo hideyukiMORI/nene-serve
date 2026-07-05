@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace NeneServe\Tests\Support;
 
 use Nene2\Config\DatabaseConfig;
-use Nene2\Database\PdoConnectionFactory;
-use Nene2\Database\PdoDatabaseQueryExecutor;
+use Nene2\Database\DatabaseQueryExecutorInterface;
+use Nene2\Testing\DatabaseTestKit;
 use Throwable;
 
 /**
@@ -21,7 +21,7 @@ use Throwable;
  */
 final class PgsqlTestDatabase
 {
-    public static function fromEnv(): ?PdoDatabaseQueryExecutor
+    public static function fromEnv(): ?DatabaseQueryExecutorInterface
     {
         $host = getenv('PGSQL_TEST_HOST');
 
@@ -41,7 +41,7 @@ final class PgsqlTestDatabase
             charset: 'utf8',
         );
 
-        $executor = new PdoDatabaseQueryExecutor(new PdoConnectionFactory($config));
+        $executor = DatabaseTestKit::fromConfig($config)->queryExecutor;
 
         try {
             $executor->fetchOne('SELECT 1');

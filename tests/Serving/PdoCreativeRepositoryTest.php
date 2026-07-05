@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace NeneServe\Tests\Serving;
 
-use Nene2\Database\PdoDatabaseQueryExecutor;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 use NeneServe\Serving\CreativeType;
 use NeneServe\Serving\PdoCreativeRepository;
 use NeneServe\Serving\ReviewStatus;
@@ -19,7 +19,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class PdoCreativeRepositoryTest extends TestCase
 {
-    private PdoDatabaseQueryExecutor $db;
+    private DatabaseQueryExecutorInterface $db;
     private PdoCreativeRepository $repo;
 
     protected function setUp(): void

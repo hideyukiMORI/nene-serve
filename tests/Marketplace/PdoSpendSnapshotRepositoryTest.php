@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace NeneServe\Tests\Marketplace;
 
-use Nene2\Database\PdoDatabaseQueryExecutor;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 use NeneServe\Marketplace\PdoSpendSnapshotRepository;
 use NeneServe\Marketplace\SpendSnapshot;
 use NeneServe\Tests\Support\TestDatabase;
@@ -18,7 +18,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class PdoSpendSnapshotRepositoryTest extends TestCase
 {
-    private PdoDatabaseQueryExecutor $db;
+    private DatabaseQueryExecutorInterface $db;
     private PdoSpendSnapshotRepository $repo;
 
     protected function setUp(): void
