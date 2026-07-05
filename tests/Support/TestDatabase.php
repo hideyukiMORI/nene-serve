@@ -5,16 +5,22 @@ declare(strict_types=1);
 namespace NeneServe\Tests\Support;
 
 use Nene2\Config\DatabaseConfig;
-use Nene2\Database\PdoConnectionFactory;
-use Nene2\Database\PdoDatabaseQueryExecutor;
+use Nene2\Database\DatabaseQueryExecutorInterface;
+use Nene2\Testing\DatabaseTestKit;
 use RuntimeException;
 
 /**
- * In-memory SQLite harness for repository tests. A single
- * {@see PdoDatabaseQueryExecutor} caches one connection, so the loaded schema and
- * seeded rows persist for the life of the executor. The portable SELECT paths of
- * the production repositories run unchanged; the MySQL-specific upsert in their
+ * In-memory SQLite harness for repository tests. Built through the sanctioned
+ * {@see DatabaseTestKit} (ADR 0009) rather than the `@internal` PDO adapters. A
+ * single query executor caches one connection, so the loaded schema and seeded
+ * rows persist for the life of the executor. The portable SELECT paths of the
+ * production repositories run unchanged; the MySQL-specific upsert in their
  * save() does not, so tests seed via {@see self::seed()} (plain INSERT).
+ *
+ * Note: {@see DatabaseTestKit::sqlite()} rejects `:memory:` because its
+ * `transactional()` helper opens a second connection; this harness only drives
+ * the shared query executor and never spans connections, so it builds the kit
+ * via {@see DatabaseTestKit::fromConfig()} with an in-memory config directly.
  */
 final class TestDatabase
 {
@@ -22,9 +28,9 @@ final class TestDatabase
      * Builds an executor over an in-memory SQLite DB with the given schema
      * fixtures (file names under tests/Support/schema, without extension).
      */
-    public static function withSchema(string ...$tables): PdoDatabaseQueryExecutor
+    public static function withSchema(string ...$tables): DatabaseQueryExecutorInterface
     {
-        $executor = new PdoDatabaseQueryExecutor(new PdoConnectionFactory(DatabaseConfig::sqlite(':memory:')));
+        $executor = DatabaseTestKit::fromConfig(DatabaseConfig::sqlite(':memory:'))->queryExecutor;
 
         foreach ($tables as $table) {
             $path = __DIR__ . '/schema/' . $table . '.sql';
@@ -44,7 +50,7 @@ final class TestDatabase
      *
      * @param array<string, scalar|null> $row
      */
-    public static function seed(PdoDatabaseQueryExecutor $executor, string $table, array $row): void
+    public static function seed(DatabaseQueryExecutorInterface $executor, string $table, array $row): void
     {
         $columns = array_keys($row);
         $placeholders = implode(', ', array_fill(0, count($columns), '?'));

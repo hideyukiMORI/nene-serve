@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace NeneServe\Tests\Serving;
 
-use Nene2\Database\PdoDatabaseQueryExecutor;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 use NeneServe\Serving\PdoPlacementRepository;
 use NeneServe\Serving\Placement;
 use NeneServe\Support\SqlDialect;
@@ -18,7 +18,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class PdoPlacementRepositoryTest extends TestCase
 {
-    private PdoDatabaseQueryExecutor $db;
+    private DatabaseQueryExecutorInterface $db;
     private PdoPlacementRepository $repo;
 
     protected function setUp(): void

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace NeneServe\Tests\Marketplace;
 
-use Nene2\Database\PdoDatabaseQueryExecutor;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 use NeneServe\Marketplace\PdoBillingPeriodRepository;
 use NeneServe\Tests\Support\TestDatabase;
 use PHPUnit\Framework\TestCase;
@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class PdoBillingPeriodRepositoryTest extends TestCase
 {
-    private PdoDatabaseQueryExecutor $db;
+    private DatabaseQueryExecutorInterface $db;
     private PdoBillingPeriodRepository $repo;
 
     protected function setUp(): void

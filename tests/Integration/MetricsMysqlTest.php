@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace NeneServe\Tests\Integration;
 
-use Nene2\Database\PdoDatabaseQueryExecutor;
+use Nene2\Database\DatabaseQueryExecutorInterface;
 use NeneServe\Measurement\PdoEventStore;
 use NeneServe\Tests\Support\MysqlTestDatabase;
 use NeneServe\Tests\Support\TestDatabase;
@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
 #[Group('integration')]
 final class MetricsMysqlTest extends TestCase
 {
-    private PdoDatabaseQueryExecutor $db;
+    private DatabaseQueryExecutorInterface $db;
 
     private string $organizationId;
 
