@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace NeneServe\Http;
 
 use LogicException;
+use Nene2\Auth\GuardedJwtSecretResolver;
 use Nene2\Auth\LocalBearerTokenVerifier;
 use Nene2\Auth\TokenIssuerInterface;
 use Nene2\Auth\TokenVerifierInterface;
 use Nene2\Config\AppConfig;
-use Nene2\Config\AppEnvironment;
 use Nene2\Config\ConfigLoader;
 use Nene2\Database\DatabaseConnectionFactoryInterface;
 use Nene2\Database\DatabaseQueryExecutorInterface;
@@ -92,15 +92,19 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
     public const string PROJECT_ROOT = 'nene-serve.project_root';
 
     /**
-     * Dev/test-only fallback for the local JWT signing secret (#136). Never used
-     * in production — {@see self::resolveJwtSecret()} refuses to boot instead.
+     * Product-injected development secret for the local JWT signing key (#136, #138).
+     * The framework never owns a dev secret; {@see GuardedJwtSecretResolver} only uses
+     * this when {@see AppConfig::$allowDevSecret} is opted in outside production, and
+     * refuses to boot otherwise (fail-closed).
      */
     private const string DEFAULT_DEV_SECRET = 'nene-serve-dev-secret';
 
     /**
-     * Env key documented as this repo's local JWT secret (docs/explanation/terminology.md,
+     * This repo's documented local JWT secret env key (docs/explanation/terminology.md,
      * .env.example). It differs from the shared NENE2_LOCAL_JWT_SECRET key that
-     * {@see ConfigLoader} reads by default, so it is bridged in as a config override below.
+     * {@see ConfigLoader} reads by default, so serve reads it directly and passes it to
+     * {@see GuardedJwtSecretResolver} as the configured secret (and as `secretEnvName`
+     * so fail-closed messages name the correct variable).
      */
     private const string JWT_SECRET_ENV_KEY = 'NENE_SERVE_JWT_SECRET';
 
@@ -142,7 +146,7 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Config loader service is invalid.');
                     }
 
-                    return $loader->load(self::jwtSecretOverride());
+                    return $loader->load();
                 },
             )
             ->set(
@@ -404,7 +408,25 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Application config service is invalid.');
                     }
 
-                    return new LocalBearerTokenVerifier(self::resolveJwtSecret($config));
+                    // Serve reads its JWT secret under a custom key
+                    // (NENE_SERVE_JWT_SECRET), so it drives the resolver's full
+                    // constructor directly instead of the NENE2_LOCAL_JWT_SECRET
+                    // convenience path. The resolver fails closed: production always
+                    // requires the secret, and local/test only accepts the injected
+                    // dev secret behind the NENE2_ALLOW_DEV_SECRET opt-in.
+                    $configuredSecret = $_SERVER[self::JWT_SECRET_ENV_KEY]
+                        ?? $_ENV[self::JWT_SECRET_ENV_KEY]
+                        ?? '';
+
+                    return new LocalBearerTokenVerifier(
+                        (new GuardedJwtSecretResolver(
+                            configuredSecret: is_string($configuredSecret) ? $configuredSecret : '',
+                            environment: $config->environment,
+                            allowDevSecret: $config->allowDevSecret,
+                            devSecret: self::DEFAULT_DEV_SECRET,
+                            secretEnvName: self::JWT_SECRET_ENV_KEY,
+                        ))->resolve(),
+                    );
                 },
             )
             ->set(
@@ -710,52 +732,5 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
         $value = getenv($name);
 
         return is_string($value) && $value !== '' ? $value : $default;
-    }
-
-    /**
-     * Resolves the HMAC secret for local bearer tokens, failing closed.
-     *
-     * The same secret signs operator and service tokens, so a predictable value
-     * is a full authentication bypass (a forged superadmin token). In production
-     * the secret is therefore mandatory: if NENE_SERVE_JWT_SECRET is unset (or
-     * blank) we refuse to boot rather than silently fall back to the public dev
-     * constant. Local/test may use the dev fallback for convenience. (#136)
-     */
-    private static function resolveJwtSecret(AppConfig $config): string
-    {
-        $secret = $config->localJwtSecret;
-
-        if ($secret !== null && $secret !== '') {
-            return $secret;
-        }
-
-        if ($config->environment === AppEnvironment::Production) {
-            throw new LogicException(
-                self::JWT_SECRET_ENV_KEY . ' must be set in production. '
-                . 'Generate one with: php -r "echo bin2hex(random_bytes(32));"',
-            );
-        }
-
-        return self::DEFAULT_DEV_SECRET;
-    }
-
-    /**
-     * Bridges this repo's documented env key ({@see self::JWT_SECRET_ENV_KEY}) into
-     * the shared {@see ConfigLoader}'s NENE2_LOCAL_JWT_SECRET slot: ConfigLoader
-     * only reads that fixed key by default, so without this override
-     * NENE_SERVE_JWT_SECRET would never reach {@see AppConfig::$localJwtSecret}
-     * and {@see self::resolveJwtSecret()} could not fail closed on it.
-     *
-     * @return array<string, string>
-     */
-    private static function jwtSecretOverride(): array
-    {
-        $value = $_SERVER[self::JWT_SECRET_ENV_KEY] ?? $_ENV[self::JWT_SECRET_ENV_KEY] ?? null;
-
-        if (!is_string($value) || $value === '') {
-            return [];
-        }
-
-        return ['NENE2_LOCAL_JWT_SECRET' => $value];
     }
 }

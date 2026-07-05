@@ -12,6 +12,10 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-local}
       NENE_SERVE_JWT_SECRET: ${NENE_SERVE_JWT_SECRET:-dev-insecure-secret-change-me}
+      # Opt-in to the injected dev secret when NENE_SERVE_JWT_SECRET is unset
+      # (GuardedJwtSecretResolver, #138). Pass-through, empty by default so
+      # production stays fail-closed; ignored in production regardless.
+      NENE2_ALLOW_DEV_SECRET: ${NENE2_ALLOW_DEV_SECRET:-}
       # Base64 of 32 bytes — encrypts at-rest secrets (e.g. the SMTP password).
       # Dev default only; production sets a real key out of band.
       APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:-bmVuZS1zZXJ2ZS1kZXYtaW5zZWN1cmUta2V5LTMyYnk=}
