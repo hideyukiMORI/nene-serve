@@ -36,6 +36,11 @@
     "scripts": {
         "serve": "php -S 127.0.0.1:8010 -t public_html public_html/index.php",
         "locales:check": "php scripts/locales-check.php",
+        "migrations:status": "phinx status -c phinx.php",
+        "migrations:migrate": "phinx migrate -c phinx.php",
+        "migrations:rollback": "phinx rollback -c phinx.php",
+        "migrations:create": "phinx create -c phinx.php",
+        "migrations:seed": "phinx seed:run -c phinx.php",
         "test": "phpunit --testsuite unit",
         "test:integration": "phpunit --testsuite integration",
         "stan": "phpstan analyse",
