@@ -11,6 +11,12 @@
              an in-memory SQLite database so no server is required. -->
         <env name="DB_ADAPTER" value="sqlite"/>
         <env name="DB_NAME" value=":memory:"/>
+        <!-- Tests that boot the runtime container resolve the local JWT secret via
+             GuardedJwtSecretResolver (#138). No NENE_SERVE_JWT_SECRET is set here,
+             so opt in to the injected dev secret; APP_ENV=local keeps that path
+             enabled (production would ignore the opt-in and fail closed). -->
+        <env name="APP_ENV" value="local"/>
+        <env name="NENE2_ALLOW_DEV_SECRET" value="1"/>
     </php>
     <testsuites>
         <testsuite name="unit">
