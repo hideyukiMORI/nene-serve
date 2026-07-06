@@ -42,6 +42,7 @@ final readonly class AuthServiceProvider implements ServiceProviderInterface
                     self::service($c, OrganizationRepositoryInterface::class),
                     self::service($c, UserRepositoryInterface::class),
                     self::service($c, TokenIssuerInterface::class),
+                    self::clock($c),
                 ),
             )
             ->set(

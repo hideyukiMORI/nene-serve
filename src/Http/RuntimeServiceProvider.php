@@ -21,10 +21,12 @@ use Nene2\DependencyInjection\ContainerBuilder;
 use Nene2\DependencyInjection\ServiceProviderInterface;
 use Nene2\Error\DomainExceptionHandlerInterface;
 use Nene2\Error\ProblemDetailsResponseFactory;
+use Nene2\Http\ClockInterface;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Http\RequestScopedHolder;
 use Nene2\Http\ResponseEmitter;
 use Nene2\Http\RuntimeApplicationFactory;
+use Nene2\Http\UtcClock;
 use Nene2\Log\MonologLoggerFactory;
 use Nene2\Log\RequestIdHolder;
 use Nene2\Middleware\InMemoryRateLimitStorage;
@@ -124,6 +126,10 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
             ->set(
                 self::ORG_ID_HOLDER,
                 static fn (ContainerInterface $container): RequestScopedHolder => new RequestScopedHolder(),
+            )
+            ->set(
+                ClockInterface::class,
+                static fn (ContainerInterface $container): ClockInterface => new UtcClock(),
             )
             ->set(
                 ConfigLoader::class,
@@ -300,7 +306,13 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Project root service is invalid.');
                     }
 
-                    return new FileTokenStore($projectRoot . '/var/tokens.json');
+                    $clock = $container->get(ClockInterface::class);
+
+                    if (!$clock instanceof ClockInterface) {
+                        throw new LogicException('Clock service is invalid.');
+                    }
+
+                    return new FileTokenStore($projectRoot . '/var/tokens.json', $clock);
                 },
             )
             ->set(
