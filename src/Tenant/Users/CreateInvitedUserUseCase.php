@@ -6,6 +6,7 @@ namespace NeneServe\Tenant\Users;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\ClockInterface;
 use Nene2\Http\RequestScopedHolder;
 use Nene2\Http\SecureTokenHelper;
 use NeneServe\Audit\PdoAuditLog;
@@ -39,6 +40,7 @@ final readonly class CreateInvitedUserUseCase implements CreateInvitedUserUseCas
         private UserRepositoryInterface $users,
         private DatabaseTransactionManagerInterface $transactions,
         private RequestScopedHolder $organizationId,
+        private ClockInterface $clock,
         private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
@@ -78,7 +80,7 @@ final readonly class CreateInvitedUserUseCase implements CreateInvitedUserUseCas
             $user->id,
             $tokenHash,
             'pending',
-            gmdate('Y-m-d H:i:s', time() + self::TOKEN_TTL_HOURS * 3600),
+            gmdate('Y-m-d H:i:s', $this->clock->now()->getTimestamp() + self::TOKEN_TTL_HOURS * 3600),
         );
 
         $dialect = $this->dialect;

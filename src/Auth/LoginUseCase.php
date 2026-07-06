@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Auth;
 
 use Nene2\Auth\TokenIssuerInterface;
+use Nene2\Http\ClockInterface;
 use NeneServe\Tenant\OrganizationRepositoryInterface;
 use NeneServe\Tenant\UseCase\AuthenticationFailedException;
 use NeneServe\Tenant\UserRepositoryInterface;
@@ -21,6 +22,7 @@ final readonly class LoginUseCase implements LoginUseCaseInterface
         private OrganizationRepositoryInterface $organizations,
         private UserRepositoryInterface $users,
         private TokenIssuerInterface $tokenIssuer,
+        private ClockInterface $clock,
         private int $ttlSeconds = 3600,
     ) {
     }
@@ -39,7 +41,7 @@ final readonly class LoginUseCase implements LoginUseCaseInterface
             throw new AuthenticationFailedException();
         }
 
-        $now = time();
+        $now = $this->clock->now()->getTimestamp();
         $token = $this->tokenIssuer->issue([
             'sub' => $user->id,
             'org' => $user->organizationId,

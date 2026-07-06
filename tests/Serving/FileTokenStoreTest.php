@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Tests\Serving;
 
 use NeneServe\Serving\Token\FileTokenStore;
+use NeneServe\Tests\Support\FixedClock;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -46,6 +47,25 @@ final class FileTokenStoreTest extends TestCase
         $token = $store->issueClickToken('org-1', 'plc-1', 'cr-1', 'https://x.test/landing', -1);
 
         self::assertNull($store->consumeClickToken($token));
+    }
+
+    public function testClickTokenExpiryIsDeterministicWithFixedClock(): void
+    {
+        // Issue a 15-minute click token at a fixed instant.
+        $issued = new FileTokenStore($this->path, new FixedClock('2026-07-06T09:00:00+00:00'));
+        $token = $issued->issueClickToken('org-1', 'plc-1', 'cr-1', 'https://x.test/landing', 900);
+
+        // 14 minutes later the token still resolves (within the window).
+        $withinWindow = new FileTokenStore($this->path, new FixedClock('2026-07-06T09:14:00+00:00'));
+        self::assertNotNull($withinWindow->consumeClickToken($token));
+
+        // Re-issue and advance past the window: the token is expired, no wall-clock
+        // sleep required — the fixed clock makes the boundary exact.
+        $reissued = new FileTokenStore($this->path, new FixedClock('2026-07-06T09:00:00+00:00'));
+        $token2 = $reissued->issueClickToken('org-1', 'plc-1', 'cr-1', 'https://x.test/landing', 900);
+
+        $afterWindow = new FileTokenStore($this->path, new FixedClock('2026-07-06T09:15:01+00:00'));
+        self::assertNull($afterWindow->consumeClickToken($token2));
     }
 
     public function testImpressionIsIdempotentAcrossInstances(): void

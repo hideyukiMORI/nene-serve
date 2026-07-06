@@ -39,6 +39,7 @@ final readonly class UsersServiceProvider implements ServiceProviderInterface
                     self::service($c, UserRepositoryInterface::class),
                     self::transactions($c),
                     self::orgId($c),
+                    self::clock($c),
                     self::dialect($c),
                 ),
             )

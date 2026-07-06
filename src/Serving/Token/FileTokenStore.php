@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\Token;
 
+use Nene2\Http\ClockInterface;
 use Nene2\Http\SecureTokenHelper;
+use Nene2\Http\UtcClock;
 use NeneServe\Support\LockedJsonFile;
 
 /**
@@ -20,6 +22,7 @@ final class FileTokenStore implements TokenStoreInterface
 
     public function __construct(
         private readonly string $path,
+        private readonly ClockInterface $clock = new UtcClock(),
     ) {
     }
 
@@ -52,7 +55,7 @@ final class FileTokenStore implements TokenStoreInterface
                 'placement' => $placementId,
                 'creative' => $creativeId,
                 'dest' => $destinationUrl,
-                'expires' => time() + $ttlSeconds,
+                'expires' => $this->clock->now()->getTimestamp() + $ttlSeconds,
                 'used' => false,
             ];
         });
@@ -89,7 +92,7 @@ final class FileTokenStore implements TokenStoreInterface
                 return;
             }
             $entry = &$state['clicks'][$token];
-            if ((bool) $entry['used'] || (int) $entry['expires'] < time()) {
+            if ((bool) $entry['used'] || (int) $entry['expires'] < $this->clock->now()->getTimestamp()) {
                 return;
             }
             $entry['used'] = true;
@@ -111,7 +114,7 @@ final class FileTokenStore implements TokenStoreInterface
             $state['frames'][$token] = [
                 'org' => $organizationId,
                 'creative' => $creativeId,
-                'expires' => time() + $ttlSeconds,
+                'expires' => $this->clock->now()->getTimestamp() + $ttlSeconds,
             ];
         });
 
@@ -126,7 +129,7 @@ final class FileTokenStore implements TokenStoreInterface
                 return;
             }
             $entry = $state['frames'][$token];
-            if ((int) $entry['expires'] < time()) {
+            if ((int) $entry['expires'] < $this->clock->now()->getTimestamp()) {
                 return;
             }
             $result = new FrameTarget((string) $entry['org'], (string) $entry['creative']);
