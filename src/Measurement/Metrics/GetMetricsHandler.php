@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Measurement\Metrics;
 
 use Nene2\Error\ProblemDetailsResponseFactory;
+use Nene2\Http\ClockInterface;
 use Nene2\Http\JsonResponseFactory;
 use Nene2\Validation\ValidationError;
 use Nene2\Validation\ValidationException;
@@ -26,6 +27,7 @@ final readonly class GetMetricsHandler
         private GetMetricsUseCase $metrics,
         private JsonResponseFactory $response,
         private ProblemDetailsResponseFactory $problemDetails,
+        private ClockInterface $clock,
     ) {
     }
 
@@ -33,7 +35,7 @@ final readonly class GetMetricsHandler
     {
         $context = AuthContextResolver::require($request);
 
-        $range = MetricsRange::fromRequest($request);
+        $range = MetricsRange::fromRequest($request, $this->clock);
 
         if ($range === null) {
             throw new ValidationException([new ValidationError('from', 'from/to must be YYYY-MM-DD dates.', 'invalid')]);

@@ -15,6 +15,7 @@ use NeneServe\Measurement\Metrics\GetMetricsUseCase;
 use NeneServe\Measurement\UseCase\ExportMetricsUseCase;
 use NeneServe\Tenant\Auth\AdminAuthMiddleware;
 use NeneServe\Tenant\Auth\AuthContextRequiredException;
+use NeneServe\Tests\Support\FixedClock;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -57,6 +58,7 @@ final class MetricsHandlerTest extends TestCase
             new ExportMetricsUseCase($this->events(), $this->orgId()),
             $psr17,
             $psr17,
+            new FixedClock(),
         );
 
         $request = $psr17->createServerRequest('GET', '/admin/metrics/export')
@@ -79,6 +81,7 @@ final class MetricsHandlerTest extends TestCase
             new GetMetricsUseCase($this->events(), $this->transactions(), $this->orgId()),
             new JsonResponseFactory($psr17, $psr17),
             new ProblemDetailsResponseFactory($psr17, $psr17),
+            new FixedClock(),
         );
 
         $request = $psr17->createServerRequest('GET', '/admin/metrics')->withQueryParams($query);

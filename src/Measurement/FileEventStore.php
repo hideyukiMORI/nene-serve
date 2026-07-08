@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace NeneServe\Measurement;
 
+use Nene2\Http\ClockInterface;
+use Nene2\Http\UtcClock;
 use NeneServe\Support\LockedJsonFile;
 
 /**
@@ -18,6 +20,7 @@ final class FileEventStore implements EventStoreInterface
 
     public function __construct(
         private readonly string $path,
+        private readonly ClockInterface $clock = new UtcClock(),
     ) {
     }
 
@@ -84,7 +87,7 @@ final class FileEventStore implements EventStoreInterface
         $this->mutate(function (array &$state) use ($organizationId, $placementId, $filled): void {
             $state['serves'][] = [
                 'org' => $organizationId,
-                'date' => gmdate('Y-m-d'),
+                'date' => $this->clock->now()->format('Y-m-d'),
                 'placement' => $placementId,
                 'filled' => $filled,
             ];

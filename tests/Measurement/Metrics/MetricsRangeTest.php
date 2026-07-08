@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Tests\Measurement\Metrics;
 
 use NeneServe\Measurement\Metrics\MetricsRange;
+use NeneServe\Tests\Support\FixedClock;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -12,10 +13,23 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * `from`/`to` metrics window parsing. Defaults to the trailing 30-day window
- * (today and today-29). Any malformed date rejects the whole window.
+ * (today and today-29), where "today" comes from the injected clock — asserted
+ * deterministically against a {@see FixedClock}. Any malformed date rejects the
+ * whole window.
  */
 final class MetricsRangeTest extends TestCase
 {
+    /** FixedClock's default instant is 2026-07-06T09:00:00+00:00. */
+    private const TODAY = '2026-07-06';
+    private const TODAY_MINUS_29 = '2026-06-07';
+
+    private FixedClock $clock;
+
+    protected function setUp(): void
+    {
+        $this->clock = new FixedClock();
+    }
+
     /** @param array<string, mixed> $query */
     private function request(array $query): ServerRequestInterface
     {
@@ -24,30 +38,30 @@ final class MetricsRangeTest extends TestCase
 
     public function testDefaultsToTrailing30DayWindow(): void
     {
-        $range = MetricsRange::fromRequest($this->request([]));
+        $range = MetricsRange::fromRequest($this->request([]), $this->clock);
 
-        self::assertSame([gmdate('Y-m-d', strtotime('-29 days')), gmdate('Y-m-d')], $range);
+        self::assertSame([self::TODAY_MINUS_29, self::TODAY], $range);
     }
 
     public function testUsesExplicitFromAndTo(): void
     {
-        $range = MetricsRange::fromRequest($this->request(['from' => '2026-01-01', 'to' => '2026-01-31']));
+        $range = MetricsRange::fromRequest($this->request(['from' => '2026-01-01', 'to' => '2026-01-31']), $this->clock);
 
         self::assertSame(['2026-01-01', '2026-01-31'], $range);
     }
 
     public function testFromDefaultsWhenOnlyToGiven(): void
     {
-        $range = MetricsRange::fromRequest($this->request(['to' => '2026-01-31']));
+        $range = MetricsRange::fromRequest($this->request(['to' => '2026-01-31']), $this->clock);
 
-        self::assertSame([gmdate('Y-m-d', strtotime('-29 days')), '2026-01-31'], $range);
+        self::assertSame([self::TODAY_MINUS_29, '2026-01-31'], $range);
     }
 
     public function testToDefaultsToTodayWhenOnlyFromGiven(): void
     {
-        $range = MetricsRange::fromRequest($this->request(['from' => '2026-01-01']));
+        $range = MetricsRange::fromRequest($this->request(['from' => '2026-01-01']), $this->clock);
 
-        self::assertSame(['2026-01-01', gmdate('Y-m-d')], $range);
+        self::assertSame(['2026-01-01', self::TODAY], $range);
     }
 
     /** @return iterable<string, array{string}> */
@@ -65,20 +79,20 @@ final class MetricsRangeTest extends TestCase
     #[DataProvider('malformedDates')]
     public function testRejectsMalformedFrom(string $from): void
     {
-        self::assertNull(MetricsRange::fromRequest($this->request(['from' => $from])));
+        self::assertNull(MetricsRange::fromRequest($this->request(['from' => $from]), $this->clock));
     }
 
     #[DataProvider('malformedDates')]
     public function testRejectsMalformedTo(string $to): void
     {
-        self::assertNull(MetricsRange::fromRequest($this->request(['to' => $to])));
+        self::assertNull(MetricsRange::fromRequest($this->request(['to' => $to]), $this->clock));
     }
 
     public function testNonStringParamsFallBackToDefaults(): void
     {
         // An array-valued param is not a string, so it is ignored (defaults used).
-        $range = MetricsRange::fromRequest($this->request(['from' => ['x'], 'to' => ['y']]));
+        $range = MetricsRange::fromRequest($this->request(['from' => ['x'], 'to' => ['y']]), $this->clock);
 
-        self::assertSame([gmdate('Y-m-d', strtotime('-29 days')), gmdate('Y-m-d')], $range);
+        self::assertSame([self::TODAY_MINUS_29, self::TODAY], $range);
     }
 }

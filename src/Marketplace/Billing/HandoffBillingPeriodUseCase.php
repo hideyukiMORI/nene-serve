@@ -6,6 +6,7 @@ namespace NeneServe\Marketplace\Billing;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\ClockInterface;
 use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Marketplace\Invoice\InvoiceClientException;
@@ -49,6 +50,7 @@ final readonly class HandoffBillingPeriodUseCase implements HandoffBillingPeriod
         private DatabaseTransactionManagerInterface $transactions,
         private InvoiceClientInterface $invoice,
         private RequestScopedHolder $organizationId,
+        private ClockInterface $clock,
         private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
@@ -100,7 +102,7 @@ final readonly class HandoffBillingPeriodUseCase implements HandoffBillingPeriod
             'reconciled',
             'pending',
             null,
-            gmdate('c'),
+            $this->clock->now()->format('c'),
         );
 
         try {
@@ -194,7 +196,7 @@ final readonly class HandoffBillingPeriodUseCase implements HandoffBillingPeriod
             'discrepancy',
             'failed',
             null,
-            gmdate('c'),
+            $this->clock->now()->format('c'),
         );
         $dialect = $this->dialect;
         $this->transactions->transactional(

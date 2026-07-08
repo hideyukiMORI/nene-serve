@@ -11,6 +11,7 @@ use NeneServe\Serving\InMemoryPlacementRepository;
 use NeneServe\Serving\Placement;
 use NeneServe\Serving\PublicApi\RecordImpressionUseCase;
 use NeneServe\Serving\Token\FileTokenStore;
+use NeneServe\Tests\Support\FixedClock;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -26,6 +27,8 @@ final class RecordImpressionUseCaseTest extends TestCase
     private const CREATIVE = 'cr-1';
     private const IP = '203.0.113.9';
     private const UA = 'Mozilla/5.0';
+    /** UTC day of FixedClock's default instant (2026-07-06T09:00:00+00:00). */
+    private const DAY = '2026-07-06';
 
     private string $tokenPath;
     private string $freqPath;
@@ -56,6 +59,7 @@ final class RecordImpressionUseCaseTest extends TestCase
             $this->tokens,
             $this->events,
             $this->frequencyCaps,
+            new FixedClock(),
         );
     }
 
@@ -86,7 +90,7 @@ final class RecordImpressionUseCaseTest extends TestCase
 
         self::assertSame(1, $this->impressionCount());
 
-        $bucket = VisitorBucket::derive(self::ORG, self::IP, self::UA);
+        $bucket = VisitorBucket::derive(self::ORG, self::IP, self::UA, self::DAY);
         self::assertCount(1, $this->events->exportVisitorData(self::ORG, $bucket));
         self::assertSame(1, $this->frequencyCaps->count(self::PLACEMENT, $bucket));
     }
@@ -99,7 +103,7 @@ final class RecordImpressionUseCaseTest extends TestCase
         // The count is still recorded (no PII in the count itself)...
         self::assertSame(1, $this->impressionCount());
         // ...but no visitor bucket is stored and the cap is untouched.
-        $bucket = VisitorBucket::derive(self::ORG, self::IP, self::UA);
+        $bucket = VisitorBucket::derive(self::ORG, self::IP, self::UA, self::DAY);
         self::assertCount(0, $this->events->exportVisitorData(self::ORG, $bucket));
         self::assertSame(0, $this->frequencyCaps->count(self::PLACEMENT, $bucket));
     }
@@ -113,7 +117,7 @@ final class RecordImpressionUseCaseTest extends TestCase
         $useCase->execute($token, self::IP, self::UA, consentGranted: true);
 
         self::assertSame(1, $this->impressionCount());
-        self::assertSame(1, $this->frequencyCaps->count(self::PLACEMENT, VisitorBucket::derive(self::ORG, self::IP, self::UA)));
+        self::assertSame(1, $this->frequencyCaps->count(self::PLACEMENT, VisitorBucket::derive(self::ORG, self::IP, self::UA, self::DAY)));
     }
 
     public function testUnknownTokenRecordsNothing(): void
@@ -136,7 +140,7 @@ final class RecordImpressionUseCaseTest extends TestCase
         $token = $this->issueToken();
         $this->useCase($this->placement(frequencyCap: null))->execute($token, self::IP, self::UA, consentGranted: true);
 
-        $bucket = VisitorBucket::derive(self::ORG, self::IP, self::UA);
+        $bucket = VisitorBucket::derive(self::ORG, self::IP, self::UA, self::DAY);
         self::assertCount(1, $this->events->exportVisitorData(self::ORG, $bucket));
         self::assertSame(0, $this->frequencyCaps->count(self::PLACEMENT, $bucket));
     }

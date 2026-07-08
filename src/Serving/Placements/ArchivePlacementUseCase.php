@@ -6,6 +6,7 @@ namespace NeneServe\Serving\Placements;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\ClockInterface;
 use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Serving\PdoPlacementRepository;
@@ -27,6 +28,7 @@ final readonly class ArchivePlacementUseCase implements ArchivePlacementUseCaseI
         private PlacementRepositoryInterface $placements,
         private DatabaseTransactionManagerInterface $transactions,
         private RequestScopedHolder $organizationId,
+        private ClockInterface $clock,
     ) {
     }
 
@@ -40,7 +42,7 @@ final readonly class ArchivePlacementUseCase implements ArchivePlacementUseCaseI
             throw new PlacementNotFoundException();
         }
 
-        $at = gmdate('c');
+        $at = $this->clock->now()->format('c');
 
         $archived = $this->transactions->transactional(
             static function (DatabaseQueryExecutorInterface $tx) use ($placement, $input, $organizationId, $at): Placement {

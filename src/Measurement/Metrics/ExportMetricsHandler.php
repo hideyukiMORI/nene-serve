@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace NeneServe\Measurement\Metrics;
 
+use Nene2\Http\ClockInterface;
 use Nene2\Validation\ValidationError;
 use Nene2\Validation\ValidationException;
 use NeneServe\Measurement\UseCase\ExportMetricsUseCase;
@@ -24,6 +25,7 @@ final readonly class ExportMetricsHandler
         private ExportMetricsUseCase $export,
         private ResponseFactoryInterface $responseFactory,
         private StreamFactoryInterface $streamFactory,
+        private ClockInterface $clock,
     ) {
     }
 
@@ -31,7 +33,7 @@ final readonly class ExportMetricsHandler
     {
         $context = AuthContextResolver::require($request);
 
-        $range = MetricsRange::fromRequest($request);
+        $range = MetricsRange::fromRequest($request, $this->clock);
 
         if ($range === null) {
             throw new ValidationException([new ValidationError('from', 'from/to must be YYYY-MM-DD dates.', 'invalid')]);

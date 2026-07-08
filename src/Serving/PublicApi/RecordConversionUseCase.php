@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\PublicApi;
 
+use Nene2\Http\ClockInterface;
 use NeneServe\Measurement\ConversionEvent;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Serving\PlacementRepositoryInterface;
@@ -20,6 +21,7 @@ final readonly class RecordConversionUseCase implements RecordConversionUseCaseI
     public function __construct(
         private PlacementRepositoryInterface $placements,
         private EventStoreInterface $events,
+        private ClockInterface $clock,
     ) {
     }
 
@@ -39,7 +41,7 @@ final readonly class RecordConversionUseCase implements RecordConversionUseCaseI
             Id::random(16),
             $placement->organizationId,
             $placement->id,
-            gmdate('c'),
+            $this->clock->now()->format('c'),
             $creativeId,
             $countryCode,
         ));

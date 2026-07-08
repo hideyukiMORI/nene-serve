@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace NeneServe\Measurement;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
+use Nene2\Http\ClockInterface;
+use Nene2\Http\UtcClock;
 use NeneServe\Support\Id;
 use NeneServe\Support\SqlDialect;
 
@@ -18,6 +20,7 @@ final readonly class PdoEventStore implements EventStoreInterface
     public function __construct(
         private DatabaseQueryExecutorInterface $query,
         private SqlDialect $dialect = SqlDialect::Mysql,
+        private ClockInterface $clock = new UtcClock(),
     ) {
     }
 
@@ -103,7 +106,7 @@ final readonly class PdoEventStore implements EventStoreInterface
         $this->query->execute(
             'INSERT INTO serve_requests (id, organization_id, placement_id, occurred_at, filled)
              VALUES (?, ?, ?, ?, ?)',
-            [Id::random(16), $organizationId, $placementId, gmdate('Y-m-d H:i:s'), $filled ? 1 : 0],
+            [Id::random(16), $organizationId, $placementId, $this->clock->now()->format('Y-m-d H:i:s'), $filled ? 1 : 0],
         );
     }
 

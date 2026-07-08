@@ -9,6 +9,7 @@ use NeneServe\Serving\InMemoryPlacementRepository;
 use NeneServe\Serving\Placement;
 use NeneServe\Serving\PublicApi\RecordConversionUseCase;
 use NeneServe\Serving\UseCase\PlacementNotFoundException;
+use NeneServe\Tests\Support\FixedClock;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -32,7 +33,7 @@ final class RecordConversionUseCaseTest extends TestCase
     {
         $placement = new Placement('plc-1', self::ORG, self::KEY, [], 'active', null, $measurementEnabled);
 
-        return new RecordConversionUseCase(new InMemoryPlacementRepository([$placement]), $this->events);
+        return new RecordConversionUseCase(new InMemoryPlacementRepository([$placement]), $this->events, new FixedClock());
     }
 
     private function conversionCount(): int

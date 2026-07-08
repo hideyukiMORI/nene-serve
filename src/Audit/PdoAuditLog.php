@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace NeneServe\Audit;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
+use Nene2\Http\ClockInterface;
+use Nene2\Http\UtcClock;
 use NeneServe\Support\Id;
 
 final readonly class PdoAuditLog implements AuditLogInterface
@@ -13,6 +15,7 @@ final readonly class PdoAuditLog implements AuditLogInterface
 
     public function __construct(
         private DatabaseQueryExecutorInterface $query,
+        private ClockInterface $clock = new UtcClock(),
     ) {
     }
 
@@ -24,7 +27,7 @@ final readonly class PdoAuditLog implements AuditLogInterface
         string $subjectId,
         array $metadata = [],
     ): void {
-        $occurredAt = gmdate('Y-m-d H:i:s');
+        $occurredAt = $this->clock->now()->format('Y-m-d H:i:s');
         $previousHash = $this->headHash($organizationId);
         $hash = AuditHasher::compute(
             $organizationId,

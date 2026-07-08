@@ -41,6 +41,7 @@ final readonly class PublicServiceProvider implements ServiceProviderInterface
                     self::service($c, FrequencyCapStoreInterface::class),
                     self::service($c, EventStoreInterface::class),
                     self::service($c, GetCampaignSpendUseCase::class),
+                    self::clock($c),
                     self::clickTokenTtl(),
                 ),
             )
@@ -51,6 +52,7 @@ final readonly class PublicServiceProvider implements ServiceProviderInterface
                     self::service($c, TokenStoreInterface::class),
                     self::service($c, EventStoreInterface::class),
                     self::service($c, FrequencyCapStoreInterface::class),
+                    self::clock($c),
                 ),
             )
             ->set(
@@ -59,6 +61,7 @@ final readonly class PublicServiceProvider implements ServiceProviderInterface
                     self::service($c, PlacementRepositoryInterface::class),
                     self::service($c, TokenStoreInterface::class),
                     self::service($c, EventStoreInterface::class),
+                    self::clock($c),
                 ),
             )
             ->set(
@@ -66,6 +69,7 @@ final readonly class PublicServiceProvider implements ServiceProviderInterface
                 static fn (ContainerInterface $c): RecordConversionUseCaseInterface => new RecordConversionUseCase(
                     self::service($c, PlacementRepositoryInterface::class),
                     self::service($c, EventStoreInterface::class),
+                    self::clock($c),
                 ),
             )
             ->set(

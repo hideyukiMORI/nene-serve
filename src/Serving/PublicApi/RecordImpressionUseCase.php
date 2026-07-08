@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\PublicApi;
 
+use Nene2\Http\ClockInterface;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Measurement\ImpressionEvent;
 use NeneServe\Measurement\PageUrl;
@@ -27,6 +28,7 @@ final readonly class RecordImpressionUseCase implements RecordImpressionUseCaseI
         private TokenStoreInterface $tokens,
         private EventStoreInterface $events,
         private FrequencyCapStoreInterface $frequencyCaps,
+        private ClockInterface $clock,
     ) {
     }
 
@@ -50,8 +52,9 @@ final readonly class RecordImpressionUseCase implements RecordImpressionUseCaseI
             return; // opt-out: served without a tracking beacon
         }
 
+        $now = $this->clock->now();
         $visitorBucket = $consentGranted
-            ? VisitorBucket::derive($record->organizationId, $clientIp, $userAgent)
+            ? VisitorBucket::derive($record->organizationId, $clientIp, $userAgent, $now->format('Y-m-d'))
             : null;
 
         $this->events->recordImpression(new ImpressionEvent(
@@ -59,7 +62,7 @@ final readonly class RecordImpressionUseCase implements RecordImpressionUseCaseI
             $record->organizationId,
             $record->placementId,
             $record->creativeId,
-            gmdate('c'),
+            $now->format('c'),
             $countryCode,
             PageUrl::truncate($pageUrl),
             $visitorBucket,

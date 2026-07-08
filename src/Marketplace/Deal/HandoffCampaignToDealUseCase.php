@@ -6,6 +6,7 @@ namespace NeneServe\Marketplace\Deal;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\ClockInterface;
 use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Marketplace\AdvertiserRepositoryInterface;
@@ -38,6 +39,7 @@ final readonly class HandoffCampaignToDealUseCase implements HandoffCampaignToDe
         private DatabaseTransactionManagerInterface $transactions,
         private DealClientInterface $deal,
         private RequestScopedHolder $organizationId,
+        private ClockInterface $clock,
         private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
@@ -72,7 +74,7 @@ final readonly class HandoffCampaignToDealUseCase implements HandoffCampaignToDe
             $campaign->budgetCents,
             'pending',
             null,
-            gmdate('c'),
+            $this->clock->now()->format('c'),
         );
 
         try {

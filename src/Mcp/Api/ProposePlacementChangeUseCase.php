@@ -6,6 +6,7 @@ namespace NeneServe\Mcp\Api;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\ClockInterface;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Mcp\ChangePlan;
 use NeneServe\Mcp\PdoChangePlanRepository;
@@ -27,6 +28,7 @@ final readonly class ProposePlacementChangeUseCase implements ProposePlacementCh
     public function __construct(
         private DatabaseQueryExecutorInterface $query,
         private DatabaseTransactionManagerInterface $transactions,
+        private ClockInterface $clock,
         private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
@@ -49,7 +51,7 @@ final readonly class ProposePlacementChangeUseCase implements ProposePlacementCh
             $placementId,
             $newCreativeId,
             'proposed',
-            gmdate('c'),
+            $this->clock->now()->format('c'),
         );
 
         $dialect = $this->dialect;

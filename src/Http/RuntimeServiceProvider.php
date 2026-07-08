@@ -207,12 +207,17 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                 AuditLogInterface::class,
                 static function (ContainerInterface $container): AuditLogInterface {
                     $query = $container->get(DatabaseQueryExecutorInterface::class);
+                    $clock = $container->get(ClockInterface::class);
 
                     if (!$query instanceof DatabaseQueryExecutorInterface) {
                         throw new LogicException('Database query executor service is invalid.');
                     }
 
-                    return new PdoAuditLog($query);
+                    if (!$clock instanceof ClockInterface) {
+                        throw new LogicException('Clock service is invalid.');
+                    }
+
+                    return new PdoAuditLog($query, $clock);
                 },
             )
             ->set(
@@ -220,6 +225,7 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                 static function (ContainerInterface $container): EventStoreInterface {
                     $query = $container->get(DatabaseQueryExecutorInterface::class);
                     $dialect = $container->get(SqlDialect::class);
+                    $clock = $container->get(ClockInterface::class);
 
                     if (!$query instanceof DatabaseQueryExecutorInterface) {
                         throw new LogicException('Database query executor service is invalid.');
@@ -229,7 +235,11 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                         throw new LogicException('SQL dialect service is invalid.');
                     }
 
-                    return new PdoEventStore($query, $dialect);
+                    if (!$clock instanceof ClockInterface) {
+                        throw new LogicException('Clock service is invalid.');
+                    }
+
+                    return new PdoEventStore($query, $dialect, $clock);
                 },
             )
             ->set(

@@ -36,7 +36,7 @@ final readonly class MetricsServiceProvider implements ServiceProviderInterface
             )
             ->set(
                 GetMetricsHandler::class,
-                static fn (ContainerInterface $c): GetMetricsHandler => new GetMetricsHandler(self::service($c, GetMetricsUseCase::class), self::json($c), self::problem($c)),
+                static fn (ContainerInterface $c): GetMetricsHandler => new GetMetricsHandler(self::service($c, GetMetricsUseCase::class), self::json($c), self::problem($c), self::clock($c)),
             )
             ->set(
                 ExportMetricsHandler::class,
@@ -44,6 +44,7 @@ final readonly class MetricsServiceProvider implements ServiceProviderInterface
                     self::service($c, ExportMetricsUseCase::class),
                     self::service($c, ResponseFactoryInterface::class),
                     self::service($c, StreamFactoryInterface::class),
+                    self::clock($c),
                 ),
             )
             ->set(

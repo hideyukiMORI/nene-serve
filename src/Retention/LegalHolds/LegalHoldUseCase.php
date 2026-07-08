@@ -6,6 +6,7 @@ namespace NeneServe\Retention\LegalHolds;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\ClockInterface;
 use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Retention\LegalHold;
@@ -29,6 +30,7 @@ final readonly class LegalHoldUseCase implements LegalHoldUseCaseInterface
         private LegalHoldRepositoryInterface $holds,
         private DatabaseTransactionManagerInterface $transactions,
         private RequestScopedHolder $organizationId,
+        private ClockInterface $clock,
         private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
@@ -43,7 +45,7 @@ final readonly class LegalHoldUseCase implements LegalHoldUseCaseInterface
             Id::generate('lh'),
             $this->organizationId->get(),
             trim($input->reason),
-            gmdate('c'),
+            $this->clock->now()->format('c'),
         );
 
         $dialect = $this->dialect;
@@ -78,7 +80,7 @@ final readonly class LegalHoldUseCase implements LegalHoldUseCaseInterface
             throw new LegalHoldException('Legal hold already released.');
         }
 
-        $released = $hold->release(gmdate('c'));
+        $released = $hold->release($this->clock->now()->format('c'));
 
         $dialect = $this->dialect;
         $stored = $this->transactions->transactional(

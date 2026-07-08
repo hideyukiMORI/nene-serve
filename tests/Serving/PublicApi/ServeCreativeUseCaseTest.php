@@ -27,6 +27,7 @@ use NeneServe\Serving\UseCase\OriginNotAllowedException;
 use NeneServe\Serving\UseCase\PlacementNotFoundException;
 use NeneServe\Tests\Marketplace\InMemoryCampaignRepository;
 use NeneServe\Tests\Marketplace\InMemoryPricingRuleRepository;
+use NeneServe\Tests\Support\FixedClock;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -42,6 +43,8 @@ final class ServeCreativeUseCaseTest extends TestCase
     private const KEY = 'pk_home';
     private const IP = '203.0.113.5';
     private const UA = 'UA/1';
+    /** UTC day of FixedClock's default instant (2026-07-06T09:00:00+00:00). */
+    private const DAY = '2026-07-06';
 
     private string $tokenPath;
     private string $freqPath;
@@ -84,6 +87,7 @@ final class ServeCreativeUseCaseTest extends TestCase
             $this->frequencyCaps,
             $this->events,
             $spend,
+            new FixedClock(),
         );
     }
 
@@ -189,7 +193,7 @@ final class ServeCreativeUseCaseTest extends TestCase
 
     private function bucket(): string
     {
-        return VisitorBucket::derive(self::ORG, self::IP, self::UA);
+        return VisitorBucket::derive(self::ORG, self::IP, self::UA, self::DAY);
     }
 
     public function testServesWhenUnderCap(): void
