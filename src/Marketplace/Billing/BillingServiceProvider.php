@@ -57,6 +57,7 @@ final readonly class BillingServiceProvider implements ServiceProviderInterface
                     self::transactions($c),
                     self::service($c, GetCampaignSpendUseCase::class),
                     self::orgId($c),
+                    self::clock($c),
                     self::dialect($c),
                 ),
             )
@@ -67,6 +68,7 @@ final readonly class BillingServiceProvider implements ServiceProviderInterface
                     self::transactions($c),
                     self::service($c, InvoiceClientInterface::class),
                     self::orgId($c),
+                    self::clock($c),
                     self::dialect($c),
                 ),
             )

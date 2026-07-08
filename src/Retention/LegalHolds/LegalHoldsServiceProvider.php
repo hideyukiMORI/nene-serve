@@ -32,6 +32,7 @@ final readonly class LegalHoldsServiceProvider implements ServiceProviderInterfa
                     self::service($c, LegalHoldRepositoryInterface::class),
                     self::transactions($c),
                     self::orgId($c),
+                    self::clock($c),
                     self::dialect($c),
                 ),
             )

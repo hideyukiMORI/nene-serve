@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace NeneServe\Measurement;
 
+use Nene2\Http\ClockInterface;
+use Nene2\Http\UtcClock;
+
 /**
  * In-memory append-only event store for tests. Production uses
  * {@see PdoEventStore}; the live boot uses {@see FileEventStore} so events
@@ -11,6 +14,11 @@ namespace NeneServe\Measurement;
  */
 final class InMemoryEventStore implements EventStoreInterface
 {
+    public function __construct(
+        private readonly ClockInterface $clock = new UtcClock(),
+    ) {
+    }
+
     /** @var list<array{org: string, date: string, placement: string, creative: string, bucket: ?string, erased: bool}> */
     private array $impressions = [];
 
@@ -75,7 +83,7 @@ final class InMemoryEventStore implements EventStoreInterface
     {
         $this->serves[] = [
             'org' => $organizationId,
-            'date' => gmdate('Y-m-d'),
+            'date' => $this->clock->now()->format('Y-m-d'),
             'placement' => $placementId,
             'filled' => $filled,
         ];

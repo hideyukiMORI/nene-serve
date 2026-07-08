@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace NeneServe\Audit;
 
+use Nene2\Http\ClockInterface;
+use Nene2\Http\UtcClock;
 use NeneServe\Support\Id;
 
 final class InMemoryAuditLog implements AuditLogInterface
@@ -14,6 +16,11 @@ final class InMemoryAuditLog implements AuditLogInterface
     /** @var array<string, string> last hash per organization */
     private array $headByOrg = [];
 
+    public function __construct(
+        private readonly ClockInterface $clock = new UtcClock(),
+    ) {
+    }
+
     public function record(
         string $organizationId,
         string $actorUserId,
@@ -22,7 +29,7 @@ final class InMemoryAuditLog implements AuditLogInterface
         string $subjectId,
         array $metadata = [],
     ): void {
-        $occurredAt = gmdate('c');
+        $occurredAt = $this->clock->now()->format('c');
         $previousHash = $this->headByOrg[$organizationId] ?? '';
         $hash = AuditHasher::compute(
             $organizationId,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\PublicApi;
 
+use Nene2\Http\ClockInterface;
 use NeneServe\Marketplace\CampaignRepositoryInterface;
 use NeneServe\Marketplace\UseCase\GetCampaignSpendUseCase;
 use NeneServe\Measurement\EventStoreInterface;
@@ -38,6 +39,7 @@ final readonly class ServeCreativeUseCase implements ServeCreativeUseCaseInterfa
         private FrequencyCapStoreInterface $frequencyCaps,
         private EventStoreInterface $events,
         private GetCampaignSpendUseCase $campaignSpend,
+        private ClockInterface $clock,
         private int $clickTokenTtlSeconds = 900,
     ) {
     }
@@ -71,7 +73,7 @@ final readonly class ServeCreativeUseCase implements ServeCreativeUseCaseInterfa
         if ($placement->measurementEnabled
             && $placement->frequencyCap !== null
             && $consentGranted) {
-            $bucket = VisitorBucket::derive($placement->organizationId, $clientIp, $userAgent);
+            $bucket = VisitorBucket::derive($placement->organizationId, $clientIp, $userAgent, $this->clock->now()->format('Y-m-d'));
 
             if ($this->frequencyCaps->count($placement->id, $bucket) >= $placement->frequencyCap) {
                 $this->events->recordServeRequest($placement->organizationId, $placement->id, false);

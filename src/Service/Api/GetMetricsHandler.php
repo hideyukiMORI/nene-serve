@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace NeneServe\Service\Api;
 
 use Nene2\Error\ProblemDetailsResponseFactory;
+use Nene2\Http\ClockInterface;
 use Nene2\Http\JsonResponseFactory;
 use NeneServe\Measurement\Metrics\GetMetricsUseCase;
 use NeneServe\Measurement\Metrics\MetricsRange;
@@ -23,6 +24,7 @@ final readonly class GetMetricsHandler
         private GetMetricsUseCase $metrics,
         private JsonResponseFactory $response,
         private ProblemDetailsResponseFactory $problemDetails,
+        private ClockInterface $clock,
     ) {
     }
 
@@ -34,7 +36,7 @@ final readonly class GetMetricsHandler
             return $this->problemDetails->create($request, 'unauthorized', 'Unauthorized', 401, 'A service token is required.');
         }
 
-        $range = MetricsRange::fromRequest($request);
+        $range = MetricsRange::fromRequest($request, $this->clock);
 
         if ($range === null) {
             return $this->problemDetails->create($request, 'validation-failed', 'Validation failed', 422, 'from/to must be YYYY-MM-DD dates.');

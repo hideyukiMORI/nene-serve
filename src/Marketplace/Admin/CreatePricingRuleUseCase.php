@@ -6,6 +6,7 @@ namespace NeneServe\Marketplace\Admin;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\ClockInterface;
 use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Marketplace\PdoPricingRuleRepository;
@@ -29,6 +30,7 @@ final readonly class CreatePricingRuleUseCase implements CreatePricingRuleUseCas
         private PricingRuleRepositoryInterface $rules,
         private DatabaseTransactionManagerInterface $transactions,
         private RequestScopedHolder $organizationId,
+        private ClockInterface $clock,
     ) {
     }
 
@@ -57,7 +59,7 @@ final readonly class CreatePricingRuleUseCase implements CreatePricingRuleUseCas
             $pricingModel,
             $rate->cents,
             $version,
-            gmdate('c'),
+            $this->clock->now()->format('c'),
         );
 
         $stored = $this->transactions->transactional(

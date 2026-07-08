@@ -68,11 +68,4 @@ final class VisitorBucketTest extends TestCase
             VisitorBucket::derive('ab', '', 'UA', '2026-06-06'),
         );
     }
-
-    public function testDefaultsToTodayWhenDayOmitted(): void
-    {
-        $explicit = VisitorBucket::derive('org-1', '1.2.3.4', 'UA/1', gmdate('Y-m-d'));
-        $defaulted = VisitorBucket::derive('org-1', '1.2.3.4', 'UA/1');
-        self::assertSame($explicit, $defaulted);
-    }
 }

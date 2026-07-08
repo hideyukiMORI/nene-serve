@@ -6,6 +6,7 @@ namespace NeneServe\Marketplace\Billing;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\ClockInterface;
 use Nene2\Http\RequestScopedHolder;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Marketplace\PdoBillingPeriodRepository;
@@ -36,6 +37,7 @@ final readonly class CloseBillingPeriodUseCase implements CloseBillingPeriodUseC
         private DatabaseTransactionManagerInterface $transactions,
         private GetCampaignSpendUseCase $campaignSpend,
         private RequestScopedHolder $organizationId,
+        private ClockInterface $clock,
         private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
@@ -82,7 +84,7 @@ final readonly class CloseBillingPeriodUseCase implements CloseBillingPeriodUseC
             $spend->pricingRuleVersion,
             $spend->spentCents,
             $hash,
-            gmdate('c'),
+            $this->clock->now()->format('c'),
         );
         $closed = $period->withStatus('closed');
 

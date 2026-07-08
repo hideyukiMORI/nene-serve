@@ -9,6 +9,7 @@ use NeneServe\Serving\InMemoryPlacementRepository;
 use NeneServe\Serving\Placement;
 use NeneServe\Serving\PublicApi\RecordClickUseCase;
 use NeneServe\Serving\Token\FileTokenStore;
+use NeneServe\Tests\Support\FixedClock;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -43,7 +44,7 @@ final class RecordClickUseCaseTest extends TestCase
     {
         $placement = new Placement(self::PLACEMENT, self::ORG, 'pk_home', [], 'active', null, $measurementEnabled);
 
-        return new RecordClickUseCase(new InMemoryPlacementRepository([$placement]), $this->tokens, $this->events);
+        return new RecordClickUseCase(new InMemoryPlacementRepository([$placement]), $this->tokens, $this->events, new FixedClock());
     }
 
     private function issueToken(): string

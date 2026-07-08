@@ -75,6 +75,7 @@ final readonly class MarketplaceServiceProvider implements ServiceProviderInterf
                     self::service($c, PricingRuleRepositoryInterface::class),
                     self::transactions($c),
                     self::orgId($c),
+                    self::clock($c),
                 ),
             )
             ->set(

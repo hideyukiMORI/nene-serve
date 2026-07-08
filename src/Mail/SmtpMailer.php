@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace NeneServe\Mail;
 
+use Nene2\Http\ClockInterface;
+use Nene2\Http\UtcClock;
+
 /**
  * Dependency-free SMTP client (fsockopen) supporting STARTTLS and AUTH LOGIN —
  * enough for Mailpit in dev and a standard authenticated submission server in
@@ -19,6 +22,7 @@ final class SmtpMailer implements MailerInterface
 
     public function __construct(
         private readonly SmtpConfig $config,
+        private readonly ClockInterface $clock = new UtcClock(),
     ) {
     }
 
@@ -100,7 +104,7 @@ final class SmtpMailer implements MailerInterface
             'From: ' . $this->formatFrom(),
             'To: <' . $email->toAddress . '>',
             'Subject: ' . $this->encodeHeader($email->subject),
-            'Date: ' . gmdate('D, d M Y H:i:s') . ' +0000',
+            'Date: ' . $this->clock->now()->format('D, d M Y H:i:s') . ' +0000',
             'MIME-Version: 1.0',
             'Content-Type: text/plain; charset=UTF-8',
             'Content-Transfer-Encoding: base64',

@@ -36,7 +36,7 @@ final readonly class ServiceApiServiceProvider implements ServiceProviderInterfa
         $builder
             ->set(
                 ProposePlacementChangeUseCaseInterface::class,
-                static fn (ContainerInterface $c): ProposePlacementChangeUseCaseInterface => new ProposePlacementChangeUseCase(self::query($c), self::transactions($c), self::dialect($c)),
+                static fn (ContainerInterface $c): ProposePlacementChangeUseCaseInterface => new ProposePlacementChangeUseCase(self::query($c), self::transactions($c), self::clock($c), self::dialect($c)),
             )
             ->set(
                 ApplyChangePlanUseCaseInterface::class,
@@ -48,7 +48,7 @@ final readonly class ServiceApiServiceProvider implements ServiceProviderInterfa
             )
             ->set(
                 GetMetricsHandler::class,
-                static fn (ContainerInterface $c): GetMetricsHandler => new GetMetricsHandler(self::service($c, GetMetricsUseCase::class), self::json($c), self::problem($c)),
+                static fn (ContainerInterface $c): GetMetricsHandler => new GetMetricsHandler(self::service($c, GetMetricsUseCase::class), self::json($c), self::problem($c), self::clock($c)),
             )
             ->set(
                 ExportMetricsHandler::class,
@@ -57,6 +57,7 @@ final readonly class ServiceApiServiceProvider implements ServiceProviderInterfa
                     self::service($c, ResponseFactoryInterface::class),
                     self::service($c, StreamFactoryInterface::class),
                     self::problem($c),
+                    self::clock($c),
                 ),
             )
             ->set(

@@ -33,6 +33,7 @@ final readonly class InvitationsServiceProvider implements ServiceProviderInterf
                     self::service($c, InvitationRepositoryInterface::class),
                     self::service($c, UserRepositoryInterface::class),
                     self::transactions($c),
+                    self::clock($c),
                     self::dialect($c),
                 ),
             )

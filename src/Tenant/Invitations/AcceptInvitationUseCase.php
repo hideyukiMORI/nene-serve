@@ -6,6 +6,7 @@ namespace NeneServe\Tenant\Invitations;
 
 use Nene2\Database\DatabaseQueryExecutorInterface;
 use Nene2\Database\DatabaseTransactionManagerInterface;
+use Nene2\Http\ClockInterface;
 use Nene2\Http\SecureTokenHelper;
 use NeneServe\Audit\PdoAuditLog;
 use NeneServe\Support\SqlDialect;
@@ -30,6 +31,7 @@ final readonly class AcceptInvitationUseCase implements AcceptInvitationUseCaseI
         private InvitationRepositoryInterface $invitations,
         private UserRepositoryInterface $users,
         private DatabaseTransactionManagerInterface $transactions,
+        private ClockInterface $clock,
         private SqlDialect $dialect = SqlDialect::Mysql,
     ) {
     }
@@ -40,7 +42,7 @@ final readonly class AcceptInvitationUseCase implements AcceptInvitationUseCaseI
             throw new UserValidationException('Password must be at least 8 characters.');
         }
 
-        $now = gmdate('Y-m-d H:i:s');
+        $now = $this->clock->now()->format('Y-m-d H:i:s');
         $invitation = $this->invitations->findByTokenHash(SecureTokenHelper::hash($input->rawToken));
 
         if ($invitation === null || !$invitation->isAcceptable($now)) {
@@ -79,7 +81,7 @@ final readonly class AcceptInvitationUseCase implements AcceptInvitationUseCaseI
 
     public function preview(PreviewInvitationInput $input): PreviewInvitationOutput
     {
-        $now = gmdate('Y-m-d H:i:s');
+        $now = $this->clock->now()->format('Y-m-d H:i:s');
         $invitation = $this->invitations->findByTokenHash(SecureTokenHelper::hash($input->rawToken));
 
         if ($invitation === null || !$invitation->isAcceptable($now)) {

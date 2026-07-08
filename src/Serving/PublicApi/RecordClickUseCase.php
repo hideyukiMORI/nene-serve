@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace NeneServe\Serving\PublicApi;
 
+use Nene2\Http\ClockInterface;
 use NeneServe\Measurement\ClickEvent;
 use NeneServe\Measurement\EventStoreInterface;
 use NeneServe\Serving\PlacementRepositoryInterface;
@@ -23,6 +24,7 @@ final readonly class RecordClickUseCase implements RecordClickUseCaseInterface
         private PlacementRepositoryInterface $placements,
         private TokenStoreInterface $tokens,
         private EventStoreInterface $events,
+        private ClockInterface $clock,
     ) {
     }
 
@@ -42,7 +44,7 @@ final readonly class RecordClickUseCase implements RecordClickUseCaseInterface
                 $redirect->organizationId,
                 $redirect->placementId,
                 $redirect->creativeId,
-                gmdate('c'),
+                $this->clock->now()->format('c'),
                 $countryCode,
             ));
         }
