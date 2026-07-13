@@ -34,6 +34,17 @@ tracks impressions and clicks, and reports time-series metrics with CSV export �
 - **OpenAPI + MCP** — campaign and weight management through documented HTTP only
 - **Optional marketplace** (Phase 3+) — advertiser budgets; money SSOT stays in Invoice
 
+## Non-goals
+
+- Not a contact-form host or inquiry inbox — that's [`nene-contact`](https://github.com/hideyukiMORI/nene-contact)
+- Not a chat-scenario / conversational engine — that's [`nene-concierge`](https://github.com/hideyukiMORI/nene-concierge)
+- Not a billing SSOT — no tax computation, no qualified invoices, no payment ledger; money SSOT stays in [`nene-invoice`](https://github.com/hideyukiMORI/nene-invoice) (ADR 0014)
+- Not bank-deposit reconciliation or collection reminders — that belongs to other siblings, not Serve
+- Not a global RTB/DSP or third-party ad-tag network — only reviewed, sandboxed creatives serve (ADR 0020/0021)
+- Not a shared database with sibling products — HTTP only (ADR 0002)
+
+Full list: [`docs/explanation/scope-contract.md`](./docs/explanation/scope-contract.md) ("DON'T" table)
+
 ## Documentation (read first)
 
 | Topic | Document |
@@ -57,29 +68,22 @@ tracks impressions and clicks, and reports time-series metrics with CSV export �
 
 ## Status
 
-**Phases 1–4 ✅ complete.** Foundation (#10–#15), Rich creatives (#24–#28),
-Marketplace (#47–#51) and Ecosystem (#57–#60) are all merged, with **integrity &
-audit hardening** (#36–#41) underneath: advertisers, versioned pricing, campaigns
-with budgets + billable spend accrual (no overspend), tamper-evident spend
-snapshots + immutable billing-period close, idempotent net Invoice handoff +
-reconciliation, statutory retention + legal hold; Records read, Deal opportunity
-handoff, Concierge conversion beacon and an MCP write-plan mechanism
-(propose→confirm→apply, read-first, audited; Serve OpenAPI only); append-only
-governed data, hash-chained audit, DB-enforced no-delete. **Money SSOT stays in
-NeNe Invoice; Serve is tax-neutral** (ADR 0014/0015).
+| Phase | Scope | Status |
+| --- | --- | --- |
+| 0 | Governance + product docs | ✅ |
+| 1 | Foundation — multi-tenant org/auth, three API surfaces, placement + creative review, impression/click measurement, locale CI | ✅ |
+| 2 | Rich creatives — video, HTML5 sandbox + malware scan, frequency cap, consent UI, reporting polish | ✅ |
+| 3 | Marketplace — advertisers, versioned pricing, budgets, billing-period close, Invoice handoff, retention + legal hold | ✅ |
+| 4 | Ecosystem — Records read, Deal handoff, Concierge conversion beacon, MCP write-plan | ✅ |
+| — | Integrity & audit hardening (ADR 0022) — append-only governed data, hash-chained audit, DB-enforced no-delete | ✅ |
+| v1 | Operable console — `serve.js` embed client, admin SPA (read screens + create forms), email-based provisioning, asset upload + ClamAV scan | ✅ |
+| v1+ | Production hardening — billing-period actions/edit forms in the console, video/HTML5 upload UI, deploy hardening (migrations on deploy, HTTPS/secrets, shared token/rate-limit store for multi-host), real sibling integrations | 🔄 In progress |
 
-**Operable v1 console.** On top of the engine: the `serve.js` embed client (#79),
-an **admin SPA** in `frontend/` (React+Vite, six-locale, mock-first) with read
-screens for placements, creatives & review, metrics and marketplace (#69–#78),
-create forms for advertiser/pricing/campaign and placement/image-creative
-(#82–#84), email-based **provisioning** (SMTP settings → invite → set-password,
-#86–#90), and real **asset upload + ClamAV** malware scan (#93–#97). Quality gates
-are green: PHPStan level 8, PSR-12, **470 backend + 33 frontend tests**.
+**Money SSOT stays in NeNe Invoice; Serve is tax-neutral** (ADR 0014/0015). Quality
+gates are green: PHPStan level 8, PSR-12, full backend and frontend test suites
+(type-check, lint, knip, Storybook).
 
-In flight toward production: billing-period close/handoff + edit forms in the
-console, video/HTML5 upload UI, and deploy hardening (migrations on deploy,
-HTTPS/secrets, shared token/rate-limit store for multi-host). See
-[`docs/todo/current.md`](./docs/todo/current.md).
+Details and sequencing: [`docs/todo/current.md`](./docs/todo/current.md).
 
 ## Running locally
 
@@ -121,11 +125,9 @@ MYSQL_TEST_HOST=127.0.0.1 MYSQL_TEST_PORT=3380 MYSQL_TEST_DB=nene_serve \
 | Mailpit UI (SMTP 1080) | **8013** |
 | ClamAV (clamd) | **3308** |
 
-NeNe Serve owns the **80xx** lane (8010 API · 8011 phpMyAdmin · 8013 Mailpit), plus
-MySQL **3380** · ClamAV **3308** · frontend **5180** · Storybook **6107**. Vite uses
-`strictPort` so the dev server never climbs into a sibling's range. Don't collide with the
-other portfolio lanes (81xx Deal · 82xx NENE2 · 83xx Clear · 84xx Profile · 85xx Invoice ·
-86xx Vault · 87xx Concierge · 88xx Suite · 89xx Corpus · 180xx Records).
+NeNe Serve owns the **80xx** port lane; sibling products use their own lanes so several
+apps can run locally side by side. Vite uses `strictPort` so the dev server never climbs
+into a sibling's range. Full policy: [`CLAUDE.md#ports`](./CLAUDE.md#ports).
 
 ## Ecosystem layer
 
