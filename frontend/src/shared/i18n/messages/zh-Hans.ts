@@ -215,4 +215,7 @@ export const zhHans: MessageCatalog = {
   'nav.group.measure': '度量',
   'nav.group.business': '业务',
   'nav.group.admin': '管理',
+
+  'toast.region': '通知',
+  'toast.dismiss': '关闭',
 }

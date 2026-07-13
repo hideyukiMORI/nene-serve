@@ -217,4 +217,7 @@ export const ja: MessageCatalog = {
   'nav.group.measure': '計測',
   'nav.group.business': 'ビジネス',
   'nav.group.admin': '管理',
+
+  'toast.region': '通知',
+  'toast.dismiss': '閉じる',
 }

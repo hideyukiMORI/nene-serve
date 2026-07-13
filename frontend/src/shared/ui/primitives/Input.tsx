@@ -12,8 +12,8 @@ export interface InputProps {
   disabled?: boolean
   error?: string | undefined
   placeholder?: string
-  min?: number
-  max?: number
+  min?: number | string
+  max?: number | string
 }
 
 /**

@@ -218,4 +218,7 @@ export const es: MessageCatalog = {
   'nav.group.measure': 'Medición',
   'nav.group.business': 'Negocio',
   'nav.group.admin': 'Admin',
+
+  'toast.region': 'Notificaciones',
+  'toast.dismiss': 'Descartar',
 }

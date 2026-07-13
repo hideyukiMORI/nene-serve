@@ -216,4 +216,7 @@ export const ko: MessageCatalog = {
   'nav.group.measure': '측정',
   'nav.group.business': '비즈니스',
   'nav.group.admin': '관리',
+
+  'toast.region': '알림',
+  'toast.dismiss': '닫기',
 }
