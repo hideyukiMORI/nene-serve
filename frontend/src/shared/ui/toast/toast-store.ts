@@ -40,7 +40,7 @@ export function dismissToast(id: number): void {
 
 export function pushToast(title: string, sub: string | undefined, variant: ToastVariant): number {
   const id = nextId++
-  toasts = [...toasts, { id, title, sub, variant }]
+  toasts = [...toasts, { id, title, variant, ...(sub !== undefined && { sub }) }]
   emit()
   return id
 }

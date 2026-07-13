@@ -220,6 +220,9 @@ export interface MessageCatalog {
   'setPassword.doneTitle': string
   'setPassword.doneBody': string
   'setPassword.toLogin': string
+
+  'toast.region': string
+  'toast.dismiss': string
 }
 
 export const en: MessageCatalog = {
@@ -441,4 +444,7 @@ export const en: MessageCatalog = {
   'setPassword.doneTitle': 'Password set',
   'setPassword.doneBody': 'You can now sign in with your new password.',
   'setPassword.toLogin': 'Go to sign in',
+
+  'toast.region': 'Notifications',
+  'toast.dismiss': 'Dismiss',
 }
