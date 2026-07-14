@@ -4,7 +4,7 @@ import { AppProviders } from '@/app/providers'
 import { AppRouter } from '@/app/router'
 import { applyStoredTheme } from '@/shared/theme'
 // Single, centralized stylesheet — the Editorial/Ink design system (one file).
-import '@/app/design/serve.css'
+import '@/shared/ui/theme/serve.css'
 
 applyStoredTheme()
 
