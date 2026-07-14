@@ -1,31 +1,40 @@
+import { createSessionTokenStore } from '@hideyukimori/nene2-client'
+
 type Listener = () => void
 
-let token: string | null = null
-const listeners = new Set<Listener>()
+/**
+ * Fleet-standard token store (nene2-js #102 / v1.1.0): `sessionStorage` in
+ * browsers, in-memory elsewhere (tests). Storage failures fail closed (reads
+ * behave as signed out). Never `localStorage`.
+ *
+ * Behavior change from the previous hand-written in-memory store: the token
+ * now survives a page reload within the same browser tab (sessionStorage is
+ * only cleared when the tab/browser closes), instead of being lost on every
+ * reload. See migrate-product-client.md and this change's PR description.
+ */
+const sessionStore = createSessionTokenStore({ key: 'nene_serve_token' })
 
 /**
- * In-memory bearer-token store. Deliberately not persisted to localStorage
- * (XSS exfiltration risk; see frontend standards) — the token is lost on
- * reload and the operator logs in again. A future ADR may move to an httpOnly
- * cookie. Shared by the API client (reads) and the login feature (writes).
+ * Public surface preserved verbatim for existing callers (`Toggles.tsx`, the
+ * login feature, `use-auth-token.ts`, the api client adapter) — only the
+ * backing storage changed, from a module-scoped variable to the fleet
+ * `SessionTokenStore`.
  */
 export const authStore = {
   getToken(): string | null {
-    return token
+    return sessionStore.getToken()
   },
   setToken(next: string | null): void {
-    token = next
-    for (const listener of listeners) {
-      listener()
+    if (next === null) {
+      sessionStore.clearToken()
+      return
     }
+    sessionStore.setToken(next)
   },
   clear(): void {
-    authStore.setToken(null)
+    sessionStore.clearToken()
   },
   subscribe(listener: Listener): () => void {
-    listeners.add(listener)
-    return () => {
-      listeners.delete(listener)
-    }
+    return sessionStore.subscribe(listener)
   },
 }
