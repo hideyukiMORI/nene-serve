@@ -1,7 +1,11 @@
 /**
- * i18n locales — six application locales (ADR 0011): English (source of truth,
- * ADR 0008), Japanese, Simplified Chinese, Korean, German, Spanish. Keep in
- * parity with the server-side catalogs in `locales/*.json`.
+ * i18n locales — six application locales (ADR 0011): English, Japanese
+ * (authority catalog — Frontend Standard 04, I18N-8), Simplified Chinese,
+ * Korean, German, Spanish. Keep in parity with the server-side catalogs in
+ * `locales/*.json`.
+ *
+ * `en` is the default locale and runtime fallback (`DEFAULT_LOCALE`); `ja` owns
+ * the message key set. The two are separate concerns.
  */
 
 export type SupportedLocale = 'en' | 'ja' | 'zh-Hans' | 'ko' | 'de' | 'es'

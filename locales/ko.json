@@ -2,7 +2,7 @@
   "_meta": {
     "locale": "ko",
     "version": 2,
-    "note": "Keys must match en.json (ADR 0011)."
+    "note": "Keys must match ja.json, the authority catalog (ADR 0011)."
   },
   "embed": {
     "loading": "광고 불러오는 중…",

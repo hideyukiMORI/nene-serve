@@ -35,8 +35,11 @@ final class LocaleCatalogsTest extends TestCase
 
         self::assertTrue($result->ok, implode("\n", $result->errors));
         self::assertSame(LocaleCatalogs::LOCALES, array_keys($result->keyCounts));
-        // every locale carries the same number of keys as canonical en
-        self::assertSame([$result->keyCounts['en']], array_values(array_unique($result->keyCounts)));
+        // every locale carries the same number of keys as the authority catalog (ja)
+        self::assertSame(
+            [$result->keyCounts[LocaleCatalogs::CANONICAL]],
+            array_values(array_unique($result->keyCounts)),
+        );
     }
 
     public function testCheckDetectsMissingAndExtraKeys(): void

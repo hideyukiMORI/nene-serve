@@ -7,13 +7,18 @@ namespace NeneServe\I18n;
 /**
  * Six-locale catalog parity check (ADR 0011, i18n.md). Flattens nested JSON to
  * dotted keys and asserts every locale carries the exact key set of the
- * canonical `en` catalog, plus ICU-lite pluralization consistency
+ * authority `ja` catalog, plus ICU-lite pluralization consistency
  * (`*_one` ⇔ `*_other`). The `_meta` block is ignored.
+ *
+ * Authority is `ja` (ADR 0011; Frontend Standard 04, I18N-8): keys are authored
+ * in Japanese first and every other catalog — including `en` — mirrors that key
+ * set. `en` remains the default/fallback locale at runtime; only the key-set
+ * authority lives here.
  */
 final class LocaleCatalogs
 {
     public const LOCALES = ['en', 'ja', 'zh-Hans', 'ko', 'de', 'es'];
-    public const CANONICAL = 'en';
+    public const CANONICAL = 'ja';
 
     /**
      * Flattens a (possibly nested) catalog to a sorted list of dotted keys,
@@ -70,14 +75,17 @@ final class LocaleCatalogs
 
         $canonical = self::load($dir, self::CANONICAL, $errors);
         $canonicalKeys = self::flatten($canonical);
-        $counts[self::CANONICAL] = count($canonicalKeys);
 
         foreach (self::pluralProblems($canonicalKeys) as $problem) {
             $errors[] = self::CANONICAL . ": {$problem}";
         }
 
+        // Counts are reported in declared LOCALES order, independent of which
+        // locale is the authority.
         foreach (self::LOCALES as $code) {
             if ($code === self::CANONICAL) {
+                $counts[$code] = count($canonicalKeys);
+
                 continue;
             }
             $keys = self::flatten(self::load($dir, $code, $errors));
