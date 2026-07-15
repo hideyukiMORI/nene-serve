@@ -1,230 +1,17 @@
+import type { MessageCatalog, MessageKey } from './ja'
+
 /**
- * English message catalog — the authoritative source of truth (ADR 0008,
- * English-first repo). Add new keys here first; the other five locale catalogs
- * mirror this `MessageCatalog` shape (ADR 0011 — six-locale parity).
+ * English message catalog — the reference locale and runtime fallback.
+ *
+ * Authority note (ADR 0011; Frontend Standard 04, I18N-8): the message key set
+ * is owned by `ja.ts` (`MessageKey = keyof typeof ja`). This catalog is typed
+ * `MessageCatalog` (= `Record<MessageKey, string>`), so it must mirror `ja`
+ * exactly — a key added to or removed from `ja` becomes a compile error here.
+ *
+ * `en` remains the default locale and the runtime fallback for every other
+ * catalog (see `translate` and `DEFAULT_LOCALE`); only the key-set authority
+ * moved to `ja`.
  */
-export interface MessageCatalog {
-  'app.title': string
-  'app.subtitle': string
-
-  'nav.home': string
-  'nav.placements': string
-  'nav.group.prepare': string
-  'nav.group.build': string
-  'nav.group.govern': string
-  'nav.group.measure': string
-  'nav.group.business': string
-  'nav.group.admin': string
-
-  'home.greeting': string
-  'home.lead': string
-  'home.setup.title': string
-  'home.setup.subtitle': string
-  'home.setup.progress': string
-  'home.setup.resume': string
-  'home.step.doThis': string
-  'home.step.done': string
-  'home.steps.smtp.title': string
-  'home.steps.smtp.desc': string
-  'home.steps.invite.title': string
-  'home.steps.invite.desc': string
-  'home.steps.placement.title': string
-  'home.steps.placement.desc': string
-  'home.steps.creative.title': string
-  'home.steps.creative.desc': string
-  'home.steps.approve.title': string
-  'home.steps.approve.desc': string
-  'home.steps.embed.title': string
-  'home.steps.embed.desc': string
-  'home.steps.measure.title': string
-  'home.steps.measure.desc': string
-
-  'shell.theme': string
-  'shell.themeLight': string
-  'shell.themeDark': string
-  'shell.lang': string
-  'shell.signout': string
-
-  'common.error.unauthorized': string
-  'common.error.forbidden': string
-  'common.error.notFound': string
-  'common.error.conflict': string
-  'common.error.validation': string
-  'common.error.rateLimit': string
-  'common.error.serverError': string
-  'common.error.unknown': string
-
-  'login.title': string
-  'login.subtitle': string
-  'login.organization': string
-  'login.signingInTo': string
-  'login.email': string
-  'login.password': string
-  'login.submit': string
-  'login.failed': string
-  'login.secure': string
-  'login.validation.organizationRequired': string
-  'login.validation.emailRequired': string
-  'login.validation.passwordRequired': string
-
-  'placements.title': string
-  'placements.subtitle': string
-  'placements.empty': string
-  'placements.loading': string
-  'placements.loadError': string
-  'placements.column.key': string
-  'placements.column.status': string
-  'placements.column.creative': string
-  'placements.create': string
-  'placements.field.key': string
-  'placements.field.origins': string
-  'placements.field.defaultCreative': string
-
-  'notFound.title': string
-  'notFound.body': string
-  'notFound.back': string
-
-  'nav.creatives': string
-  'nav.review': string
-
-  'creatives.title': string
-  'creatives.subtitle': string
-  'creatives.empty': string
-  'creatives.loading': string
-  'creatives.loadError': string
-  'creatives.column.id': string
-  'creatives.column.type': string
-  'creatives.column.status': string
-  'creatives.column.version': string
-  'creatives.create': string
-  'creatives.field.destination': string
-  'creatives.field.asset': string
-  'creatives.field.width': string
-  'creatives.field.height': string
-  'creatives.field.file': string
-  'creatives.uploading': string
-  'creatives.uploaded': string
-  'creatives.uploadError': string
-
-  'form.create': string
-  'form.creating': string
-  'form.error': string
-  'form.required': string
-  'form.positiveInt': string
-
-  'review.title': string
-  'review.subtitle': string
-  'review.empty': string
-  'review.loading': string
-  'review.loadError': string
-  'review.column.id': string
-  'review.column.type': string
-  'review.column.status': string
-  'review.column.actions': string
-  'review.action.startReview': string
-  'review.action.approve': string
-  'review.action.reject': string
-  'review.action.requestChanges': string
-  'review.fourEyes': string
-  'review.actionFailed': string
-
-  'nav.metrics': string
-  'metrics.title': string
-  'metrics.subtitle': string
-  'metrics.loading': string
-  'metrics.loadError': string
-  'metrics.empty': string
-  'metrics.kpi.impressions': string
-  'metrics.kpi.clicks': string
-  'metrics.kpi.ctr': string
-  'metrics.kpi.fillRate': string
-  'metrics.column.date': string
-  'metrics.column.impressions': string
-  'metrics.column.clicks': string
-  'metrics.column.ctr': string
-
-  'nav.marketplace': string
-  'marketplace.title': string
-  'marketplace.subtitle': string
-  'marketplace.loading': string
-  'marketplace.loadError': string
-  'marketplace.advertisers.title': string
-  'marketplace.advertisers.empty': string
-  'marketplace.pricingRules.title': string
-  'marketplace.pricingRules.empty': string
-  'marketplace.campaigns.title': string
-  'marketplace.campaigns.empty': string
-  'marketplace.column.name': string
-  'marketplace.column.status': string
-  'marketplace.column.model': string
-  'marketplace.column.rate': string
-  'marketplace.column.version': string
-  'marketplace.column.funding': string
-  'marketplace.column.budget': string
-  'marketplace.create.advertiser': string
-  'marketplace.create.pricingRule': string
-  'marketplace.create.campaign': string
-  'marketplace.field.advertiser': string
-  'marketplace.field.pricingRule': string
-  'marketplace.field.rateCents': string
-  'marketplace.field.budgetCents': string
-  'marketplace.action.create': string
-  'marketplace.action.creating': string
-  'marketplace.createError': string
-  'marketplace.validation.required': string
-  'marketplace.validation.nonNegative': string
-
-  'nav.users': string
-  'nav.settings': string
-
-  'users.title': string
-  'users.subtitle': string
-  'users.invite': string
-  'users.loading': string
-  'users.empty': string
-  'users.field.email': string
-  'users.field.role': string
-  'users.action.invite': string
-  'users.inviteSent': string
-  'users.inviteNotSent': string
-  'users.column.email': string
-  'users.column.role': string
-
-  'settings.title': string
-  'settings.loading': string
-  'settings.saved': string
-  'settings.testOk': string
-  'settings.tenant.title': string
-  'settings.tenant.mode': string
-  'settings.tenant.organization': string
-  'settings.tenant.note': string
-  'settings.smtp.subtitle': string
-  'settings.smtp.host': string
-  'settings.smtp.port': string
-  'settings.smtp.encryption': string
-  'settings.smtp.username': string
-  'settings.smtp.password': string
-  'settings.smtp.passwordSet': string
-  'settings.smtp.fromAddress': string
-  'settings.smtp.fromName': string
-  'settings.action.save': string
-  'settings.action.test': string
-  'settings.action.testing': string
-
-  'setPassword.title': string
-  'setPassword.validating': string
-  'setPassword.invalid': string
-  'setPassword.password': string
-  'setPassword.submit': string
-  'setPassword.tooShort': string
-  'setPassword.doneTitle': string
-  'setPassword.doneBody': string
-  'setPassword.toLogin': string
-
-  'toast.region': string
-  'toast.dismiss': string
-}
-
 export const en: MessageCatalog = {
   'app.title': 'NeNe Serve',
   'app.subtitle': 'Ad serving & analytics',
@@ -448,3 +235,8 @@ export const en: MessageCatalog = {
   'toast.region': 'Notifications',
   'toast.dismiss': 'Dismiss',
 }
+
+// `MessageCatalog`/`MessageKey` authority now lives in `ja.ts`
+// (Frontend Standard 04, I18N-8). Re-exported here so existing `./en` type
+// imports keep resolving unchanged.
+export type { MessageCatalog, MessageKey }

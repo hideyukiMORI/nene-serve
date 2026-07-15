@@ -1,7 +1,14 @@
-import type { MessageCatalog } from './en'
-
-/** Japanese catalog (ADR 0011). */
-export const ja: MessageCatalog = {
+/**
+ * Japanese message catalog — the authority catalog (ADR 0011; Frontend
+ * Standard 04, I18N-8).
+ *
+ * `MessageKey` is derived from these keys (`keyof typeof ja`). Every other
+ * locale — including `en` — is typed `MessageCatalog`
+ * (= `Record<MessageKey, string>`) and therefore mirrors this catalog exactly:
+ * adding or removing a key here surfaces as a compile error in the five other
+ * catalogs. Add new keys here first, then translate.
+ */
+export const ja = {
   'app.title': 'NeNe Serve',
   'app.subtitle': '広告配信と分析',
   'nav.home': 'ホーム',
@@ -221,3 +228,9 @@ export const ja: MessageCatalog = {
   'toast.region': '通知',
   'toast.dismiss': '閉じる',
 }
+
+/** Authority key set (Frontend Standard 04, I18N-8): `MessageKey` derives from `ja`. */
+export type MessageKey = keyof typeof ja
+
+/** Shape every locale catalog must match exactly (six-locale parity, ADR 0011). */
+export type MessageCatalog = Record<MessageKey, string>

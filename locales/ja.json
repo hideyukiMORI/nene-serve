@@ -2,7 +2,7 @@
   "_meta": {
     "locale": "ja",
     "version": 2,
-    "note": "Keys must match en.json (ADR 0011)."
+    "note": "Authority catalog: canonical key set (ADR 0011). Other locales must match these keys."
   },
   "embed": {
     "loading": "広告を読み込み中…",
