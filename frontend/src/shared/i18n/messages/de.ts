@@ -1,7 +1,7 @@
-import type { MessageCatalog } from './en'
+import type { MessageKey } from './en'
 
-/** German catalog (ADR 0011). */
-export const de: MessageCatalog = {
+/** German catalog (ADR 0011; non-authority — Frontend Standard 04, I18N-9). */
+export const de = {
   'app.title': 'NeNe Serve',
   'app.subtitle': 'Anzeigenauslieferung & Analyse',
   'nav.home': 'Start',
@@ -226,4 +226,4 @@ export const de: MessageCatalog = {
 
   'toast.region': 'Benachrichtigungen',
   'toast.dismiss': 'Schließen',
-}
+} satisfies Record<MessageKey, string>

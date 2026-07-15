@@ -4,15 +4,16 @@ import type { MessageCatalog, MessageKey } from './ja'
  * English message catalog — the reference locale and runtime fallback.
  *
  * Authority note (ADR 0011; Frontend Standard 04, I18N-8): the message key set
- * is owned by `ja.ts` (`MessageKey = keyof typeof ja`). This catalog is typed
- * `MessageCatalog` (= `Record<MessageKey, string>`), so it must mirror `ja`
- * exactly — a key added to or removed from `ja` becomes a compile error here.
+ * is owned by `ja.ts` (`MessageKey = keyof typeof ja`). This catalog is
+ * checked against `Record<MessageKey, string>` (Frontend Standard 04, I18N-9),
+ * so it must mirror `ja` exactly — a key added to or removed from `ja`
+ * becomes a compile error here.
  *
  * `en` remains the default locale and the runtime fallback for every other
  * catalog (see `translate` and `DEFAULT_LOCALE`); only the key-set authority
  * moved to `ja`.
  */
-export const en: MessageCatalog = {
+export const en = {
   'app.title': 'NeNe Serve',
   'app.subtitle': 'Ad serving & analytics',
 
@@ -234,7 +235,7 @@ export const en: MessageCatalog = {
 
   'toast.region': 'Notifications',
   'toast.dismiss': 'Dismiss',
-}
+} satisfies Record<MessageKey, string>
 
 // `MessageCatalog`/`MessageKey` authority now lives in `ja.ts`
 // (Frontend Standard 04, I18N-8). Re-exported here so existing `./en` type

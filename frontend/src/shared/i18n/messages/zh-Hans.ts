@@ -1,7 +1,7 @@
-import type { MessageCatalog } from './en'
+import type { MessageKey } from './en'
 
-/** Simplified Chinese catalog (ADR 0011). */
-export const zhHans: MessageCatalog = {
+/** Simplified Chinese catalog (ADR 0011; non-authority — Frontend Standard 04, I18N-9). */
+export const zhHans = {
   'app.title': 'NeNe Serve',
   'app.subtitle': '广告投放与分析',
   'nav.home': '主页',
@@ -218,4 +218,4 @@ export const zhHans: MessageCatalog = {
 
   'toast.region': '通知',
   'toast.dismiss': '关闭',
-}
+} satisfies Record<MessageKey, string>
