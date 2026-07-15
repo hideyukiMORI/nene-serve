@@ -1,7 +1,7 @@
-import type { MessageCatalog } from './en'
+import type { MessageKey } from './en'
 
-/** Korean catalog (ADR 0011). */
-export const ko: MessageCatalog = {
+/** Korean catalog (ADR 0011; non-authority — Frontend Standard 04, I18N-9). */
+export const ko = {
   'app.title': 'NeNe Serve',
   'app.subtitle': '광고 게재 및 분석',
   'nav.home': '홈',
@@ -219,4 +219,4 @@ export const ko: MessageCatalog = {
 
   'toast.region': '알림',
   'toast.dismiss': '닫기',
-}
+} satisfies Record<MessageKey, string>
