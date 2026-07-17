@@ -69,6 +69,9 @@ jobs:
       - name: Static analysis (PHPStan level 8)
         run: composer stan
 
+      - name: NENE2 conformance linter
+        run: composer conformance
+
       - name: Tests (PHPUnit)
         run: composer test
 
