@@ -1,6 +1,6 @@
-<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="NeNe Deal">
-  <rect width="64" height="64" rx="14" fill="#2c7a6e"></rect>
-  <rect x="15" y="38" width="9" height="8.5" rx="2.5" fill="#ffffff" opacity="0.34"></rect>
-  <rect x="27.5" y="28" width="9" height="8.5" rx="2.5" fill="#ffffff" opacity="0.62"></rect>
-  <rect x="40" y="17.5" width="9" height="8.5" rx="2.5" fill="#ffffff"></rect>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none" role="img" aria-label="NeNe Serve favicon">
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="#262320"></rect>
+  <circle cx="32" cy="32" r="5.5" fill="#faf8f4"></circle>
+  <circle cx="32" cy="32" r="13" fill="none" stroke="#faf8f4" stroke-width="4"></circle>
+  <circle cx="32" cy="32" r="21" fill="none" stroke="#faf8f4" stroke-width="3.6" opacity=".9"></circle>
 </svg>

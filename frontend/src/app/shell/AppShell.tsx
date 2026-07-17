@@ -3,10 +3,10 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '@/entities/auth'
 import { useTranslation, type MessageKey } from '@/shared/i18n'
 import {
+  IconBeacon,
   IconBoard,
   IconHome,
   IconInvoice,
-  IconLogo,
   IconSettings,
   IconShield,
   IconStages,
@@ -72,10 +72,13 @@ export function AppShell() {
       <aside className="sidebar">
         <div className="side-brand">
           <span className="logo-mark">
-            <IconLogo />
+            <IconBeacon />
           </span>
           <div className="stack">
-            <span className="brand-name">NeNe Serve</span>
+            <span className="brand-name">
+              <b>NeNe</b>
+              <span> Serve</span>
+            </span>
             <span className="brand-sub">{t('app.subtitle')}</span>
           </div>
         </div>

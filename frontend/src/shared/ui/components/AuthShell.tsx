@@ -137,7 +137,10 @@ export function AuthShell({ children }: { children: ReactNode }) {
           <span className="auth-brand-mark">
             <IconBeacon />
           </span>
-          <span className="auth-brand-name">NeNe Serve</span>
+          <span className="auth-brand-name">
+            <b>NeNe</b>
+            <span> Serve</span>
+          </span>
         </div>
         <div className="auth-pitch stack g3">
           <h2 className="t-display">{t('app.subtitle')}</h2>

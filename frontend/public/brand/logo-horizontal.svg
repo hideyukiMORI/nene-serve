@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 64" width="300" height="64" fill="none" role="img" aria-label="NeNe Serve">
+  <g>
+    <circle cx="32" cy="32" r="5.5" fill="#1f1c17"></circle>
+    <circle cx="32" cy="32" r="13" fill="none" stroke="#1f1c17" stroke-width="4"></circle>
+    <circle cx="32" cy="32" r="21" fill="none" stroke="#1f1c17" stroke-width="3.6" opacity=".9"></circle>
+  </g>
+  <text x="78" y="41" font-family="Newsreader, &#39;Noto Serif JP&#39;, Georgia, serif" font-size="29" font-weight="500" letter-spacing="-0.15" fill="#1f1c17">NeNe<tspan fill="#6b6457" dx="3"> Serve</tspan></text>
+</svg>

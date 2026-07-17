@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="64" height="64" fill="none" role="img" aria-label="NeNe Serve Beacon mark">
+  <circle cx="16" cy="16" r="3" fill="#1f1c17"></circle>
+  <circle cx="16" cy="16" r="7.5" fill="none" stroke="#1f1c17" stroke-width="2.4"></circle>
+  <circle cx="16" cy="16" r="12" fill="none" stroke="#1f1c17" stroke-width="2.2" opacity=".9"></circle>
+</svg>
