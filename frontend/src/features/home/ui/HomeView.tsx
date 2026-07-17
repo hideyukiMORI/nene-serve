@@ -13,7 +13,7 @@ import {
   IconStages,
   IconUsers,
 } from '@/shared/ui/icons'
-import type { HomeStepId } from '../hooks/use-home-page'
+import type { HomeStepId } from '../model/use-home-page'
 
 interface StepDef {
   id: HomeStepId
