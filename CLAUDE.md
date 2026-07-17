@@ -32,7 +32,7 @@ Agent guide. Cursor rules: `.cursor/rules/`.
 - **Governed data is append-only & fully audited.** Every governed write is audited (who/when/before→after/why); no ad-hoc/manual physical delete — "delete" = archive/disable/tombstone; FKs `RESTRICT` not `CASCADE`; app DB role lacks `DELETE`/`TRUNCATE`; only cosmetic "presentation" data (allowlist) is freely deletable/unaudited (ADR 0022)
 - MCP maps to Serve OpenAPI only (`docs/api/service.openapi.json`)
 - **OpenAPI 3.1 is the contract** for the three surfaces (`docs/api/`, ADR 0018); `tests/Api/OpenApiContractTest.php` asserts documented paths == Kernel routes — add an endpoint, update its spec
-- **Admin SPA in `frontend/`** follows the sibling NeNe convention (React+Vite+TS, FSD, Tailwind v4, TanStack Query, MSW mock-first, Storybook, six-locale i18n); typed from `docs/api/admin.openapi.json` via `npm run codegen`; gate is `npm run check` (see `frontend/README.md`)
+- **Admin SPA in `frontend/`** follows the sibling NeNe convention (React+Vite+TS, FSD, TanStack Query, MSW mock-first, Storybook, six-locale i18n); styling is a hand-written design system v3 (`frontend/src/shared/ui/theme/serve.css`, OKLCH tokens) — **no Tailwind yet**; Tailwind v4 adoption is planned for token-contract stage 2 (W6); typed from `docs/api/admin.openapi.json` via `npm run codegen`; gate is `npm run check` (see `frontend/README.md`)
 
 ## Ports
 
