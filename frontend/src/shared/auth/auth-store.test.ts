@@ -20,6 +20,9 @@ describe('authStore', () => {
     authStore.setToken('header.payload.signature')
 
     expect(sessionStorage.getItem('nene_serve_token')).not.toBeNull()
+    // Intent: "Never localStorage" (for the token). If the app ever gains a
+    // legitimate localStorage use, switch to a value scan (no value contains
+    // the token) instead of asserting emptiness.
     expect(localStorage.length).toBe(0)
   })
 
