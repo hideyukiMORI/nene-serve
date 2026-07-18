@@ -83,8 +83,8 @@ const MAP = {
   '--r-md': '--radius-x-md',
   '--r-lg': '--radius-x-lg',
   '--r-xl': '--radius-x-xl',
-  '--nav-w': '--space-x-nav-w',
-  '--topbar-h': '--space-x-topbar-h',
+  '--nav-w': '--spacing-x-nav-w',
+  '--topbar-h': '--spacing-x-topbar-h',
 }
 
 /**
