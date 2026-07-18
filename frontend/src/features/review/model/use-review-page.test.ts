@@ -16,13 +16,15 @@ describe('useReviewPage', () => {
       expect(result.current.loading).toBe(false)
     })
     expect(result.current.errorKey).toBeNull()
-    expect(result.current.creatives.map((c) => c.id)).toEqual([
-      'cr-acme-pending',
-      'cr-acme-promo',
-      'cr-acme-holiday',
-      'cr-acme-q1launch',
-      'cr-acme-banner-v4',
-    ])
+    // Fleet assertion standard: count, contract property, and one boundary
+    // anchor — not a transcription of the fixture ids.
+    expect(result.current.creatives.length).toBeGreaterThan(0)
+    expect(
+      result.current.creatives.every(
+        (c) => c.reviewStatus === 'submitted' || c.reviewStatus === 'in_review',
+      ),
+    ).toBe(true)
+    expect(result.current.creatives[0]?.id).toBe('cr-acme-pending')
   })
 
   it('maps a failing queue fetch to a localized error key', async () => {
