@@ -19,4 +19,4 @@ they are measured or relayed. Multiple sessions on the same day append
 
 ## Index
 
-- [2026-07-18](2026-07-18.md) — conformance wired into CI (#164) · A1 hooks→model codemod (#166) · stage1 pre-stage token inventory → upstream double-x bug filed (fleet-tooling#88) · CLAUDE.md Tailwind claim honesty fix (#168) · WIP brand-refresh preserved on branch · S2: convention-v2 D2 self-check (#172) · W1 stage1 completed (#174, tracking #175) · T0 front-test inventory
+- [2026-07-18](2026-07-18.md) — conformance wired into CI (#164) · A1 hooks→model codemod (#166) · stage1 pre-stage token inventory → upstream double-x bug filed (fleet-tooling#88) · CLAUDE.md Tailwind claim honesty fix (#168) · WIP brand-refresh preserved on branch · S2: convention-v2 D2 self-check (#172) · W1 stage1 completed (#174, tracking #175) · T0 front-test inventory · T1-lite TOP5 cleared, 36→107 tests (#179–#189)
