@@ -6,7 +6,7 @@ fleet-wide source of truth `_work/daily-report-convention.md` (approved 2026-07-
 ## Role and boundary
 
 - **`docs/daily/` (here)** … work done inside this repo (PRs/Issues touched, verified facts, remaining tasks).
-- **`_work/daily/` / `_work/discussion-log/`** … cross-repo, strategy, and business discussions. Never recorded here (per `/home/xi/docker/CLAUDE.md`).
+- **`_work/daily/` / `_work/discussion-log/`** … cross-repo, strategy, and business discussions. Never recorded here (per the workspace-level convention).
 
 One file per day, `YYYY-MM-DD.md`. No frontmatter. Numbers must state whether
 they are measured or relayed. Multiple sessions on the same day append
