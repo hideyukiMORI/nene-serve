@@ -83,7 +83,7 @@ Full list: [`docs/explanation/scope-contract.md`](./docs/explanation/scope-contr
 gates are green: PHPStan level 8, PSR-12, full backend and frontend test suites
 (type-check, lint, knip, Storybook).
 
-Details and sequencing: [`docs/todo/current.md`](./docs/todo/current.md).
+Details and sequencing: private `nene-origin/internal-docs/serve/todo/current.md` (operational logs live in the private receptacle).
 
 ## Running locally
 

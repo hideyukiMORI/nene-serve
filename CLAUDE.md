@@ -18,7 +18,7 @@ Agent guide. Cursor rules: `.cursor/rules/`.
 | Console help (reference) | `docs/reference/admin-console.md` |
 | Tutorial (end-to-end) | `docs/tutorial/first-campaign.md` |
 | Design brief (for Claude Design) | `docs/design/design-brief.md` |
-| Tasks | `docs/todo/current.md` |
+| Tasks | private `nene-origin/internal-docs/serve/todo/current.md` |
 
 ## Quick Rules
 
@@ -30,7 +30,7 @@ Agent guide. Cursor rules: `.cursor/rules/`.
 - **Three API surfaces** (public `/public/*` none · admin `/admin/*` JWT+Capability · service `/api/*` scoped token); no open redirect, no `*` CORS for credentialed routes, opaque short-lived tokens (ADR 0018/0019)
 - **Only approved creatives serve.** Review workflow + four-eyes approval, immutable versions, html5 malware-scanned + sandboxed; no raw third-party tags (ADR 0020/0021)
 - **Governed data is append-only & fully audited.** Every governed write is audited (who/when/before→after/why); no ad-hoc/manual physical delete — "delete" = archive/disable/tombstone; FKs `RESTRICT` not `CASCADE`; app DB role lacks `DELETE`/`TRUNCATE`; only cosmetic "presentation" data (allowlist) is freely deletable/unaudited (ADR 0022)
-- **Daily reports**: `docs/daily/<YYYY-MM-DD>.md`. Placement, format, and operation follow the fleet source of truth `_work/daily-report-convention.md`
+- **Operational logs are private**: `docs/todo`, `docs/daily`, and field-trial equivalents moved to private `nene-origin/internal-docs/serve/` — read and write work status, handovers, and daily reports there (fleet source of truth `_work/daily-report-convention.md`, v3 §11)
 - MCP maps to Serve OpenAPI only (`docs/api/service.openapi.json`)
 - **OpenAPI 3.1 is the contract** for the three surfaces (`docs/api/`, ADR 0018); `tests/Api/OpenApiContractTest.php` asserts documented paths == Kernel routes — add an endpoint, update its spec
 - **Admin SPA in `frontend/`** follows the sibling NeNe convention (React+Vite+TS, FSD, TanStack Query, MSW mock-first, Storybook, six-locale i18n); styling is a hand-written design system v3 (`frontend/src/shared/ui/theme/serve.css`, OKLCH tokens) — **no Tailwind yet**; Tailwind v4 adoption is planned for token-contract stage 2 (W6); typed from `docs/api/admin.openapi.json` via `npm run codegen`; gate is `npm run check` (see `frontend/README.md`)
@@ -44,4 +44,5 @@ API **8010** · phpMyAdmin **8011** · MySQL **3380** · frontend dev **5180** �
 Phases 1–4 ✅ complete (foundation · rich creatives · marketplace · ecosystem) +
 integrity/audit hardening; operable v1 console (admin SPA, `serve.js`, provisioning,
 asset upload + ClamAV). In flight: billing-period actions/edit forms in the console,
-video/HTML5 upload UI, production deploy hardening. See `docs/todo/current.md`.
+video/HTML5 upload UI, production deploy hardening. See private
+`nene-origin/internal-docs/serve/todo/current.md`.

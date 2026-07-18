@@ -25,7 +25,7 @@ See [ADR 0009](docs/adr/0009-separate-from-contact-and-concierge.md).
 - **Six locales (binding):** `docs/adr/0011-six-locale-application.md`, `docs/development/i18n.md`
 - **Terminology registry (binding):** `docs/explanation/terminology.md`
 - **Sibling integrations:** `docs/integrations/sibling-products.md`
-- **Current work:** `docs/todo/current.md`
+- **Current work:** private `nene-origin/internal-docs/serve/todo/current.md` (operational logs moved there; see CLAUDE.md)
 
 ## Operating Rules
 
