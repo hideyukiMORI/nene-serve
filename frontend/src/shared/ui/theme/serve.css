@@ -69,8 +69,8 @@
   --radius-x-lg: 14px;
   --radius-x-xl: 20px;
 
-  --space-x-nav-w: 256px;
-  --space-x-topbar-h: 58px;
+  --spacing-x-nav-w: 256px;
+  --spacing-x-topbar-h: 58px;
 }
 
 [data-theme='dark'] {
@@ -282,7 +282,7 @@ svg {
    ============================================================ */
 .app {
   display: grid;
-  grid-template-columns: var(--space-x-nav-w) 1fr;
+  grid-template-columns: var(--spacing-x-nav-w) 1fr;
   grid-template-rows: 100vh;
   height: 100vh;
   overflow: hidden;
@@ -325,7 +325,7 @@ svg {
   min-height: 0;
 }
 .side-brand {
-  height: var(--space-x-topbar-h);
+  height: var(--spacing-x-topbar-h);
   display: flex;
   align-items: center;
   gap: 11px;
@@ -443,7 +443,7 @@ svg {
   min-height: 0;
 }
 .topbar {
-  height: var(--space-x-topbar-h);
+  height: var(--spacing-x-topbar-h);
   flex-shrink: 0;
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface-raised);
@@ -1527,7 +1527,7 @@ table.table {
 
 /* density tweak */
 .app.dense {
-  --space-x-topbar-h: 52px;
+  --spacing-x-topbar-h: 52px;
 }
 .app.dense .page {
   padding-top: 20px;
