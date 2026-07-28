@@ -64,9 +64,15 @@
     // none of it is in the shipped bundle. The attack requires feeding an adversarial brace
     // pattern to a local lint/codegen run.
     //
-    // Expiry: 2026-08-31. Removed when `eslint-plugin-import` / `eslint-plugin-jsx-a11y` stop
-    // bundling minimatch@3 (the fleet eslint 10 wave) — at which point the blanket override
-    // becomes safe and this entry goes away with it.
+    // Expiry: 2026-08-31. Removed when **`eslint-plugin-import` and `eslint-plugin-jsx-a11y`
+    // stop bundling minimatch@3**, at which point the blanket override becomes safe and this
+    // entry goes away with it. The condition is deliberately written as the broken path, not
+    // as a tool generation: eslint itself is already on 10.8.0 here (with minimatch@10) and
+    // that changed nothing — the plugins are what pin minimatch@3. Naming an "eslint 10 wave"
+    // would read as satisfied while the advisory is still live (fleet ruling 2026-07-29,
+    // after a sibling was still broken on eslint 10).
+    //
+    // Check with: npm ls minimatch --all
     "GHSA-mh99-v99m-4gvg",
   ],
 }
