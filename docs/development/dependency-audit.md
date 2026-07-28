@@ -77,9 +77,16 @@ at 7.18.1 (measured `npm view react-router-dom version`), and the fix lands in `
 ≥ 8.2.1 — a different package and a breaking upgrade. The exception is removed by the
 **react-router v8 migration wave** (bundled with the NENE2 RR8 re-evaluation).
 
-`GHSA-mh99-v99m-4gvg` is removed when `eslint-plugin-import` / `eslint-plugin-jsx-a11y` stop
-bundling `minimatch@3` (the fleet **eslint 10 wave**) — at that point the blanket override
-becomes safe and the entry goes away with it.
+`GHSA-mh99-v99m-4gvg` is removed when **`eslint-plugin-import` and `eslint-plugin-jsx-a11y`
+stop bundling `minimatch@3`** — at that point the blanket override becomes safe and the entry
+goes away with it. Verify with `npm ls minimatch --all`.
+
+Note the condition is written as *the broken path*, not as a tool generation. eslint itself is
+already on 10.8.0 here (pulling `minimatch@10`) and that changed nothing — the plugins are what
+pin `minimatch@3`. Phrasing this as "the eslint 10 wave" would read as satisfied while the
+advisory is still live; a sibling product hit exactly that (fleet ruling 2026-07-29). This
+generalises: **an expiry condition should name the thing that is actually broken, not the
+upgrade that is expected to fix it.**
 
 ## Verifying the gate is sharp
 
