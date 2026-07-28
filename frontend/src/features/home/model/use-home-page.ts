@@ -6,13 +6,7 @@ import { useUsers } from '@/entities/user'
 
 /** The seven steps of the core serve loop, in canonical order. */
 export type HomeStepId =
-  | 'smtp'
-  | 'invite'
-  | 'placement'
-  | 'creative'
-  | 'approve'
-  | 'embed'
-  | 'measure'
+  'smtp' | 'invite' | 'placement' | 'creative' | 'approve' | 'embed' | 'measure'
 
 export interface HomePage {
   /** Ids of the steps that are already complete. */

@@ -83,9 +83,8 @@ describe('serve.js embed client', () => {
   it('renders nothing on an empty serve (204)', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(
-        (): Promise<FakeResponse> =>
-          Promise.resolve({ status: 204, ok: true, json: () => Promise.resolve(null) }),
+      vi.fn((): Promise<FakeResponse> =>
+        Promise.resolve({ status: 204, ok: true, json: () => Promise.resolve(null) }),
       ),
     )
     runServeJs()
