@@ -59,8 +59,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         max={max}
         aria-invalid={error !== undefined}
         aria-describedby={errorId}
-        className="input"
-        style={error !== undefined ? { borderColor: 'var(--danger)' } : undefined}
+        className={error !== undefined ? 'input invalid' : 'input'}
       />
       {error !== undefined ? (
         <span id={errorId} className="t-tiny danger">

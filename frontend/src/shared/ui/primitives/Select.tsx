@@ -58,8 +58,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
         disabled={disabled}
         aria-invalid={error !== undefined}
         aria-describedby={errorId}
-        className="select"
-        style={error !== undefined ? { borderColor: 'var(--danger)' } : undefined}
+        className={error !== undefined ? 'select invalid' : 'select'}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
