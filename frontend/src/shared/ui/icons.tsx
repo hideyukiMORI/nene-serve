@@ -184,7 +184,8 @@ export function IconLock(props: IconProps) {
 /**
  * Brand mark — "rising cards": three faint stage tracks, an ascending
  * connector, and three stacked cards climbing to the accent-filled top card.
- * Self-colored (var(--color-accent)/var(--fg)); the container CSS sizes it 100%.
+ * Self-colored (var(--color-accent)/var(--color-text-primary)); the container
+ * CSS sizes it 100%.
  */
 export function IconLogo(props: IconProps) {
   return (
@@ -225,8 +226,8 @@ export function IconLogo(props: IconProps) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <rect x="11" y="39" width="9.5" height="8.6" rx="2.5" fill="var(--fg)" />
-      <rect x="27.25" y="28.7" width="9.5" height="8.6" rx="2.5" fill="var(--fg)" />
+      <rect x="11" y="39" width="9.5" height="8.6" rx="2.5" fill="var(--color-text-primary)" />
+      <rect x="27.25" y="28.7" width="9.5" height="8.6" rx="2.5" fill="var(--color-text-primary)" />
       <rect x="43.5" y="18.4" width="9.5" height="8.6" rx="2.5" fill="var(--color-accent)" />
     </svg>
   )

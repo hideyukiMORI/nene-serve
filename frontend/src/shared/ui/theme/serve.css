@@ -223,6 +223,12 @@ svg {
 .muted {
   color: var(--color-text-muted);
 }
+/* Error-toned text. Used by <Text className="danger"> for view-level failure
+   messages and by the field-error span in Input/Select. Same stop tone as
+   .field-msg.err — this is the inline-text variant, without the flex layout. */
+.danger {
+  color: var(--color-x-st-stop-ink);
+}
 .faint {
   color: var(--color-text-faint);
 }
