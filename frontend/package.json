@@ -21,6 +21,7 @@
     "build-storybook": "storybook build",
     "codegen": "openapi-typescript ../docs/api/admin.openapi.json -o src/shared/api/schema.gen.ts",
     "knip": "knip",
+    "audit": "audit-ci --config audit-ci.jsonc",
     "check:fast": "npm run type-check && npm run lint && npm run format && npm run test",
     "check": "npm run type-check && npm run lint && npm run format && npm run test && npm run knip && npm run build-storybook"
   },
@@ -47,6 +48,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "audit-ci": "^7.1.0",
     "eslint": "^10.3.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
@@ -70,5 +72,10 @@
     "workerDirectory": [
       "public"
     ]
+  },
+  "overrides": {
+    "esbuild": "^0.28.1",
+    "js-yaml": "^4.3.0",
+    "brace-expansion": "^5.0.8"
   }
 }

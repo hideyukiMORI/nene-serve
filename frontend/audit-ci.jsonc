@@ -1,0 +1,43 @@
+{
+  // Dependency-vulnerability gate for CI (replaces a bare `npm audit --audit-level=high`,
+  // which has no way to record a reasoned exception).
+  //
+  // The gate stays sharp: anything high/critical that is NOT listed below fails the build.
+  // `allowlist` is per-advisory (GHSA id), never per-severity — we do not lower the level.
+  //
+  // Adding an entry requires, in this file: (1) the advisory id, (2) why it does not apply to
+  // THIS codebase, measured — not assumed, (3) an expiry date, (4) what removes the need for it.
+  // An expired entry is a task, not a renewal: re-check it, do not extend it by reflex.
+  //
+  // Prefer the fix. Everything that had an adoptable fix on 2026-07-29 was taken instead of
+  // excepted (react-router-dom 7.16.0 → 7.18.1; postcss 8.5.15 → 8.5.24; vite 8.0.14 → 8.1.5;
+  // and `overrides` for esbuild ^0.28.1 / js-yaml ^4.3.0 / brace-expansion ^5.0.8). That took
+  // the report from high 5 / moderate 2 / low 1 down to the single entry below.
+  //
+  // Policy: docs/development/dependency-audit.md
+  "$schema": "https://github.com/IBM/audit-ci/raw/main/docs/schema.json",
+  "moderate": false,
+  "high": true,
+  "critical": true,
+  "allowlist": [
+    // GHSA-qwww-vcr4-c8h2 — react-router "RSC Mode CSRF Bypass Allows Action Execution Before
+    // 400 Response" (high). Vulnerable range 7.12.0–8.2.0. There is NO fix in the 7.x line:
+    // `react-router-dom` ends at 7.18.1 (measured `npm view react-router-dom version`), and the
+    // fix lands in `react-router` >= 8.2.1 — a different package and a breaking major.
+    //
+    // Why it does not apply here (measured 2026-07-29): this admin console is a **static SPA
+    // built by Vite**, with no server runtime of its own — the PHP kernel serves the API, and
+    // the bundle talks to it over fetch. `src/app/router.tsx` uses `createBrowserRouter` with
+    // **element-only routes**: grepping the tree for route `action:` / `loader:` keys returns
+    // no route-config hits (the `action` matches are domain props on the creative-review
+    // feature, not router config), and there is no `@react-router/dev`, no RSC entry, no
+    // `createStaticHandler` / `StaticRouterProvider` import anywhere in `src/`. The advisory's
+    // attack path — a server executing a route action before returning 400 — has no
+    // counterpart in a client-only bundle.
+    //
+    // Expiry: 2026-08-31. Removed by the react-router v8 migration wave (bundled with the
+    // NENE2 RR8 re-evaluation). If that wave slips past the expiry, the entry must be
+    // re-argued in a PR — not silently extended.
+    "GHSA-qwww-vcr4-c8h2",
+  ],
+}
