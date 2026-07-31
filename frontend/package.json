@@ -22,7 +22,8 @@
     "codegen": "openapi-typescript ../docs/api/admin.openapi.json -o src/shared/api/schema.gen.ts",
     "knip": "knip",
     "check:fast": "npm run type-check && npm run lint && npm run format && npm run test",
-    "check": "npm run type-check && npm run lint && npm run format && npm run test && npm run knip && npm run build-storybook"
+    "check": "npm run type-check && npm run lint && npm run format && npm run test && npm run knip && npm run build-storybook",
+    "audit": "audit-ci --config audit-ci.jsonc"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -63,11 +64,15 @@
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12",
-    "vitest": "^4.0.14"
+    "vitest": "^4.0.14",
+    "audit-ci": "^7.1.0"
   },
   "msw": {
     "workerDirectory": [
       "public"
     ]
+  },
+  "overrides": {
+    "brace-expansion@5": "^5.0.8"
   }
 }
