@@ -12,10 +12,26 @@
   // Prefer the fix. Everything that had an adoptable fix on 2026-07-29 was taken instead of
   // excepted (react-router-dom 7.16.0 → 7.18.1; postcss 8.5.15 → 8.5.24; vite 8.0.14 → 8.1.5;
   // and `overrides` for esbuild ^0.28.1 / js-yaml ^4.3.0 / brace-expansion@5 ^5.0.8). That
-  // took the report from high 5 / moderate 2 / low 1 down to the two entries below.
+  // took the report from high 5 / moderate 2 / low 1 down to two entries.
   //
-  // Note the `@5` on the brace-expansion override: it is scoped on purpose, see the second
-  // entry. A blanket `brace-expansion: ^5.0.8` is the obvious-looking move and it is wrong.
+  // 2026-08-04 (#203): one of those two is gone, by fix rather than by argument. GHSA-rgw5-rvv9-x895
+  // extended the brace-expansion range to include **5.0.8 itself** — the version the 2026-07-29
+  // override had named as the remedy — so the pinned fix stopped being a fix. Patched releases
+  // existed for all three locked copies (1.1.16 → 1.1.18, 2.1.3 → 2.1.4, 5.0.8 → 5.0.9), so the
+  // lockfile was refreshed and the GHSA-mh99-v99m-4gvg entry was deleted rather than re-argued.
+  // The lesson is worth keeping: an entry that names a specific fixed version carries an expiry
+  // whether or not one is written next to it.
+  //
+  // Note the `@5` on the brace-expansion override: it is scoped on purpose, and it STAYS scoped
+  // even though no allowlist entry explains it any more. `eslint-plugin-import` and
+  // `eslint-plugin-jsx-a11y` still bundle `minimatch@3.1.5`, which does
+  // `const expand = require('brace-expansion')` and calls it; brace-expansion@5 exports an
+  // **object**, not a function, so a blanket `brace-expansion: ^5` makes every brace pattern
+  // throw `expand is not a function` (it broke `npm run lint` outright on nene-invoice #732).
+  // Scoping leaves those plugins on the v1 line, which now has its own patched 1.1.18.
+  // Measured after the 2026-08-04 refresh, with a negative control:
+  // `minimatch('src/a.ts', 'src/{a,b}.ts')` → true, `minimatch('src/c.ts', 'src/{a,b}.ts')` → false.
+  // Check with: npm ls minimatch --all
   //
   // Policy: docs/development/dependency-audit.md
   "$schema": "https://github.com/IBM/audit-ci/raw/main/docs/schema.json",
@@ -43,36 +59,9 @@
     // re-argued in a PR — not silently extended.
     "GHSA-qwww-vcr4-c8h2",
 
-    // GHSA-mh99-v99m-4gvg — brace-expansion "DoS via unbounded expansion length causing an
-    // out-of-memory process crash" (high). Vulnerable range <= 5.0.7; the fix exists ONLY in
-    // 5.0.8 — there is no patched 1.x or 2.x (measured: `npm view brace-expansion versions`
-    // ends at 1.1.16 / 2.1.3, both inside the range). npm's own suggested fix is a
-    // semver-major *downgrade* of eslint-plugin-jsx-a11y to 6.4.1, which is not adoptable.
-    //
-    // Why we do not force 5.0.8 everywhere: `eslint-plugin-import` and `eslint-plugin-jsx-a11y`
-    // still bundle `minimatch@3.1.5`, which does `const expand = require('brace-expansion')`
-    // and calls it. brace-expansion@5 exports an **object**, not a function, so a blanket
-    // override makes any brace pattern throw `expand is not a function` (measured here; it
-    // broke `npm run lint` outright on nene-invoice #732). The override is therefore scoped —
-    // `"brace-expansion@5": "^5.0.8"` — which patches the v5 chain and leaves minimatch@3 on
-    // its compatible 1.1.16. Measured after scoping: `minimatch('src/a.ts', 'src/{a,b}.ts')`
-    // → `true` (it throws under the blanket form).
-    //
-    // Why the residual risk is acceptable (measured 2026-07-29): brace-expansion is
-    // **dev-only** here — `npm ls brace-expansion --omit=dev --all` returns `(empty)`. It
-    // reaches the tree solely through eslint plugins and the OpenAPI codegen toolchain, and
-    // none of it is in the shipped bundle. The attack requires feeding an adversarial brace
-    // pattern to a local lint/codegen run.
-    //
-    // Expiry: 2026-08-31. Removed when **`eslint-plugin-import` and `eslint-plugin-jsx-a11y`
-    // stop bundling minimatch@3**, at which point the blanket override becomes safe and this
-    // entry goes away with it. The condition is deliberately written as the broken path, not
-    // as a tool generation: eslint itself is already on 10.8.0 here (with minimatch@10) and
-    // that changed nothing — the plugins are what pin minimatch@3. Naming an "eslint 10 wave"
-    // would read as satisfied while the advisory is still live (fleet ruling 2026-07-29,
-    // after a sibling was still broken on eslint 10).
-    //
-    // Check with: npm ls minimatch --all
-    "GHSA-mh99-v99m-4gvg",
+    // GHSA-mh99-v99m-4gvg was here until 2026-08-04 (#203). It is not excepted any more and it
+    // is not being re-argued: every chain now resolves to a patched release, so audit-ci itself
+    // reports "Consider not allowlisting advisory: GHSA-mh99-v99m-4gvg". Deleted per this file's
+    // own rule that an entry which is no longer needed goes away rather than being carried.
   ],
 }
