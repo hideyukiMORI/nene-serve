@@ -1,0 +1,16 @@
+-- 0036 index for the frequency cap lookup (#207).
+--
+-- The shared frequency store counts impressions already delivered to a
+-- consent-gated visitor bucket, rather than keeping a parallel counter:
+--
+--   SELECT COUNT(*) FROM impressions
+--   WHERE placement_id = ? AND visitor_bucket = ? AND erased_at IS NULL
+--
+-- Counting the events themselves means the cap can never disagree with the
+-- numbers billing and reporting read (ADR 0015 audit-grade counts), and there
+-- is no second store to keep in step. The bucket rotates per UTC day, so the
+-- window is a day without any expiry logic.
+--
+-- This runs on the serve path, so it needs its own index — the existing ones
+-- are organisation- and time-oriented.
+CREATE INDEX idx_impressions_placement_bucket ON impressions (placement_id, visitor_bucket);

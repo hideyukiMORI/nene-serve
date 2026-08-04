@@ -46,6 +46,12 @@ GRANT SELECT, INSERT         ON nene_serve.assets        TO 'nene'@'%'; -- appen
 -- windows are pruned by the privileged maintenance role, not by a request.
 GRANT SELECT, INSERT, UPDATE ON nene_serve.rate_limit_counters TO 'nene'@'%';
 
+-- Operational: shared public-surface tokens (#207). UPDATE is needed for the
+-- one-way flips only — recorded_at (impression idempotency) and consumed_at
+-- (click single-use). Consumption is a stamp, never a delete; expired rows are
+-- pruned by the privileged maintenance role.
+GRANT SELECT, INSERT, UPDATE ON nene_serve.public_tokens TO 'nene'@'%';
+
 -- Presentation data: cosmetic UI state may be deleted.
 GRANT SELECT, INSERT, UPDATE, DELETE ON nene_serve.user_preferences TO 'nene'@'%';
 
