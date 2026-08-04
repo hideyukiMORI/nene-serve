@@ -35,6 +35,8 @@ use Nene2\Middleware\ThrottleMiddleware;
 use NeneServe\ApplicationServiceProvider;
 use NeneServe\Audit\AuditLogInterface;
 use NeneServe\Audit\PdoAuditLog;
+use NeneServe\Http\RateLimit\PdoRateLimitStorage;
+use NeneServe\Http\RateLimit\RateLimitStoreMode;
 use NeneServe\Mail\MailerFactoryInterface;
 use NeneServe\Mail\SmtpMailerFactory;
 use NeneServe\Marketplace\Invoice\FakeInvoiceClient;
@@ -591,7 +593,45 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
             )
             ->set(
                 RateLimitStorageInterface::class,
-                static fn (ContainerInterface $container): RateLimitStorageInterface => new InMemoryRateLimitStorage(),
+                static function (ContainerInterface $container): RateLimitStorageInterface {
+                    $config = $container->get(AppConfig::class);
+
+                    if (!$config instanceof AppConfig) {
+                        throw new LogicException('Application config service is invalid.');
+                    }
+
+                    $configured = $_SERVER[RateLimitStoreMode::ENV_KEY] ?? $_ENV[RateLimitStoreMode::ENV_KEY] ?? '';
+
+                    // Production refuses the per-process store outright: it cannot
+                    // trip under one-process-per-request, so binding it would mount
+                    // a limiter that never denies (#199).
+                    $mode = RateLimitStoreMode::resolve(
+                        is_string($configured) ? $configured : '',
+                        $config->environment,
+                    );
+
+                    if ($mode === RateLimitStoreMode::Memory) {
+                        return new InMemoryRateLimitStorage();
+                    }
+
+                    $query = $container->get(DatabaseQueryExecutorInterface::class);
+                    $dialect = $container->get(SqlDialect::class);
+                    $clock = $container->get(ClockInterface::class);
+
+                    if (!$query instanceof DatabaseQueryExecutorInterface) {
+                        throw new LogicException('Database query executor service is invalid.');
+                    }
+
+                    if (!$dialect instanceof SqlDialect) {
+                        throw new LogicException('SQL dialect service is invalid.');
+                    }
+
+                    if (!$clock instanceof ClockInterface) {
+                        throw new LogicException('Clock service is invalid.');
+                    }
+
+                    return new PdoRateLimitStorage($query, $dialect, $clock);
+                },
             )
             ->set(
                 ThrottleMiddleware::class,
@@ -607,9 +647,10 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                         throw new LogicException('Rate limit storage service is invalid.');
                     }
 
-                    // Generous fixed-window budget for the untrusted public surface;
-                    // production must inject a shared (Redis/DB) storage so the limit
-                    // is enforced across PHP-FPM workers.
+                    // Generous fixed-window budget for the untrusted public surface.
+                    // The storage above is shared (database-backed) unless a
+                    // non-production install opted out, so the limit is enforced
+                    // across workers and hosts rather than per process (#199).
                     return new ThrottleMiddleware($problemDetails, $storage, limit: 600, windowSeconds: 60);
                 },
             )
