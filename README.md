@@ -61,6 +61,7 @@ Full list: [`docs/explanation/scope-contract.md`](./docs/explanation/scope-contr
 | **i18n (six locales)** | [`docs/development/i18n.md`](./docs/development/i18n.md) |
 | **Console help (reference)** | [`docs/reference/admin-console.md`](./docs/reference/admin-console.md) |
 | **Tutorial (end-to-end)** | [`docs/tutorial/first-campaign.md`](./docs/tutorial/first-campaign.md) |
+| **Deploying (partial — health checks, rate limit store)** | [`docs/how-to/deploy.md`](./docs/how-to/deploy.md) |
 | **Design brief (for Claude Design)** | [`docs/design/design-brief.md`](./docs/design/design-brief.md) |
 | **Terminology registry (binding)** | [`docs/explanation/terminology.md`](./docs/explanation/terminology.md) |
 | **Sibling integrations** | [`docs/integrations/sibling-products.md`](./docs/integrations/sibling-products.md) |
