@@ -50,10 +50,13 @@ use NeneServe\Service\PdoServiceTokenRepository;
 use NeneServe\Service\ServiceTokenRepositoryInterface;
 use NeneServe\Serving\Frequency\FileFrequencyCapStore;
 use NeneServe\Serving\Frequency\FrequencyCapStoreInterface;
+use NeneServe\Serving\Frequency\PdoFrequencyCapStore;
+use NeneServe\Serving\PublicStoreMode;
 use NeneServe\Serving\Scan\BundleScannerInterface;
 use NeneServe\Serving\Scan\ClamAvScanner;
 use NeneServe\Serving\Scan\StubBundleScanner;
 use NeneServe\Serving\Token\FileTokenStore;
+use NeneServe\Serving\Token\PdoTokenStore;
 use NeneServe\Serving\Token\TokenStoreInterface;
 use NeneServe\Storage\LocalStorage;
 use NeneServe\Storage\StorageInterface;
@@ -312,31 +315,51 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
             ->set(
                 TokenStoreInterface::class,
                 static function (ContainerInterface $container): TokenStoreInterface {
-                    $projectRoot = $container->get(self::PROJECT_ROOT);
-
-                    if (!is_string($projectRoot) || $projectRoot === '') {
-                        throw new LogicException('Project root service is invalid.');
-                    }
-
                     $clock = $container->get(ClockInterface::class);
 
                     if (!$clock instanceof ClockInterface) {
                         throw new LogicException('Clock service is invalid.');
                     }
 
-                    return new FileTokenStore($projectRoot . '/var/tokens.json', $clock);
+                    if (self::publicStoreMode($container) === PublicStoreMode::File) {
+                        $projectRoot = $container->get(self::PROJECT_ROOT);
+
+                        if (!is_string($projectRoot) || $projectRoot === '') {
+                            throw new LogicException('Project root service is invalid.');
+                        }
+
+                        return new FileTokenStore($projectRoot . '/var/tokens.json', $clock);
+                    }
+
+                    $query = $container->get(DatabaseQueryExecutorInterface::class);
+
+                    if (!$query instanceof DatabaseQueryExecutorInterface) {
+                        throw new LogicException('Database query executor service is invalid.');
+                    }
+
+                    return new PdoTokenStore($query, $clock);
                 },
             )
             ->set(
                 FrequencyCapStoreInterface::class,
                 static function (ContainerInterface $container): FrequencyCapStoreInterface {
-                    $projectRoot = $container->get(self::PROJECT_ROOT);
+                    if (self::publicStoreMode($container) === PublicStoreMode::File) {
+                        $projectRoot = $container->get(self::PROJECT_ROOT);
 
-                    if (!is_string($projectRoot) || $projectRoot === '') {
-                        throw new LogicException('Project root service is invalid.');
+                        if (!is_string($projectRoot) || $projectRoot === '') {
+                            throw new LogicException('Project root service is invalid.');
+                        }
+
+                        return new FileFrequencyCapStore($projectRoot . '/var/frequency.json');
                     }
 
-                    return new FileFrequencyCapStore($projectRoot . '/var/frequency.json');
+                    $query = $container->get(DatabaseQueryExecutorInterface::class);
+
+                    if (!$query instanceof DatabaseQueryExecutorInterface) {
+                        throw new LogicException('Database query executor service is invalid.');
+                    }
+
+                    return new PdoFrequencyCapStore($query);
                 },
             )
             ->set(Crypto::class, static fn (ContainerInterface $container): Crypto => new Crypto())
@@ -771,6 +794,25 @@ final readonly class RuntimeServiceProvider implements ServiceProviderInterface
                 },
             )
             ->set(ResponseEmitter::class, static fn (ContainerInterface $container): ResponseEmitter => new ResponseEmitter());
+    }
+
+    /**
+     * Where the public serving surface keeps its cross-request state
+     * (`NENE_SERVE_PUBLIC_STORE`). Shared by the token store and the frequency
+     * cap store, which hold two halves of the same flow — production refuses the
+     * single-host file pair (#207).
+     */
+    private static function publicStoreMode(ContainerInterface $container): PublicStoreMode
+    {
+        $config = $container->get(AppConfig::class);
+
+        if (!$config instanceof AppConfig) {
+            throw new LogicException('Application config service is invalid.');
+        }
+
+        $configured = $_SERVER[PublicStoreMode::ENV_KEY] ?? $_ENV[PublicStoreMode::ENV_KEY] ?? '';
+
+        return PublicStoreMode::resolve(is_string($configured) ? $configured : '', $config->environment);
     }
 
     /**
