@@ -41,6 +41,11 @@ GRANT SELECT, INSERT, UPDATE ON nene_serve.smtp_settings   TO 'nene'@'%'; -- ups
 GRANT SELECT, INSERT, UPDATE ON nene_serve.invitations    TO 'nene'@'%'; -- status advances pending->accepted
 GRANT SELECT, INSERT         ON nene_serve.assets        TO 'nene'@'%'; -- append-only metadata
 
+-- Operational (not governed, not presentation): shared fixed-window rate limit
+-- counters (#199). Upserted in place; the app never removes a row, so expired
+-- windows are pruned by the privileged maintenance role, not by a request.
+GRANT SELECT, INSERT, UPDATE ON nene_serve.rate_limit_counters TO 'nene'@'%';
+
 -- Presentation data: cosmetic UI state may be deleted.
 GRANT SELECT, INSERT, UPDATE, DELETE ON nene_serve.user_preferences TO 'nene'@'%';
 

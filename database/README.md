@@ -37,6 +37,29 @@ Phinx only ever scans `*.php`, so the `.sql` baseline files above are invisible
 to it and coexist safely in the same directory. New migrations are timestamp-named
 PHP classes (`version_order: creation`) and are tracked in the `phinxlog` table.
 
+### Exception: `0034_create_rate_limit_counters.sql` (2026-08-04, #199)
+
+This one is a **baseline `.sql` file even though it is new**, and the rule above
+should be read as *"phinx, once something runs phinx"* until that is true.
+
+Measured reason: **nothing invokes phinx today.** CI applies
+`database/migrations/*.sql` in a loop and translates the same glob for
+PostgreSQL; phinx is in `require-dev`; no deploy path calls
+`migrations:migrate`. A phinx migration here would therefore mean the table
+**silently does not exist** in CI or on a first deploy — while the application
+boots and the gates stay green, because the failure only appears when a request
+reaches the counter. That is precisely the "installed but not running" shape
+#199 itself was about, so writing it that way to satisfy the convention would
+have reproduced the bug in the fix (hub ruling, 2026-08-04).
+
+**When this exception ends:** when a deploy path actually runs phinx. That work
+is the "migrations on deploy" item of production-deploy hardening, and the
+conversion of this table is bundled with it — one file, plus the CI steps that
+run `migrations:migrate` against the MySQL and PostgreSQL services. The
+condition is written as the missing mechanism, not as a date: an exception that
+names a date reads as satisfied when the date passes, whether or not anything
+changed.
+
 ### Bootstrap order on a fresh database
 
 1. Apply the raw-SQL baseline (loop above) — brings the DB to the shipped schema.

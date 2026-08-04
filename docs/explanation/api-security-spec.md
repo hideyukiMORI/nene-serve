@@ -40,11 +40,22 @@ self-review [`../review/api-security.md`](../review/api-security.md).
 | **Public serve** | `/public/*` | Browsers via `serve.js` | **None** | Origin-gated, rate-limited, opaque tokens only |
 | **Admin** | `/admin/*` | Operators (humans) | **JWT + `Capability`** | Tenant-scoped (ADR 0006); mutations audited |
 | **Service** | `/api/*` | Machines / MCP / automation | **Scoped service token** | Read-first; audited writes; per-scope grants |
-| System | `GET /health` | Anyone | None | Liveness only; no data |
+| System | `GET /health` | Anyone | None | **Readiness**, not liveness — see below; no data |
 
 OpenAPI 3.1 is the **contract** for all three; errors use **RFC 9457 Problem
 Details**. JSON is snake_case. The public serve doc and admin/service docs are
 separate OpenAPI documents.
+
+**`GET /health` carries readiness semantics.** It was documented as liveness-only
+until the rate limiter moved to a shared store (#199): the throttle middleware
+runs on *every* route, so every request — `/health` included — now reads the
+shared counter table, and `/health` fails when the database is unreachable. That
+is the correct signal for a load balancer, because the counters live in the same
+database the application needs for everything else: if it is gone, this instance
+cannot serve, and taking it out of rotation is right. It is **not** a process
+liveness check — a supervisor that restarts on a failing `/health` will restart
+healthy instances during a database outage. Watch the process for liveness. See
+[`docs/how-to/deploy.md`](../how-to/deploy.md).
 
 ---
 
