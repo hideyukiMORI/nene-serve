@@ -5,8 +5,41 @@ on:
     branches: [main]
   pull_request:
 
+  # Weekly schedule: re-runs this same CI (incl. the dependency audit in the
+  # `frontend` job) on a cadence so newly-published advisories against pinned
+  # versions are caught even without a new push. Cron minute is offset from
+  # other fleet repos to avoid a same-minute stampede (00=origin/fleet-tooling,
+  # 05=clear, 10=deal, 15=field, 20=payout, 25=records, 30=nene2-python,
+  # 35=vault, 40=records-commercial, 45=concierge, 50=contact, 55=invoice,
+  # 1時台 05=profile, 10=serve).
+  #
+  # KNOWN LIMITATION: GitHub auto-disables scheduled workflows after 60 days
+  # of repository inactivity. A dormant repo — the one most in need of this
+  # check — is exactly the one where it silently stops firing. There is no
+  # in-repo fix for this; it needs an external poller (fleet-level, tracked
+  # outside this repo) to detect a stale last-run date.
+  schedule:
+    - cron: '10 1 * * 1' # Monday 01:10 UTC = 10:10 JST
+
+  # Manual trigger, with an optional switch to rehearse the failure path
+  # (see the "Simulate failure" step in the `frontend` job and the
+  # `notify-failure` job below) without waiting for the next scheduled run.
+  workflow_dispatch:
+    inputs:
+      simulate_failure:
+        description: 'Intentionally fail the frontend job to verify the failure-notification path'
+        type: boolean
+        default: false
+
 permissions:
   contents: read
+
+concurrency:
+  # github.event_name is included so a schedule/workflow_dispatch run is not
+  # cancelled by a push run racing it on the same ref (observed in the fleet
+  # rollout: without it, dispatch/schedule runs get silently cancelled by push).
+  group: ci-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -108,6 +141,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Placed after Checkout (not literally the first step): this job's
+      # `defaults.run.working-directory: frontend` doesn't exist until checkout
+      # runs, so a step placed before it would fail on a missing directory
+      # instead of the intended `exit 1` (hit during the fleet rollout of this
+      # harness — nene-deal #207). Still fails before any real work.
+      - name: Simulate failure (validation only)
+        if: inputs.simulate_failure
+        run: exit 1
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -132,3 +174,28 @@ jobs:
       # Policy: docs/development/dependency-audit.md
       - name: Audit (fail on high/critical)
         run: npm run audit
+
+  notify-failure:
+    name: Open an issue when the scheduled run fails
+    if: failure() && (github.event_name == 'schedule' || inputs.simulate_failure)
+    needs: [build, frontend]
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    env:
+      ISSUE_TITLE: '🔴 serve: 週次 CI（schedule）が失敗しています'
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Create or update the failure issue
+        run: |
+          set -euo pipefail
+          existing="$(gh issue list --state open --limit 100 --json number,title \
+            | jq -r --arg t "$ISSUE_TITLE" 'map(select(.title == $t)) | .[0].number // empty')"
+          body="週次の schedule 実行が失敗しました。 実行: ${RUN_URL}"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "$ISSUE_TITLE" --body "$body"
+          fi
