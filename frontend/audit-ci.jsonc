@@ -82,7 +82,6 @@
     // Expiry: 2026-08-31. Removed by the react-router v8 migration wave (bundled with the
     // NENE2 RR8 re-evaluation). If that wave slips past the expiry, the entry must be
     // re-argued in a PR — not silently extended.
-
     // GHSA-mh99-v99m-4gvg was here until 2026-08-04 (#203). It is not excepted any more and it
     // is not being re-argued: every chain now resolves to a patched release, so audit-ci itself
     // reports "Consider not allowlisting advisory: GHSA-mh99-v99m-4gvg". Deleted per this file's
