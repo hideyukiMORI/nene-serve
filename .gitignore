@@ -8,7 +8,7 @@
 /.phpstan.cache/
 /.php-cs-fixer.cache
 /var/
-/composer.lock
+# /composer.lock は追跡する（type=project のアプリはビルド再現性のため lock をコミットする・#214）
 /public_html/assets/
 /public_html/admin/*
 /public_html/serve/*

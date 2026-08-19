@@ -5,9 +5,10 @@ on:
     branches: [main]
   pull_request:
 
-  # Weekly schedule: re-runs this same CI (incl. the dependency audit in the
-  # `frontend` job) on a cadence so newly-published advisories against pinned
-  # versions are caught even without a new push. Cron minute is offset from
+  # Weekly schedule: re-runs this same CI (incl. the dependency audits — `npm`
+  # in the `frontend` job and `composer` in the `backend` job) on a cadence so
+  # newly-published advisories against pinned versions are caught even without
+  # a new push. Cron minute is offset from
   # other fleet repos to avoid a same-minute stampede (00=origin/fleet-tooling,
   # 05=clear, 10=deal, 15=field, 20=payout, 25=records, 30=nene2-python,
   # 35=vault, 40=records-commercial, 45=concierge, 50=contact, 55=invoice,
@@ -92,6 +93,13 @@ jobs:
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
+
+      # Dependency-vulnerability gate. Kept as its own step rather than folded into
+      # `composer check`, so the job log (and any cross-repo tooling that reads it)
+      # can tell whether the audit ran at all. A check that leaves no trace cannot be
+      # distinguished from a check that is missing.
+      - name: composer audit
+        run: composer audit --no-interaction
 
       - name: Locale parity (six locales, ADR 0011)
         run: composer locales:check
