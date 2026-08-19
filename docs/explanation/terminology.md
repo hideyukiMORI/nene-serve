@@ -177,6 +177,10 @@ capability; self-approval is disallowed by default.
 - snake_case for all API properties
 - Monetary: `*_cents` integers only
 
+> `cents` = the currency's **minor unit**, not 1/100 of the display amount.
+> **JPY has zero decimal places (ISO 4217), so `*_cents` stores whole yen — never multiply by 100.**
+> Example: ¥1,500 is stored as `1500`. A value like `116480` means ¥116,480, not ¥1,164.80.
+
 ---
 
 ## Locales (application)
