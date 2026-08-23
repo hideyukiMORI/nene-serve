@@ -33,6 +33,11 @@ See [ADR 0009](docs/adr/0009-separate-from-contact-and-concierge.md).
 - **Identifiers** must match `docs/explanation/terminology.md`
 - Do **not** add contact forms, chat scenarios, bank CSV, reconciliation, or invoice issuance
 - **No tax computation and no qualified invoices in Serve; money SSOT = Invoice** (ADR 0014). Billing-relevant counts are append-only, closed-period immutable, reconciled, idempotent (ADR 0015)
+
+> `cents` = the currency's **minor unit**, not 1/100 of the display amount.
+> **JPY has zero decimal places (ISO 4217), so `*_cents` stores whole yen — never multiply by 100.**
+> Example: ¥1,500 is stored as `1500`. A value like `116480` means ¥116,480, not ¥1,164.80.
+
 - **Operator is the data controller; privacy by default** (ADR 0016/0017): consent-gate non-essential beacons, minimize data, hash visitor identifiers, no raw PII in event tables, advertisers get aggregates only
 - **Keep API surfaces separate** (ADR 0018/0019): `/public/*` unauthenticated + origin-gated + rate-limited, `/admin/*` JWT+Capability, `/api/*` scoped token; no open redirect, no `*` CORS for credentialed routes, opaque idempotent tokens, no secrets/PII in public responses
 - **Only approved creatives serve** (ADR 0020/0021): respect the review state machine, four-eyes approval (no self-approval by default), immutable approved versions (edits → new version → re-review), html5 bundles malware-scanned + sandboxed iframe + strict CSP; never raw `third_party_tag`
