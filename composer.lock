@@ -70,11 +70,11 @@
         },
         {
             "name": "hideyukimori/nene2",
-            "version": "dev-bc3c076cda9f45d98236e8ae6dabb5a5b272caf4",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "../NENE2",
-                "reference": "b44d9a783a6eb4ec00a24da3487c933bf0feb195"
+                "reference": "6146abd6d1224655104aa1b9db43f3c551d767d6"
             },
             "require": {
                 "monolog/monolog": "^3.0",
@@ -6171,16 +6171,16 @@
         },
         {
             "name": "symfony/yaml",
-            "version": "v8.1.0",
+            "version": "v8.1.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/yaml.git",
-                "reference": "efb42bd2c6f4f3ccfd4683583449938b5fc146b0"
+                "reference": "6107ee26a25215c3df3af0a3315e56bb4fd0b7db"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/yaml/zipball/efb42bd2c6f4f3ccfd4683583449938b5fc146b0",
-                "reference": "efb42bd2c6f4f3ccfd4683583449938b5fc146b0",
+                "url": "https://api.github.com/repos/symfony/yaml/zipball/6107ee26a25215c3df3af0a3315e56bb4fd0b7db",
+                "reference": "6107ee26a25215c3df3af0a3315e56bb4fd0b7db",
                 "shasum": ""
             },
             "require": {
@@ -6223,7 +6223,7 @@
             "description": "Loads and dumps YAML files",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/yaml/tree/v8.1.0"
+                "source": "https://github.com/symfony/yaml/tree/v8.1.9"
             },
             "funding": [
                 {
@@ -6243,7 +6243,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-05-29T05:06:50+00:00"
+            "time": "2026-10-12T12:37:13+00:00"
         },
         {
             "name": "theseer/tokenizer",
